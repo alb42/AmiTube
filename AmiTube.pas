@@ -3,7 +3,7 @@ program AmiTube;
 {$mode objfpc}{$H+}
 uses
   AThreads,
-  Classes, SysUtils, fphttpclient, jsonparser, fpjson,
+  Classes, SysUtils, fphttpclient, jsonparser, fpjson, mui, muihelper,
   MUIClass.Base, MUIClass.Window, MUIClass.Group, MUIClass.Area, MUIClass.Gadget,
   MUIClass.StringGrid, MUIClass.Dialog, MUIClass.List, filedownloadunit;
 
@@ -13,7 +13,7 @@ const
   ConvertURL = 'http://build.alb42.de/ytcdxl.php?id=';
 
   MovieFolder = 'movies';
-
+  DefaultTextLimit = 33;
 type
 
   TProgressEvent = procedure(Sender: TObject; Percent: Integer; Text: string) of object;
@@ -82,6 +82,7 @@ type
     procedure Button2Click(Sender: TObject);
     procedure ProgressEvent(Sender: TObject; Percent: Integer; Text: string);
   private
+    TextLimit: Integer;
     Movies: string;
     Results: array of record
       ID: string;
@@ -317,6 +318,7 @@ procedure TMainWindow.EndThread(Sender: TObject);
 var
   i: Integer;
   t, s: Integer;
+  st: string;
 begin
   ProgressEvent(Self, 0, 'Idle');
   if SearchThread.IsError then
@@ -335,7 +337,10 @@ begin
       Results[i].id := SearchThread.Results[i].id;
       Results[i].Desc := SearchThread.Results[i].Desc;
       List.Cells[0, i] := IntToStr(i + 1);
-      List.Cells[1, i] := UTF8ToAnsi(SearchThread.Results[i].Name);
+      st := SearchThread.Results[i].Name;
+      if Length(st) > TextLimit then
+        st := Copy(st, 1, TextLimit - 3) + '...';
+      List.Cells[1, i] := UTF8ToAnsi(st);
       t := StrToIntDef(SearchThread.Results[i].Duration, 0);
       s := t mod 60;
       List.Cells[2, i] := IntToStr(t div 60) + ':' + Format('%2.2d',[s]);
@@ -370,7 +375,7 @@ procedure TMainWindow.ListClick(Sender: TObject);
 begin
   if (List.Row >= 0) and (List.Row <= High(Results)) then
   begin
-    TextOut.Text := Results[List.Row].Desc;
+    TextOut.Text := UTF8ToAnsi(Results[List.Row].Desc);
     Button.Disabled := FileExists(IncludeTrailingPathDelimiter(Movies) + Results[List.Row].ID + '.cdxl');
     Button2.Disabled := not Button.Disabled;
   end
@@ -432,6 +437,9 @@ var
   Grp1, Grp2: TMUIGroup;
 begin
   inherited Create;
+  Title := 'AmiTube 0.3';
+  ID := Make_ID('A','M','T','U');
+  TextLimit := DefaultTextLimit;
   ConvertThread := nil;
   SearchThread := nil;
 
@@ -446,6 +454,7 @@ begin
   Grp1 := TMUIGroup.Create;
   with Grp1 do
   begin
+    Frame := MUIV_FRAME_NONE;
     Horiz := False;
     Parent := Self;
   end;
@@ -473,6 +482,7 @@ begin
   Grp1 := TMUIGroup.Create;
   with Grp1 do
   begin
+    Frame := MUIV_FRAME_NONE;
     Horiz := True;
     Parent := Self;
   end;
@@ -484,9 +494,15 @@ begin
     Parent := Grp1;
   end;
 
+  with TMUIBalance.Create do
+  begin
+    Parent := Grp1;
+  end;
+
   Grp2 := TMUIGroup.Create;
   with Grp2 do
   begin
+    Frame := MUIV_FRAME_NONE;
     Horiz := False;
     Parent := Grp1;
   end;
@@ -500,6 +516,7 @@ begin
   Grp1 := TMUIGroup.Create;
   with Grp1 do
   begin
+    Frame := MUIV_FRAME_NONE;
     Horiz := True;
     Parent := Grp2;
   end;
@@ -532,12 +549,15 @@ begin
   inherited Destroy;
 end;
 
+const
+  VERSION = '$VER: AmiTube 0.3 (25.11.2021)';
 begin
   TMainWindow.Create;
-
-
+  MUIApp.Title := 'AmiTube 0.3';
+  MUIApp.Version := VERSION;
+  MUIApp.Author := 'Marcus "ALB42" Sackrow';
+  MUIApp.Description := 'YouTube for classic Amiga';
+  MUIApp.Base := 'AMITUBE';
   MUIApp.Run;
-
-
 end.
 
