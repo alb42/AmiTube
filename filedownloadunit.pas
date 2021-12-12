@@ -8,15 +8,27 @@ uses
   Classes, SysUtils;
 
 type
-  TOnProgress = procedure(Sender: TObject; Percent: integer) of object;
+  TOnProgress = procedure(Sender: TObject; Percent: integer; Speed: Integer) of object;
 
 procedure DonwloadFile(OnProgress: TOnProgress; cURL: string; cFile: string);
 
+procedure KillDownload;
+
+var
+  ShortVer: string = 'AmiTube';
 
 implementation
 
 uses
   fphttpclient;
+var
+  vHTTP: TFPHTTPClient = nil;
+
+procedure KillDownload;
+begin
+  if Assigned(vHTTP) then
+    vHTTP.Terminate;
+end;
 
 { TStreamAdapter }
 type
@@ -30,6 +42,7 @@ type
     FBuffer: Pointer;
     FBufPos: PByte;
     FBytes: LongInt;
+    StartTime: LongWord;
   public
     constructor Create(AStream: TStream; ASize: int64);
     destructor Destroy; override;
@@ -47,7 +60,6 @@ procedure DonwloadFile(OnProgress: TOnProgress; cURL: string; cFile: string);
 //  cFile = 'ImageMagick-6.8.6-8-Q8-x86-static.exe';
 var
   vStream: TStreamAdapter;
-  vHTTP: TFPHTTPClient;
   VSize: int64 = 0;
 
   I: integer;
@@ -58,6 +70,7 @@ begin
   vSize := 1000000;
   try
     vHTTP := TFPHTTPClient.Create(nil);
+    vHTTP.AddHeader('User-Agent', ShortVer + ' ' + {$INCLUDE %FPCTARGETCPU%} + '-' + {$INCLUDE %FPCTARGETOS%});
     vHTTP.HTTPMethod('HEAD', cUrl, nil, [200]);
     for I := 0 to pred(vHTTP.ResponseHeaders.Count) do
     begin
@@ -76,6 +89,7 @@ begin
     // vHTTP.Get(cUrl, vStream);
   finally
     vHTTP.Free;
+    vHTTP := nil;
     vStream.Free;
   end;
 end;
@@ -87,6 +101,7 @@ const BUFFSIZE = 1024000;
 constructor TStreamAdapter.Create(AStream: TStream; ASize: int64);
 begin
   inherited Create;
+  StartTime := GetTickCount;
   FStream := AStream;
   fStream.Size := ASize;
   fStream.Position := 0;
@@ -137,13 +152,20 @@ begin
 end;
 
 procedure TStreamAdapter.DoProgress(Writing: boolean);
+var
+  t1: LongWord;
+  Speed: Integer;
 begin
   //fPercent := Trunc((FStream.Position) / (FStream.Size) * 100);
   fPercent := Trunc((FPos) / (FSize) * 100);
-  //WriteLn(FStream.Size);
+  t1 := GetTickCount;
+  Speed := 0;
+  t1 := t1 - StartTime;
+  if t1 > 0 then
+    Speed := Round(FPos / (t1 / 1000));
   if Assigned(OnProgress) then
   begin
-    OnProgress(self, FPercent);
+    OnProgress(self, FPercent, Speed);
   end;
 end;
 

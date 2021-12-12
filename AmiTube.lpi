@@ -33,6 +33,10 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="Filedownloadunit"/>
       </Unit>
+      <Unit>
+        <Filename Value="prefsunit.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
