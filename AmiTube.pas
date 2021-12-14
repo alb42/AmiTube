@@ -20,7 +20,7 @@ const
   DefaultTextLimit = 33;
 
 const
-  VERSION = '$VER: AmiTube 0.5 beta2 (14.12.2021)';
+  VERSION = '$VER: AmiTube 0.5 (14.12.2021)';
 
 type
 
@@ -1226,6 +1226,10 @@ begin
   ShortVer := VERSION;
   Delete(ShortVer, 1, Pos(':', ShortVer) + 1);
   Delete(ShortVer, Pos('(', ShortVer) - 1, Length(ShortVer));
+  {$ifdef CPU68000}
+  ShortVer := ShortVer + ' 68000';
+  {$endif}
+
 end;
 
 var
