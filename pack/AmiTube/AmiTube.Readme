@@ -5,10 +5,31 @@ idea by Michal Bergseth http://www.amitopia.com
 A YouTube Client for m68k Amiga
 made with FreePascal for Amiga Systems
 
-best to view CDXL videos is the very good agablaster
+How to use:
+
+enter a search word or youtube URL to search bar in main window
+found video names with length and estimated size on HD is shown in the list underneath.
+Click to an entry to read the longer description.
+Click to the Button Download CDXL/MPEG to start the conversation and download.
+
+After the movies is converted an downloaded to your Amiga you can use the "Play" button to
+show the movie. The Share button is used to tell other AmiTube users about that particullar video.
+Delete removes the video from the harddisk (so you have to download it again if you want to watch it again)
+
+In the menu you find two different lists to show.
+1- "Local Files" - Shows the already downloaded videos on your harddisk in the list
+2- "Remote Shared" - Shows the global share list, videos other users suggested
+
+For movie playing you can choose an own player, by default MultiView is used, but MultiView is too slow most of the time
+
+My suggestions are:
+
+for CDXL videos use AGABlaster:
 https://mschordan.github.io/amiga/agablaster.html
 
-(MultiView is too slow most of the time)
+for MPEG videos use RiVA:
+http://aminet.net/gfx/show/RiVA-0.54.lha
+
 
 Conversation to CDXL is done on my Server so don't overdo it please.
 
@@ -31,6 +52,8 @@ History:
 - youtube urls can be entered to search bar ("https://www.youtube.com/watch?v=xxxxx" or "https://youtu.be/xxxxx")
 - observe clipboard for yoututbe urls, automatically search for them (turn on in prefs)
 - Auto start movie after download
+- Parameter for CDXL Player and MPEG Player
+- special Version for 68000 processor
 
 0.4:
 - converter speed increase (server side, also active for 0.3 already)

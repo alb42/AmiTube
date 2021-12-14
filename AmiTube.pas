@@ -20,7 +20,7 @@ const
   DefaultTextLimit = 33;
 
 const
-  VERSION = '$VER: AmiTube 0.5 beta (12.12.2021)';
+  VERSION = '$VER: AmiTube 0.5 beta2 (14.12.2021)';
 
 type
 
@@ -100,6 +100,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure ClipTimerEvent(Sender: TObject);
     procedure ClipChanged(Sender: TObject);
+    procedure CloseWindow(Sender: TObject; var CloseAction: TCloseAction);
   private
     PlayFormat: Integer;
     ValLock: TCriticalSection;
@@ -588,6 +589,7 @@ procedure TMainWindow.PlayClick(Sender: TObject);
 var
   MyID: string;
   MovieName: string;
+  Param: string;
 begin
   if GetTickCount - LastStart < 200 then
     Exit;
@@ -599,7 +601,9 @@ begin
       MovieName := IncludeTrailingPathDelimiter(Movies) + MyID + '.mpeg';
       if FileExists(MovieName) then
       begin
-        ExecuteProcess(Prefs.MPEGPlayerPath, MovieName, []);
+        Param := Prefs.MPEGPlayerParam;
+        Param := StringReplace(Param, '%f', '"' + MovieName + '"', [rfReplaceAll]);
+        ExecuteProcess(Prefs.MPEGPlayerPath, Param, []);
         LastStart := GetTickCount;
       end;
     end
@@ -608,7 +612,9 @@ begin
       MovieName := IncludeTrailingPathDelimiter(Movies) + MyID + '.cdxl';
       if FileExists(MovieName) then
       begin
-        ExecuteProcess(Prefs.PlayerPath, MovieName, []);
+        Param := Prefs.PlayerParam;
+        Param := StringReplace(Param, '%f', '"' + MovieName + '"', [rfReplaceAll]);
+        ExecuteProcess(Prefs.PlayerPath, Param, []);
         LastStart := GetTickCount;
       end;
     end;
@@ -977,6 +983,11 @@ begin
   ClipTimer.Enabled := Prefs.ObserveClip;
 end;
 
+procedure TMainWindow.CloseWindow(Sender: TObject; var CloseAction: TCloseAction);
+begin
+  Prefs.SaveSettings;
+end;
+
 constructor TMainWindow.Create;
 var
   Grp1, Grp2: TMUIGroup;
@@ -984,6 +995,9 @@ var
   MI: TMUIMenuItem;
 begin
   inherited Create;
+
+  OnCloseRequest := @CloseWindow;
+
   ValLock := TCriticalSection.Create;
   //
   Title := ShortVer;

@@ -18,6 +18,7 @@ type
     Ini: TIniFile;
     NumEdit: TMUIString;
     MPEGPlayerEdit, PlayerEdit: TMUIString;
+    MPEGParamEdit, ParamEdit: TMUIString;
     ChooseFormat: TMUICycle;
     FOnFormatChanged: TNotifyEvent;
     ChooseAutoStart: TMUICheckmark;
@@ -31,6 +32,7 @@ type
     procedure StartupChanged(Sender: TObject);
     procedure AutoChange(Sender: TObject);
     procedure ClipChange(Sender: TObject);
+    procedure CloseWindow(Sender: TObject; var CloseAction: TCloseAction);
 
     function GetPlayerPath: string;
     function GetMPEGPlayerPath: string;
@@ -39,12 +41,20 @@ type
     function GetAutoStart: Boolean;
     function GetStartup: Integer;
     function GetClip: Boolean;
+    function GetPlayerParam: string;
+    function GetMPEGPlayerParam: string;
   public
     constructor Create; override;
     destructor Destroy; override;
     procedure UpdateSettings;
+    procedure SaveSettings;
+
     property PlayerPath: string read GetPlayerPath;
     property MPEGPlayerPath: string read GetMPEGPlayerPath;
+
+    property PlayerParam: string read GetPlayerParam;
+    property MPEGPlayerParam: string read GetMPEGPlayerParam;
+
     property NumSearch: Integer read GetNumSearch;
     property Format: integer read GetFormat;
     property AutoStart: Boolean read GetAutoStart;
@@ -65,6 +75,14 @@ implementation
 procedure TPrefsWindow.UpdateSettings;
 begin
   ChooseFormat.Active := Ini.ReadInteger('General', 'Format', 0);
+end;
+
+procedure TPrefsWindow.SaveSettings;
+begin
+  Ini.WriteString('Player', 'Path', PlayerEdit.Contents);
+  Ini.WriteString('Player', 'Parameter', PlayerParam);
+  Ini.WriteString('Player', 'MPEGPath', MPEGPlayerEdit.Contents);
+  Ini.WriteString('Player', 'MPEGParameter', MPEGPlayerParam);
 end;
 
 procedure TPrefsWindow.ChoosePlayerClick(Sender: TObject);
@@ -125,6 +143,20 @@ end;
 function TPrefsWindow.GetMPEGPlayerPath: string;
 begin
   Result := MPEGPlayerEdit.Contents;
+end;
+
+function TPrefsWindow.GetPlayerParam: string;
+begin
+  Result := ParamEdit.Contents;
+  if Pos('%f', Result) = 0 then
+    Result := Result + ' %f';
+end;
+
+function TPrefsWindow.GetMPEGPlayerParam: string;
+begin
+  Result := MPEGParamEdit.Contents;
+  if Pos('%f', Result) = 0 then
+    Result := Result + ' %f';
 end;
 
 function TPrefsWindow.GetNumSearch: Integer;
@@ -188,11 +220,19 @@ begin
     FOnClipChanged(Self);
 end;
 
+procedure TPrefsWindow.CloseWindow(Sender: TObject; var CloseAction: TCloseAction);
+begin
+  SaveSettings;
+end;
+
 constructor TPrefsWindow.Create;
 var
-  Grp1: TMUIGroup;
+  Grp1, Grp2: TMUIGroup;
 begin
   inherited Create;
+
+  OnCloseRequest := @CloseWindow;
+
   Ini := TIniFile.Create(ChangeFileExt(ParamStr(0), '.ini'));
 
   ID := MAKE_ID('A','T','P', 'r');
@@ -274,15 +314,22 @@ begin
   Grp1 := TMUIGroup.Create;
   with Grp1 do
   begin
-    Columns := 2;
     FrameTitle := 'Player';
     Parent := Self;
   end;
 
-  with TMUIText.Create('Auto Start after Download') do
+  Grp2 := TMUIGroup.Create;
+  with Grp2 do
   begin
     Frame := MUIV_FRAME_NONE;
+    Horiz := True;
     Parent := Grp1;
+  end;
+
+  with TMUIText.Create('Auto start movie after download') do
+  begin
+    Frame := MUIV_FRAME_NONE;
+    Parent := Grp2;
   end;
 
   ChooseAutoStart := TMUICheckmark.Create;
@@ -290,6 +337,16 @@ begin
   begin
     Selected := Ini.ReadBool('Player', 'AutoStart', False);
     OnSelected := @AutoChange;
+    Parent := Grp2;
+  end;
+
+  // CDXL Player
+
+  Grp2 := TMUIGroup.Create;
+  with Grp2 do
+  begin
+    FrameTitle := 'CDXL';
+    Columns := 2;
     Parent := Grp1;
   end;
 
@@ -297,14 +354,39 @@ begin
   with PlayerEdit do
   begin
     Contents := Ini.ReadString('Player', 'Path', 'Sys:Utilities/MultiView');
-    Parent := Grp1;
+    Parent := Grp2;
   end;
 
   with TMUIButton.Create do
   begin
     HorizWeight := 20;
     Contents := 'Choose';
+    FixWidthTxt := ' Choose ';
     OnClick := @ChoosePlayerClick;
+    Parent := Grp2;
+  end;
+
+  ParamEdit := TMUIString.Create;
+  with ParamEdit do
+  begin
+    Contents := Ini.ReadString('Player', 'Parameter', '%f');
+    Parent := Grp2;
+  end;
+
+  with TMUIText.Create('Parameter') do
+  begin
+    FixWidthTxt := ' Parameter ';
+    Frame := MUIV_FRAME_NONE;
+    Parent := Grp2;
+  end;
+
+  // MPEG Player
+
+  Grp2 := TMUIGroup.Create;
+  with Grp2 do
+  begin
+    FrameTitle := 'MPEG';
+    Columns := 2;
     Parent := Grp1;
   end;
 
@@ -312,15 +394,30 @@ begin
   with MPEGPlayerEdit do
   begin
     Contents := Ini.ReadString('Player', 'MPEGPath', 'Sys:Utilities/MultiView');
-    Parent := Grp1;
+    Parent := Grp2;
   end;
 
   with TMUIButton.Create do
   begin
     HorizWeight := 20;
     Contents := 'Choose';
+    FixWidthTxt := ' Choose ';
     OnClick := @ChooseMPEGPlayerClick;
-    Parent := Grp1;
+    Parent := Grp2;
+  end;
+
+  MPEGParamEdit := TMUIString.Create;
+  with MPEGParamEdit do
+  begin
+    Contents := Ini.ReadString('Player', 'MPEGParameter', '%f');
+    Parent := Grp2;
+  end;
+
+  with TMUIText.Create('Parameter') do
+  begin
+    FixWidthTxt := ' Parameter ';
+    Frame := MUIV_FRAME_NONE;
+    Parent := Grp2;
   end;
 
 end;
