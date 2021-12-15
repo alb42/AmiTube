@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, inifiles, Math, muihelper, mui,
   MUIClass.Window, MUIClass.Group, MUIClass.Gadget,
-  MUIClass.Area, MUIClass.Dialog, MUIClass.Image;
+  MUIClass.Area, MUIClass.Dialog, MUIClass.Image, AmiTubelocale;
 
 type
 
@@ -104,7 +104,7 @@ begin
         Ini.WriteString('Player', 'Path', PlayerEdit.Contents);
       end
       else
-        ShowMessage('Error: "' + Player + '" not found.');
+        ShowMessage(StringReplace(GetLocString(MSG_ERROR_PLAYER), '%s', Player, [rfReplaceAll]));
     end;
     Free;
   end;
@@ -129,7 +129,7 @@ begin
         Ini.WriteString('Player', 'MPEGPath', MPEGPlayerEdit.Contents);
       end
       else
-        ShowMessage('Error: "' + Player + '" not found.');
+        ShowMessage(StringReplace(GetLocString(MSG_ERROR_PLAYER), '%s', Player, [rfReplaceAll]));
     end;
     Free;
   end;
@@ -231,6 +231,8 @@ var
 begin
   inherited Create;
 
+  Title := GetLocString(MSG_PREFS_WINDOW);
+
   OnCloseRequest := @CloseWindow;
 
   Ini := TIniFile.Create(ChangeFileExt(ParamStr(0), '.ini'));
@@ -241,7 +243,7 @@ begin
   Grp1 := TMUIGroup.Create;
   with Grp1 do
   begin
-    FrameTitle := 'Start up list contents';
+    FrameTitle := GetLocString(MSG_PREFS_STARTUP);
     Horiz := True;
     Parent := Self;
   end;
@@ -249,7 +251,7 @@ begin
   ChooseBootup := TMUICycle.Create;
   with ChooseBootup do
   begin
-    Entries := ['Empty', 'Local Files', 'Remote Shared'];
+    Entries := [GetLocString(MSG_PREFS_STARTUP1), GetLocString(MSG_PREFS_STARTUP2), GetLocString(MSG_PREFS_STARTUP3)];
     Active := Ini.ReadInteger('General', 'Startup', 0);
     OnActiveChange := @StartupChanged;
     Parent := Grp1;
@@ -258,7 +260,7 @@ begin
   Grp1 := TMUIGroup.Create;
   with Grp1 do
   begin
-    FrameTitle := 'File Format';
+    FrameTitle := GetLocString(MSG_PREFS_FORMAT);
     Horiz := True;
     Parent := Self;
   end;
@@ -266,7 +268,7 @@ begin
   ChooseFormat := TMUICycle.Create;
   with ChooseFormat do
   begin
-    Entries := ['CDXL 32 Colors OCS', 'CDXL 256 colors AGA', 'MPEG1'];
+    Entries := [GetLocString(MSG_PREFS_FORMAT1), GetLocString(MSG_PREFS_FORMAT2), GetLocString(MSG_PREFS_FORMAT3)];
     Active := Ini.ReadInteger('General', 'Format', 0);
     OnActiveChange := @FormatChanged;
     Parent := Grp1;
@@ -276,12 +278,12 @@ begin
   Grp1 := TMUIGroup.Create;
   with Grp1 do
   begin
-    FrameTitle := 'Search Results';
+    FrameTitle := GetLocString(MSG_PREFS_SEARCH);
     Columns := 2;
     Parent := Self;
   end;
 
-  with TMUIText.Create('Maximum Number') do
+  with TMUIText.Create(GetLocString(MSG_PREFS_SEARCHNUM)) do
   begin
     Frame := MUIV_FRAME_NONE;
     Parent := Grp1;
@@ -296,7 +298,7 @@ begin
     Parent := Grp1;
   end;
 
-  with TMUIText.Create('Observe clipboard for URLs') do
+  with TMUIText.Create(GetLocString(MSG_PREFS_CLIP)) do
   begin
     Frame := MUIV_FRAME_NONE;
     Parent := Grp1;
@@ -314,7 +316,7 @@ begin
   Grp1 := TMUIGroup.Create;
   with Grp1 do
   begin
-    FrameTitle := 'Player';
+    FrameTitle := GetLocString(MSG_PREFS_PLAYER);
     Parent := Self;
   end;
 
@@ -326,7 +328,7 @@ begin
     Parent := Grp1;
   end;
 
-  with TMUIText.Create('Auto start movie after download') do
+  with TMUIText.Create(GetLocString(MSG_PREFS_AUTOSTART)) do
   begin
     Frame := MUIV_FRAME_NONE;
     Parent := Grp2;
@@ -360,8 +362,8 @@ begin
   with TMUIButton.Create do
   begin
     HorizWeight := 20;
-    Contents := 'Choose';
-    FixWidthTxt := ' Choose ';
+    Contents := GetLocString(MSG_PREFS_CHOOSEPLAYER);
+    FixWidthTxt := ' '+GetLocString(MSG_PREFS_CHOOSEPLAYER)+' ';
     OnClick := @ChoosePlayerClick;
     Parent := Grp2;
   end;
@@ -373,9 +375,9 @@ begin
     Parent := Grp2;
   end;
 
-  with TMUIText.Create('Parameter') do
+  with TMUIText.Create(GetLocString(MSG_PREFS_PLAYERPARAM)) do
   begin
-    FixWidthTxt := ' Parameter ';
+    FixWidthTxt := ' '+GetLocString(MSG_PREFS_PLAYERPARAM)+' ';
     Frame := MUIV_FRAME_NONE;
     Parent := Grp2;
   end;
@@ -400,8 +402,8 @@ begin
   with TMUIButton.Create do
   begin
     HorizWeight := 20;
-    Contents := 'Choose';
-    FixWidthTxt := ' Choose ';
+    Contents := GetLocString(MSG_PREFS_CHOOSEPLAYER);
+    FixWidthTxt := ' '+GetLocString(MSG_PREFS_CHOOSEPLAYER)+' ';
     OnClick := @ChooseMPEGPlayerClick;
     Parent := Grp2;
   end;
@@ -413,9 +415,9 @@ begin
     Parent := Grp2;
   end;
 
-  with TMUIText.Create('Parameter') do
+  with TMUIText.Create(GetLocString(MSG_PREFS_PLAYERPARAM)) do
   begin
-    FixWidthTxt := ' Parameter ';
+    FixWidthTxt := ' ' + GetLocString(MSG_PREFS_PLAYERPARAM) + ' ';
     Frame := MUIV_FRAME_NONE;
     Parent := Grp2;
   end;

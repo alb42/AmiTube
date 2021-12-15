@@ -2,25 +2,25 @@ program AmiTube;
 // search and download Youtube videos to CDXL
 {$mode objfpc}{$H+}
 uses
-  AThreads, Exec, AmigaDos, clipboard, iffparse,
+  AThreads, clipboard, iffparse,
   Classes, SysUtils, fphttpclient, mui, muihelper, SyncObjs,
   MUIClass.Base, MUIClass.Window, MUIClass.Group, MUIClass.Area, MUIClass.Gadget,
   MUIClass.Menu,
   MUIClass.StringGrid, MUIClass.Dialog, MUIClass.List, filedownloadunit, prefsunit,
-  XMLRead, DOM;
+  XMLRead, DOM, AmiTubelocale;
 
 const
-  BaseURL = 'http://build.alb42.de/ytsearch2.php?q=';
-  BaseURLID = 'http://build.alb42.de/ytsearch2.php?id=';
-  ConvertURL = 'http://build.alb42.de/ytcdxl2.php?id=';
-  ShareURL = 'http://build.alb42.de/ytshare2.php?id=';
-  SharedURL = 'http://build.alb42.de/ytshares.xml';
+  BaseURL = 'http://amitube.alb42.de/ytsearch2.php?q=';
+  BaseURLID = 'http://amitube.alb42.de/ytsearch2.php?id=';
+  ConvertURL = 'http://amitube.alb42.de/ytcdxl2.php?id=';
+  ShareURL = 'http://amitube.alb42.de/ytshare2.php?id=';
+  SharedURL = 'http://amitube.alb42.de/ytshares.xml';
 
   MovieTemplateFolder = 'movies';
   DefaultTextLimit = 33;
 
 const
-  VERSION = '$VER: AmiTube 0.5 (14.12.2021)';
+  VERSION = '$VER: AmiTube 0.6 beta (15.12.2021)';
 
 type
 
@@ -126,13 +126,14 @@ type
 var
   hp: TFPHTTPClient;
 
+{
 const
   AFF_68080 = 1 shl 10;
 
 function CheckMe: Boolean; inline;
 begin
   Result := (PExecBase(AOS_ExecBase)^.AttnFlags and AFF_68080) <> 0;
-end;
+end;}
 
 procedure KillSearch;
 begin
@@ -149,6 +150,7 @@ begin
   //  Exit;
   hp := TFPHTTPClient.Create(nil);
   try
+    hp.AllowRedirect := True;
     hp.AddHeader('User-Agent', ShortVer + ' ' + {$INCLUDE %FPCTARGETCPU%} + '-' + {$INCLUDE %FPCTARGETOS%});
     hp.Get(address, AStream);
     Result := True;
@@ -166,9 +168,9 @@ begin
   if t1-LastTime > 500 then
   begin
     if Speed > 0 then
-      DoProgress(Percent, 'Downloading ... with ' + FloatToStrF(Speed/1000, ffFixed, 8,2) + ' kbyte/s')
+      DoProgress(Percent, GetLocString(MSG_STATUS_DOWNLOADING) + '...' + FloatToStrF(Speed/1000, ffFixed, 8,2) + ' kbyte/s')
     else
-      DoProgress(Percent, 'Downloading ... ');
+      DoProgress(Percent, GetLocString(MSG_STATUS_DOWNLOADING) + '...');
     LastTime := GetTickCount;
   end;
 end;
@@ -187,7 +189,7 @@ var
   Format: Integer;
 begin
   try
-    DoProgress(0, 'Converting movie');
+    DoProgress(0, GetLocString(MSG_STATUS_CONVERT));
     Format := Prefs.Format;
     Url := ConvertURL + ID + '&format=' + IntToStr(Format);
     Mem := TMemoryStream.Create;
@@ -203,7 +205,7 @@ begin
         SL.LoadFromStream(Mem);
         //
         LastTime := GetTickCount;
-        DoProgress(0, 'Downloading ...');
+        DoProgress(0, GetLocString(MSG_STATUS_DOWNLOADING) + '...');
         if Pos('http', sl[0]) >= 1 then
         begin
           //writeln('download file');
@@ -229,13 +231,13 @@ begin
           end;
         end
         else
-          DoProgress(0, 'Error on convert');//writeln('no download');
+          DoProgress(0, GetLocString(MSG_ERROR_CONVERT) +  ' ' + SL.Text);//writeln('no download');
       end;
       Mem.Free;
       SL.Free;
     except
       on e:Exception do
-        writeln('Exception ' + E.MEssage);
+        writeln('Exception ' + E.Message);
     end;
   finally
     Synchronize(@DoOnEnd);
@@ -268,7 +270,7 @@ var
   Node: TDOMNode;
 begin
   Result := Default;
-  Node := ANode.Attributes.GetNamedItem(AttributeName);
+  Node := ANode.Attributes.GetNamedItem(UniCodeString(AttributeName));
   if Assigned(Node) then
     Result := string(Node.NodeValue);
 end;
@@ -285,7 +287,7 @@ var
   Count: Integer;
   AsID: Boolean;
 begin
-  DoProgress(0, 'Prepare Search');
+  DoProgress(0, GetLocString(MSG_STATUS_PREPSEARCH));
   Doc := nil;
   Mem := Nil;
   try
@@ -331,12 +333,12 @@ begin
     ErrMsg := '';
     IsError := True;
     try
-      DoProgress(0, 'Send Search');
+      DoProgress(0, GetLocString(MSG_STATUS_SEARCH));
       if GetFile(Url, Mem) then
       begin
         if Terminated then
           Exit;
-        DoProgress(0, 'Parse Search Result');
+        DoProgress(0, GetLocString(MSG_STATUS_PARSESEARCH));
         {Mem.Position := 0;
         With TStringList.Create do
         begin
@@ -348,14 +350,17 @@ begin
           Mem.Position := 0;
           ReadXMLFile(Doc, Mem);
         except
-          writeln('exception in ReadXMLFile');
-          Mem.Position := 0;
-          With TStringList.Create do
+          on E: Exception do
           begin
-            LoadFromStream(Mem);
-            Writeln(Text);
-            Exit;
-            Free;
+            writeln('Exception in ReadXMLFile ', E.Message);
+            Mem.Position := 0;
+            With TStringList.Create do
+            begin
+              LoadFromStream(Mem);
+              Writeln(Text);
+              Exit;
+              Free;
+            end;
           end;
         end;
         Child := Doc.DocumentElement.FirstChild;
@@ -365,7 +370,7 @@ begin
         i := 0;
         while Assigned(Child) do
         begin
-          DoProgress(Round(((i + 1) / Count) * 100), 'Parse Search');
+          DoProgress(Round(((i + 1) / Count) * 100), GetLocString(MSG_STATUS_PARSESEARCH));
           Inc(i);
           if Child.NodeName <> 'result' then
             Continue;
@@ -389,15 +394,15 @@ begin
             Results[Idx].Desc := Results[Idx].Desc + 'License: ' + s + #10;
           Node := Child.FirstChild;
           if Assigned(Node) then
-            Results[Idx].Desc := Results[Idx].Desc + #10 + Node.TextContent;
+            Results[Idx].Desc := Results[Idx].Desc + #10 + string(Node.TextContent);
           Child := Child.NextSibling;
         end;
-        DoProgress(100, 'Search Done');
+        DoProgress(100, GetLocString(MSG_STATUS_SEARCHDONE));
         IsError := False;
       end
       else
       begin
-        ErrMsg := 'Error get URL';
+        ErrMsg := GetLocString(MSG_ERROR_GETURL);
       end;
     except
       on E:Exception do
@@ -443,7 +448,7 @@ var
   t, s: Integer;
   st: string;
 begin
-  ProgressEvent(Self, 0, 'Idle');
+  ProgressEvent(Self, 0, GetLocString(MSG_STATUS_IDLE));
   if SearchThread.IsError then
   begin
     ShowMessage('SearchThread Error: ' + SearchThread.ErrMsg);
@@ -493,7 +498,7 @@ procedure TMainWindow.EndCThread(Sender: TObject);
 var
   i: Integer;
 begin
-  ProgressEvent(Self, 0, 'Idle');
+  ProgressEvent(Self, 0, GetLocString(MSG_STATUS_IDLE));
 
   for i := 0 to High(Results) do
   begin
@@ -734,7 +739,7 @@ begin
     SearchField.Contents := '';
   end
   else
-    ShowMessage('no locally saved movie files found');
+    ShowMessage(GetLocString(MSG_ERROR_LOCAL));
   SL.Free;
 end;
 
@@ -781,9 +786,9 @@ var
   t,i : Integer;
 begin
   if Prefs.Format = 2 then
-    DownloadBtn.Contents := 'Download as MPEG'
+    DownloadBtn.Contents := GetLocString(MSG_GUI_DOWNLOAD_MPEG)
   else
-    DownloadBtn.Contents := 'Download as CDXL';
+    DownloadBtn.Contents := GetLocString(MSG_GUI_DOWNLOAD_CDXL);
   if List.NumColumns > 3 then
   begin
     for i := 0 to High(Results) do
@@ -827,12 +832,13 @@ begin
       Url := ShareURL + EncStr;
       try
         hp := TFPHTTPClient.Create(nil);
+        hp.AllowRedirect := True;
         hp.AddHeader('User-Agent', ShortVer + ' ' +  {$INCLUDE %FPCTARGETCPU%} + '-' + {$INCLUDE %FPCTARGETOS%});
         s := hp.Get(URL);
-        ShowMessage('Shared.'#10 + s);
+        ShowMessage(GetLocString(MSG_STATUS_SHARED) + #10 + s);
       except
         On E:Exception do
-          ShowMessage('Error sharing: ' + E.Message);
+          ShowMessage(GetLocString(MSG_ERROR_SHARE)+ ' ' + E.Message);
       end;
     end;
   finally
@@ -967,7 +973,7 @@ begin
     s := Trim(s);
     if ((Pos('https://', lowercase(s)) = 1) and (Pos('youtube', lowercase(s)) > 0)) or (Pos('https://youtu.be/', lowercase(s)) = 1) then
     begin
-      if MessageBox('Got URL', 'found Youtube URL: "' + s + '" in clipboard, search for that video?', ['Yes', 'No']) = 1 then
+      if MessageBox(GetLocString(MSG_GUI_GOTURL), StringReplace(GetLocString(MSG_GUI_GOTURLTEXT), '%s', s, [rfReplaceAll]), [GetLocString(MSG_GUI_YES), GetLocString(MSG_GUI_NO)]) = 1 then
       begin
         SearchField.Contents := s;
         SearchEntry(SearchField);
@@ -1036,14 +1042,14 @@ begin
     Horiz := True;
     Parent := Grp1
   end;
-  StatusLabel := TMUIText.Create('Idle');
+  StatusLabel := TMUIText.Create(GetLocString(MSG_STATUS_IDLE));
   StatusLabel.Parent := Grp2;
 
   StopButton := TMUIButton.Create;
   with StopButton do
   begin
-    FixWidthTxt := 'Break';
-    Contents := 'Break';
+    FixWidthTxt := GetLocString(MSG_GUI_BREAK);
+    Contents := GetLocString(MSG_GUI_BREAK);
     OnClick := @StopAll;
     Disabled := True;
     Parent := Grp2;
@@ -1098,26 +1104,26 @@ begin
   with Grp1 do
   begin
     Frame := MUIV_FRAME_NONE;
-    Horiz := True;
+    Columns := 2;
     Parent := Grp2;
   end;
 
-  DownloadBtn := TMUIButton.Create('Download as CDXL');
+  DownloadBtn := TMUIButton.Create(GetLocString(MSG_GUI_DOWNLOAD_CDXL));
   DownloadBtn.OnClick := @DownloadClick;
   DownloadBtn.Disabled := True;
   DownloadBtn.Parent := Grp1;
 
-  PlayBtn := TMUIButton.Create('Start Movie');
+  PlayBtn := TMUIButton.Create(GetLocString(MSG_GUI_PLAY));
   PlayBtn.OnClick := @PlayClick;
   PlayBtn.Disabled := True;
   PlayBtn.Parent := Grp1;
 
-  DeleteBtn := TMUIButton.Create('Delete Movie');
+  DeleteBtn := TMUIButton.Create(GetLocString(MSG_GUI_DELETE));
   DeleteBtn.OnClick := @DeleteClick;
   DeleteBtn.Disabled := True;
   DeleteBtn.Parent := Grp1;
 
-  ShareBtn := TMUIButton.Create('Share');
+  ShareBtn := TMUIButton.Create(GetLocString(MSG_GUI_SHARE));
   ShareBtn.OnClick := @ShareClick;
   ShareBtn.Disabled := True;
   ShareBtn.Parent := Grp1;
@@ -1128,17 +1134,17 @@ begin
 
   Menu := TMUIMenu.Create;
   Menu.Parent := MenuStrip;
-  Menu.Title := 'Project';
+  Menu.Title := GetLocString(MSG_MENU_PROJECT);// 'Project';
 
   MI := TMUIMenuItem.Create;
-  MI.Title := 'Local Files';
-  MI.ShortCut := 'f';
+  MI.Title := GetLocString(MSG_MENU_LOCAL_FILES); //'Local Files';
+  MI.ShortCut := GetLocString(MSG_MENU_LOCAL_FILES_KEY); //'f';
   MI.OnTrigger := @LoadLocalFiles;
   MI.Parent := Menu;
 
   MI := TMUIMenuItem.Create;
-  MI.Title := 'Remote Shared';
-  MI.ShortCut := 'r';
+  MI.Title := GetLocString(MSG_MENU_SHARED); //'Remote Shared';
+  MI.ShortCut := GetLocString(MSG_MENU_SHARED_KEY); //'r';
   MI.OnTrigger := @LoadSharedList;
   MI.Parent := Menu;
   SharedMenu := MI;
@@ -1148,18 +1154,18 @@ begin
   MI.Parent := Menu;
 
   MI := TMUIMenuItem.Create;
-  MI.Title := 'Quit';
-  MI.ShortCut := 'q';
+  MI.Title := GetLocString(MSG_MENU_MAIN_QUIT); //'Quit';
+  MI.ShortCut := GetLocString(MSG_MENU_MAIN_QUIT_KEY); //'q';
   MI.OnTrigger := @QuitEvent;
   MI.Parent := Menu;
 
   Menu := TMUIMenu.Create;
   Menu.Parent := MenuStrip;
-  Menu.Title := 'Settings';
+  Menu.Title := GetLocString(MSG_MENU_SETTINGS); //'Settings';
 
   MI := TMUIMenuItem.Create;
-  MI.Title := 'Prefs ...';
-  MI.ShortCut := 'p';
+  MI.Title := GetLocString(MSG_MENU_PREFS); //'Prefs ...';
+  MI.ShortCut := GetLocString(MSG_MENU_PREFS_KEY); //'p';
   MI.OnTrigger := @PrefsStart;
   MI.Parent := Menu;
 
@@ -1171,15 +1177,15 @@ begin
 
   Menu := TMUIMenu.Create;
   Menu.Parent := MenuStrip;
-  Menu.Title := 'About';
+  Menu.Title := GetLocString(MSG_MENU_ABOUT); //'About';
 
   MI := TMUIMenuItem.Create;
-  MI.Title := 'About AmiTube ...';
+  MI.Title := GetLocString(MSG_MENU_ABOUT_AMITUBE); //'About AmiTube ...';
   MI.OnTrigger := @AboutAmiTube;
   MI.Parent := Menu;
 
   MI := TMUIMenuItem.Create;
-  MI.Title := 'About MUI ...';
+  MI.Title := GetLocString(MSG_MENU_ABOUT_MUI); //'About MUI ...';
   MI.OnTrigger := @AboutMUI;
   MI.Parent := Menu;
 

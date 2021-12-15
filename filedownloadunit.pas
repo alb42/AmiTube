@@ -70,6 +70,7 @@ begin
   vSize := 1000000;
   try
     vHTTP := TFPHTTPClient.Create(nil);
+    vHTTP.AllowRedirect := True;
     vHTTP.AddHeader('User-Agent', ShortVer + ' ' + {$INCLUDE %FPCTARGETCPU%} + '-' + {$INCLUDE %FPCTARGETOS%});
     vHTTP.HTTPMethod('HEAD', cUrl, nil, [200]);
     for I := 0 to pred(vHTTP.ResponseHeaders.Count) do

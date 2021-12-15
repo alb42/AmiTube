@@ -1,0 +1,228 @@
+## version $VER: AmiTube.catalog 0.6 (15.12.2021)
+## language deutsch
+## codeset 0
+;
+;   Comments are allowed, of course! Each line beginning with a
+;   semicolon is assumed to be a comment
+;
+;   The language of the builtin strings:
+;#language english
+;
+;   The catalog version, used for a call to Locale/OpenCatalog().
+;   This is different to Exec/OpenLibrary(): 0 means any catalog
+;   version, other numbers must match exactly!
+;#version 0
+;
+;   This defines a string and the ID which allows to use it.
+;   The number 4 says, that this string must not be shorter than
+;   4 characters.
+; --- MainMenu
+MSG_MENU_PROJECT
+Projekt
+; Project
+;
+MSG_MENU_LOCAL_FILES
+Lokale Dateien
+; Local Files
+;
+MSG_MENU_LOCAL_FILES_KEY
+L
+; F
+;
+MSG_MENU_SHARED
+Online Liste
+; Remote Shared
+;
+MSG_MENU_SHARED_KEY
+O
+; R
+;
+MSG_MENU_MAIN_QUIT
+Beenden
+; Quit
+;
+MSG_MENU_MAIN_QUIT_KEY
+B
+; Q
+;
+MSG_MENU_SETTINGS
+Einstellungen
+; Settings
+;
+MSG_MENU_PREFS
+Einstellungen ...
+; Prefs ...
+;
+MSG_MENU_PREFS_KEY
+E
+; P
+;
+MSG_MENU_ABOUT
+Über
+; About
+;
+MSG_MENU_ABOUT_AMITUBE
+Über AmiTube ...
+; About AmiTube ...
+;
+MSG_MENU_ABOUT_MUI
+Über MUI ...
+; About MUI ...
+;
+MSG_GUI_BREAK
+Stopp
+; Break
+;
+MSG_GUI_DOWNLOAD_CDXL
+Als CDXL Runterladen
+; Download as CDXL
+;
+MSG_GUI_DOWNLOAD_MPEG
+Als MPEG Runterladen
+; Download as MPEG
+;
+MSG_GUI_DELETE
+Film löschen
+; Delete Movies
+;
+MSG_GUI_SHARE
+Teilen
+; Share
+;
+MSG_GUI_PLAY
+Film abspielen
+; Play Movie
+;
+MSG_GUI_GOTURL
+URL gefunden
+; Got URL
+;
+MSG_GUI_GOTURLTEXT
+YouTube URL "%s" in Zwischenablage gefunden, nach diesem video suchen?
+; Found YouTube URL "%s" in clipboard, search for that video?
+;
+MSG_GUI_YES
+Ja
+; Yes
+;
+MSG_GUI_NO
+Nein
+; No
+;
+MSG_STATUS_IDLE
+Wartet
+; Idle
+;
+MSG_STATUS_SHARED
+Erfolgreich geteilt.
+; Successfully shared.
+;
+MSG_STATUS_PREPSEARCH
+Bereite Suche vor
+; Prepare Search.
+;
+MSG_STATUS_SEARCH
+Suche gestartet.
+; Search started.
+;
+MSG_STATUS_PARSESEARCH
+Untersuche Suchergebnis.
+; Parse search result.
+;
+MSG_STATUS_SEARCHDONE
+Suche abgeschlossen.
+; Search done.
+;
+MSG_STATUS_CONVERT
+Konvertiere Film
+; Converting movie
+;
+MSG_STATUS_DOWNLOADING
+Herunterladen
+; Downloading
+;
+MSG_ERROR_LOCAL
+Keine lokal gespeicherten Filme gefunden
+; No locally saved movie files found
+;
+MSG_ERROR_SHARE
+Fehler beim teilen:
+; Error sharing:
+;
+MSG_ERROR_GETURL
+Fehler beim holen der Daten
+; Error get URL
+;
+MSG_ERROR_CONVERT
+Fehler beim konvertieren:
+; Error converting:
+;
+MSG_ERROR_PLAYER
+Fehler: "%s" nicht gefunden.
+; Error: "%s" not found.
+;--- PREFS
+;
+MSG_PREFS_WINDOW
+Einstellungen
+; Settings
+;
+MSG_PREFS_STARTUP
+Listeninhalt bei Programmstart
+; Start up list contents
+;
+MSG_PREFS_STARTUP1
+Leer
+; Empty
+;
+MSG_PREFS_STARTUP2
+Local Dateiliste
+; Local Files
+;
+MSG_PREFS_STARTUP3
+Online Liste
+; Remote Shared
+;
+MSG_PREFS_FORMAT
+Dateiformat
+; File Format
+;
+MSG_PREFS_FORMAT1
+CDXL 32 Farben OCS
+; CDXL 32 Colors OCS
+;
+MSG_PREFS_FORMAT2
+CDXL 256 Farben AGA
+; CDXL 256 Colors AGA
+;
+MSG_PREFS_FORMAT3
+MPEG1
+; MPEG1
+;
+MSG_PREFS_SEARCH
+Suchergebnisse
+; Search Results
+;
+MSG_PREFS_SEARCHNUM
+Maximale Anzahl
+; Maximum Number
+;
+MSG_PREFS_CLIP
+Zwischenablage auf URLs ueberwachen
+; Observe clipboard for URLs
+;
+MSG_PREFS_PLAYER
+Abspielprogramme
+; Player
+;
+MSG_PREFS_AUTOSTART
+Automatisch Film abspielen nach Konvertierung
+; Auto start movie after download
+;
+MSG_PREFS_CHOOSEPLAYER
+Auswaehlen
+; Choose
+;
+MSG_PREFS_PLAYERPARAM
+Argumente
+; Parameter
+;
