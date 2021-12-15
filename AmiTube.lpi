@@ -37,6 +37,11 @@
         <Filename Value="prefsunit.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="AmiTubelocale.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="AmiTubeLocale"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
