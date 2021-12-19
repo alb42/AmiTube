@@ -2,10 +2,11 @@ program AmiTube;
 // search and download Youtube videos to CDXL
 {$mode objfpc}{$H+}
 uses
-  AThreads, clipboard, iffparse,
+  AThreads, clipboard, iffparse, AGraphics, Intuition,
+  Datatypes, Utility,
   Classes, SysUtils, fphttpclient, mui, muihelper, SyncObjs,
   MUIClass.Base, MUIClass.Window, MUIClass.Group, MUIClass.Area, MUIClass.Gadget,
-  MUIClass.Menu,
+  MUIClass.Menu, MUIClass.DrawPanel,
   MUIClass.StringGrid, MUIClass.Dialog, MUIClass.List, filedownloadunit, prefsunit,
   XMLRead, DOM, AmiTubelocale;
 
@@ -15,6 +16,7 @@ const
   ConvertURL = 'http://amitube.alb42.de/ytcdxl2.php?id=';
   ShareURL = 'http://amitube.alb42.de/ytshare2.php?id=';
   SharedURL = 'http://amitube.alb42.de/ytshares.xml';
+  IconURL = 'http://amitube.alb42.de/yticon.php?id=';
 
   MovieTemplateFolder = 'movies';
   DefaultTextLimit = 33;
@@ -38,6 +40,7 @@ type
       Name: string;
       ID: string;
       Duration: string;
+      Icon: string;
       Desc: string;
     end;
     GetSharedList: Boolean;
@@ -78,6 +81,9 @@ type
     SharedMenu: TMUIMenuItem;
     StatusLabel: TMUIText;
     Progress: TMUIGauge;
+    Icon: TMUIDrawPanel;
+    IconGrp: TMUIGroup;
+    LoadIconBtn: TMUIButton;
     procedure SearchEntry(Sender: TObject);
     procedure EndThread(Sender: TObject);
     procedure EndCThread(Sender: TObject);
@@ -101,8 +107,13 @@ type
     procedure ClipTimerEvent(Sender: TObject);
     procedure ClipChanged(Sender: TObject);
     procedure CloseWindow(Sender: TObject; var CloseAction: TCloseAction);
+    procedure LoadIcon(Sender: TObject);
+    procedure DrawIcon(Sender: TObject; RP: PRastPort; ARect: TRect);
   private
     PlayFormat: Integer;
+    DTObj: PObject_;
+    IconName: string;
+    DrawHandle: Pointer;
     ValLock: TCriticalSection;
     NewVal: Boolean;
     FPerc: Integer;
@@ -114,10 +125,14 @@ type
     Results: array of record
       ID: string;
       Desc: string;
+      Icon: string;
       Duration: string;
     end;
     SearchThread: TSearchThread;
     ConvertThread: TStartConvertThread;
+    ImgSize: TPoint;
+    procedure SetStatusText(AText: string);
+    procedure DestroyDTObj;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -378,6 +393,7 @@ begin
           SetLength(Results, Idx + 1);
           Results[Idx].Name := GetStringAttribute(Child, 'fulltitle');
           Results[Idx].Id := GetStringAttribute(Child, 'id');
+          Results[Idx].Icon := GetStringAttribute(Child, 'icon');
           Results[Idx].Duration := GetStringAttribute(Child, 'duration');
           Results[Idx].Desc := Results[Idx].Name + #10#10;
           s := GetStringAttribute(Child, 'uploader');
@@ -419,7 +435,7 @@ end;
 
 { TMainWindow }
 
-procedure TMainWindow.SearchEntry(Sender: TObject);
+procedure Tmainwindow.Searchentry(Sender: Tobject);
 begin
   SearchField.Disabled := True;
   SharedMenu.Enabled := False;
@@ -442,7 +458,7 @@ begin
 end;
 
 //##### Endew Thread
-procedure TMainWindow.EndThread(Sender: TObject);
+procedure Tmainwindow.Endthread(Sender: Tobject);
 var
   i: Integer;
   t, s: Integer;
@@ -465,6 +481,7 @@ begin
       Results[i].id := SearchThread.Results[i].id;
       Results[i].Desc := SearchThread.Results[i].Desc;
       Results[i].Duration := SearchThread.Results[i].Duration;
+      Results[i].Icon := SearchThread.Results[i].Icon;
       List.Cells[0, i] := IntToStr(i + 1);
       st := SearchThread.Results[i].Name;
       if Length(st) > TextLimit then
@@ -494,7 +511,7 @@ begin
   Timer.Enabled := False;
 end;
 
-procedure TMainWindow.EndCThread(Sender: TObject);
+procedure Tmainwindow.Endcthread(Sender: Tobject);
 var
   i: Integer;
 begin
@@ -536,8 +553,9 @@ begin
     PlayClick(PlayBtn)
 end;
 
-procedure TMainWindow.ListClick(Sender: TObject);
+procedure Tmainwindow.Listclick(Sender: Tobject);
 begin
+  Destroydtobj;
   if (List.Row >= 0) and (List.Row <= High(Results)) then
   begin
     TextOut.Text := UTF8ToAnsi(Results[List.Row].Desc);
@@ -551,6 +569,9 @@ begin
     PlayBtn.Disabled := not DownloadBtn.Disabled;
     DeleteBtn.Disabled := not DownloadBtn.Disabled;
     ShareBtn.Disabled := not DownloadBtn.Disabled;
+    //
+    if Prefs.AutoIcon then
+      LoadIcon(Sender);
   end
   else
   begin
@@ -561,7 +582,7 @@ begin
   end;
 end;
 
-procedure TMainWindow.DownloadClick(Sender: TObject);
+procedure Tmainwindow.Downloadclick(Sender: Tobject);
 var
   CT: TStartConvertThread;
 begin
@@ -590,7 +611,7 @@ end;
 var
   LastStart: Cardinal = 0;
 
-procedure TMainWindow.PlayClick(Sender: TObject);
+procedure Tmainwindow.Playclick(Sender: Tobject);
 var
   MyID: string;
   MovieName: string;
@@ -627,7 +648,7 @@ begin
   end;
 end;
 
-procedure TMainWindow.DeleteClick(Sender: TObject);
+procedure Tmainwindow.Deleteclick(Sender: Tobject);
 var
   MyID: string;
   MovieName, ReadMeName, MPEGName: string;
@@ -651,7 +672,7 @@ begin
   end;
 end;
 
-procedure TMainWindow.ProgressEvent(Sender: TObject; Percent: Integer; Text: string);
+procedure Tmainwindow.Progressevent(Sender: Tobject; Percent: Integer; Text: String);
 begin
   ValLock.Enter;
   try
@@ -663,7 +684,7 @@ begin
   end;
 end;
 
-procedure TMainWindow.LoadLocalFiles(Sender: TObject);
+procedure Tmainwindow.Loadlocalfiles(Sender: Tobject);
 var
   Info: TSearchRec;
   FileName, TXTFilename: string;
@@ -743,18 +764,18 @@ begin
   SL.Free;
 end;
 
-procedure TMainWindow.QuitEvent(Sender: TObject);
+procedure Tmainwindow.Quitevent(Sender: Tobject);
 begin
   Close;
 end;
 
-procedure TMainWindow.PrefsStart(Sender: TObject);
+procedure Tmainwindow.Prefsstart(Sender: Tobject);
 begin
   Prefs.UpdateSettings;
   Prefs.Open := True;
 end;
 
-procedure TMainWindow.StopAll(Sender: TObject);
+procedure Tmainwindow.Stopall(Sender: Tobject);
 begin
   if Assigned(SearchThread) then
     SearchThread.Terminate;
@@ -765,7 +786,7 @@ begin
   StopButton.Disabled := True;
 end;
 
-procedure TMainWindow.TimerEvent(Sender: TObject);
+procedure Tmainwindow.Timerevent(Sender: Tobject);
 begin
   ValLock.Enter;
   try
@@ -781,7 +802,7 @@ begin
 
 end;
 
-procedure TMainWindow.FormatChangeEvent(Sender: TObject);
+procedure Tmainwindow.Formatchangeevent(Sender: Tobject);
 var
   t,i : Integer;
 begin
@@ -808,7 +829,7 @@ begin
   end;
 end;
 
-procedure TMainWindow.ShareClick(Sender: TObject);
+procedure Tmainwindow.Shareclick(Sender: Tobject);
 var
   s, Url, MyID, EncStr: string;
   hp: TFPHTTPClient;
@@ -848,7 +869,7 @@ begin
 
 end;
 
-procedure TMainWindow.LoadSharedList(Sender: TObject);
+procedure Tmainwindow.Loadsharedlist(Sender: Tobject);
 begin
   begin
   SearchField.Disabled := True;
@@ -872,12 +893,12 @@ end;
 
 end;
 
-procedure TMainWindow.AboutMUI(Sender: TObject);
+procedure Tmainwindow.Aboutmui(Sender: Tobject);
 begin
   MUIApp.AboutMUI;
 end;
 
-procedure TMainWindow.AboutAmiTube(Sender: TObject);
+procedure Tmainwindow.Aboutamitube(Sender: Tobject);
 begin
   ShowMessage(MUIX_C + #10 + MUIX_B + '---   ' + ShortVer + '   ---' + MUIX_N+ #10#10 +
               'made with Free Pascal for Amiga by ALB42'#10 +
@@ -885,12 +906,12 @@ begin
               'Check ' + MUIX_U + 'https://blog.alb42.de' + MUIX_N + ' for updates.'#10);
 end;
 
-procedure TMainWindow.MUISettingsStart(Sender: TObject);
+procedure Tmainwindow.Muisettingsstart(Sender: Tobject);
 begin
   MUIApp.OpenConfigWindow;
 end;
 
-procedure TMainWindow.FormShow(Sender: TObject);
+procedure Tmainwindow.Formshow(Sender: Tobject);
 begin
   case Prefs.Startup of
     1: LoadLocalFiles(nil);
@@ -958,7 +979,7 @@ end;
 var
   LastClip: string;
 
-procedure TMainWindow.ClipTimerEvent(Sender: TObject);
+procedure Tmainwindow.Cliptimerevent(Sender: Tobject);
 var
   s: string;
 begin
@@ -984,23 +1005,151 @@ begin
   end;
 end;
 
-procedure TMainWindow.ClipChanged(Sender: TObject);
+procedure Tmainwindow.Clipchanged(Sender: Tobject);
 begin
   ClipTimer.Enabled := Prefs.ObserveClip;
 end;
 
-procedure TMainWindow.CloseWindow(Sender: TObject; var CloseAction: TCloseAction);
+procedure Tmainwindow.Closewindow(Sender: Tobject; var Closeaction: Tcloseaction);
 begin
   Prefs.SaveSettings;
 end;
 
-constructor TMainWindow.Create;
+procedure Tmainwindow.Loadicon(Sender: Tobject);
+var
+  URL: string;
+  FS: TFileStream;
+  bmhd: PBitMapHeader;
+  bm: PBitMap;
+  Filename: string;
+begin
+  Destroydtobj;
+  if (List.Row>=0) and (List.Row <= High(Results)) then
+  begin
+    Setstatustext('Load Icon');
+    URL := IconURL + Results[List.Row].ID;
+
+    if FileExists(IncludeTrailingPathDelimiter(Movies) + Results[List.Row].ID + '.jpg') then
+    begin
+      Filename := IncludeTrailingPathDelimiter(Movies) + Results[List.Row].ID + '.jpg';
+      IconName := '';
+    end
+    else
+    begin
+      if FileExists(IncludeTrailingPathDelimiter(Movies) + Results[List.Row].ID + '.txt') then
+      begin
+        Filename := IncludeTrailingPathDelimiter(Movies) + Results[List.Row].ID + '.jpg';
+        IconName := '';
+      end
+      else
+      begin
+        IconName := 'T:' + Results[List.Row].ID + '.jpg';
+        FileName := IconName;
+      end;
+
+      if FileExists(Filename) then
+        DeleteFile(Filename);
+      FS := TFileStream.Create(Filename, fmCreate);
+      try
+      GetFile(URL, FS);
+      except
+        on E:Exception do
+        begin
+          SetStatusText('Error get icon: ' + E.Message);
+          FS.Free;
+          DeleteFile(Filename);
+          Exit;
+        end;
+      end;
+      if FS.Size = 0 then
+      begin
+        SetStatusText('Error get icon file');
+        FS.Free;
+        DeleteFile(Filename);
+      end
+      else
+        FS.Free;
+    end;
+    DTObj := NewDTObject(PChar(FileName), [
+        DTA_GroupID, GID_PICTURE,
+        PDTA_Remap, AsTag(TRUE),
+        PDTA_DestMode,PMODE_V43,
+        //PDTA_Screen, AsTag(scr),
+        OBP_Precision, Precision_Image,
+        TAG_END, TAG_END]);
+    if not Assigned(DTObj) then
+    begin
+      SetStatusText('Error load icon ' + '1');
+      if IconName <> '' then
+        DeleteFile(IconName);
+      Exit;
+    end;
+    DoMethod(DTObj, [DTM_PROCLAYOUT, 0 , 1]);
+    GetDTAttrs(DTObj,
+      [
+      PDTA_DestBitMap, AsTag(@bm),
+      PDTA_BitMapHeader,AsTag(@bmhd),
+      TAG_END]);
+    if not Assigned(bm) or not Assigned(bmhd) then
+    begin
+      SetStatusText('Error load icon ' + '2');
+      Exit;
+    end;
+    ImgSize.x := bmhd^.bmh_Width;
+    ImgSize.Y := bmhd^.bmh_Height;
+    DrawHandle := ObtainDTDrawInfoA(DTObj, nil);
+
+    IconGrp.ShowMe := True;
+    IconGrp.InitChange;
+    Icon.MinHeight := ImgSize.Y;
+    Icon.MaxHeight := ImgSize.Y;
+    Icon.MinWidth := ImgSize.X;
+    Icon.MaxWidth := ImgSize.X;
+    IconGrp.ExitChange;
+    LoadIconBtn.ShowMe := False;
+    Setstatustext(GetLocString(MSG_STATUS_IDLE));
+  end;
+end;
+
+procedure Tmainwindow.Drawicon(Sender: Tobject; Rp: Prastport; Arect: Trect);
+begin
+  //
+  //sysdebugln('draw ' + IntToStr(ARect.Left) + '; ' + IntToStr(AREct.Top) + ' size = ' + IntToStr(ImgSize.X) + '; ' + IntToStr(ImgSize.Y));
+  if Assigned(DTObj) then
+    DrawDTObjectA(RP, DTObj, ARect.Left, ARect.Top, ImgSize.x, ImgSize.y, 0, 0, nil);
+  //
+end;
+
+procedure Tmainwindow.Setstatustext(Atext: String);
+begin
+  StatusLabel.Contents := AText;
+end;
+
+procedure Tmainwindow.Destroydtobj;
+begin
+  if Assigned(DTObj) then
+  begin
+    ReleaseDTDrawInfo(DTObj, DrawHandle);
+    DisposeDTObject(DTObj);
+    if IconName <> '' then
+      DeleteFile(IconName);
+  end;
+  DTObj := nil;
+  DrawHandle := nil;
+  IconName := '';
+  IconGrp.ShowMe := False;
+  LoadIconBtn.ShowMe := True;
+end;
+
+constructor Tmainwindow.Create;
 var
   Grp1, Grp2: TMUIGroup;
   Menu: TMUIMenu;
   MI: TMUIMenuItem;
 begin
   inherited Create;
+
+  DTObj := nil;
 
   OnCloseRequest := @CloseWindow;
 
@@ -1092,6 +1241,35 @@ begin
     Frame := MUIV_FRAME_NONE;
     Horiz := False;
     Parent := Grp1;
+  end;
+
+  IconGrp := TMUIGroup.Create;
+  with IconGrp do
+  begin
+    Frame := MUIV_FRAME_NONE;
+    Horiz := True;
+    ShowMe := False;
+    Parent := Grp2;
+  end;
+
+  Icon := TMUIDrawPanel.Create;
+  with Icon do
+  begin
+    MinWidth := 160;
+    MinHeight := 80;
+    FillArea := True;
+    OnDrawObject := @DrawIcon;
+    Parent := IconGrp;
+  end;
+
+  TMUIRectangle.Create.Parent := IconGrp;
+
+  LoadIconBtn := TMUIButton.Create('Load Icon');
+  with LoadIconBtn do
+  begin
+    OnClick := @LoadIcon;
+    ShowMe := False;
+    Parent := Grp2;
   end;
 
   TextOut := TMUIFloatText.Create;
@@ -1208,7 +1386,7 @@ begin
   OnShow := @FormShow;
 end;
 
-destructor TMainWindow.Destroy;
+destructor Tmainwindow.Destroy;
 begin
   StopAll(nil);
   if Assigned(SearchThread) then
@@ -1223,6 +1401,7 @@ begin
     ConvertThread.WaitFor;
     ConvertThread.Free;
   end;
+  DestroyDTObj;
   ValLock.Free;
   inherited Destroy;
 end;

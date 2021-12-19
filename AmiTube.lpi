@@ -55,7 +55,6 @@
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>
-      <TargetProcessor Value="68020"/>
       <TargetCPU Value="m68k"/>
       <TargetOS Value="amiga"/>
     </CodeGeneration>

@@ -41,6 +41,10 @@ Have fun!
 
 History:
 
+0.6
+- Preview Icons
+- Localization (german included)
+
 0.5
 - changed search from json to xml (much faster on slow Amiga)
 - new formats (CDXL AGA, MPEG, choose via Settings)

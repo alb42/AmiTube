@@ -22,6 +22,7 @@ type
     ChooseFormat: TMUICycle;
     FOnFormatChanged: TNotifyEvent;
     ChooseAutoStart: TMUICheckmark;
+    ChooseAutoIcon: TMUICheckmark;
     ChooseBootup: TMUICycle;
     ChooseClip: TMUICheckmark;
     FOnClipChanged: TNotifyEvent;
@@ -33,12 +34,14 @@ type
     procedure AutoChange(Sender: TObject);
     procedure ClipChange(Sender: TObject);
     procedure CloseWindow(Sender: TObject; var CloseAction: TCloseAction);
+    procedure AutoIconChange(Sender: TObject);
 
     function GetPlayerPath: string;
     function GetMPEGPlayerPath: string;
     function GetNumSearch: Integer;
     function GetFormat: Integer;
     function GetAutoStart: Boolean;
+    function GetAutoIcon: Boolean;
     function GetStartup: Integer;
     function GetClip: Boolean;
     function GetPlayerParam: string;
@@ -58,6 +61,7 @@ type
     property NumSearch: Integer read GetNumSearch;
     property Format: integer read GetFormat;
     property AutoStart: Boolean read GetAutoStart;
+    property AutoIcon: Boolean read GetAutoIcon;
     property Startup: Integer read GetStartup;
     property ObserveClip: Boolean read GetClip;
     //
@@ -183,6 +187,11 @@ begin
   Result := ChooseAutoStart.Selected;
 end;
 
+function TPrefsWindow.GetAutoIcon: Boolean;
+begin
+  Result := ChooseAutoIcon.Selected;
+end;
+
 function TPrefsWindow.GetClip: Boolean;
 begin
   Result := ChooseClip.Selected;
@@ -218,6 +227,11 @@ begin
   Ini.WriteBool('Search', 'Clipboard', ChooseClip.Selected);
   if Assigned(FOnClipChanged) then
     FOnClipChanged(Self);
+end;
+
+procedure TPrefsWindow.AutoIconChange(Sender: TObject);
+begin
+  Ini.WriteBool('Search', 'AutoIcon', ChooseAutoIcon.Selected);
 end;
 
 procedure TPrefsWindow.CloseWindow(Sender: TObject; var CloseAction: TCloseAction);
@@ -309,6 +323,20 @@ begin
   begin
     Selected := Ini.ReadBool('Search', 'Clipboard', False);
     OnSelected := @ClipChange;
+    Parent := Grp1;
+  end;
+
+  with TMUIText.Create('Auto load Preview Icon'{GetLocString(MSG_PREFS_CLIP)}) do
+  begin
+    Frame := MUIV_FRAME_NONE;
+    Parent := Grp1;
+  end;
+
+  ChooseAutoIcon := TMUICheckmark.Create;
+  with ChooseAutoIcon do
+  begin
+    Selected := Ini.ReadBool('Search', 'AutoIcon', False);
+    OnSelected := @AutoIconChange;
     Parent := Grp1;
   end;
 
