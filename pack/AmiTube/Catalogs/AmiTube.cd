@@ -55,11 +55,11 @@ About MUI ...
 MSG_GUI_BREAK (20000//)
 Break
 ;
-MSG_GUI_DOWNLOAD_CDXL (20001//)
-Download as CDXL
+MSG_GUI_DOWNLOAD_AS (20001//)
+Download as
 ;
-MSG_GUI_DOWNLOAD_MPEG (20002//)
-Download as MPEG
+MSG_GUI_LOAD_ICON (20002//)
+Load Preview
 ;
 MSG_GUI_DELETE (20003//)
 Delete Movies
@@ -118,7 +118,10 @@ Error get URL
 MSG_ERROR_CONVERT (40003//)
 Error converting:
 ;
-MSG_ERROR_PLAYER (40004//)
+MSG_ERROR_LOAD_ICON (40004//)
+Error load Icon.
+;
+MSG_ERROR_PLAYER (40005//)
 Error: "%s" not found.
 ;--- PREFS
 ;
@@ -169,4 +172,10 @@ Choose
 ;
 MSG_PREFS_PLAYERPARAM (50403//)
 Parameter
+;
+MSG_PREFS_ALLFORMATS (50404//)
+Show all Formats
+;
+MSG_PREFS_AUTOICON (50405//)
+Auto load Preview Icon
 ;
