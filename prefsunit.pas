@@ -20,6 +20,7 @@ type
     MPEGPlayerEdit, PlayerEdit: TMUIString;
     MPEGParamEdit, ParamEdit: TMUIString;
     ChooseFormat: TMUICycle;
+    ChooseAllFormats: TMUICheckmark;
     FOnFormatChanged: TNotifyEvent;
     ChooseAutoStart: TMUICheckmark;
     ChooseAutoIcon: TMUICheckmark;
@@ -35,6 +36,7 @@ type
     procedure ClipChange(Sender: TObject);
     procedure CloseWindow(Sender: TObject; var CloseAction: TCloseAction);
     procedure AutoIconChange(Sender: TObject);
+    procedure AllFormatChange(Sender: TObject);
 
     function GetPlayerPath: string;
     function GetMPEGPlayerPath: string;
@@ -46,6 +48,7 @@ type
     function GetClip: Boolean;
     function GetPlayerParam: string;
     function GetMPEGPlayerParam: string;
+    function GetAllFormats: Boolean;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -64,6 +67,7 @@ type
     property AutoIcon: Boolean read GetAutoIcon;
     property Startup: Integer read GetStartup;
     property ObserveClip: Boolean read GetClip;
+    property AllFormats: Boolean read GetAllFormats;
     //
     property OnFormatChanged: TNotifyEvent read FOnFormatChanged write FOnFormatChanged;
     property OnClipChanged: TNotifyEvent read FOnClipChanged write FOnClipChanged;
@@ -197,6 +201,11 @@ begin
   Result := ChooseClip.Selected;
 end;
 
+function TPrefsWindow.GetAllFormats: Boolean;
+begin
+  Result := ChooseAllFormats.Selected;
+end;
+
 procedure TPrefsWindow.NumEditACK(Sender: TObject);
 begin
   //
@@ -227,6 +236,11 @@ begin
   Ini.WriteBool('Search', 'Clipboard', ChooseClip.Selected);
   if Assigned(FOnClipChanged) then
     FOnClipChanged(Self);
+end;
+
+procedure TPrefsWindow.AllFormatChange(Sender: TObject);
+begin
+  Ini.WriteBool('General', 'AllFormats', ChooseAllFormats.Selected);
 end;
 
 procedure TPrefsWindow.AutoIconChange(Sender: TObject);
@@ -275,8 +289,14 @@ begin
   with Grp1 do
   begin
     FrameTitle := GetLocString(MSG_PREFS_FORMAT);
-    Horiz := True;
+    Columns := 2;
     Parent := Self;
+  end;
+
+  with TMUIText.Create(''{GetLocString(MSG_PREFS_SEARCHNUM)}) do
+  begin
+    Frame := MUIV_FRAME_NONE;
+    Parent := Grp1;
   end;
 
   ChooseFormat := TMUICycle.Create;
@@ -285,6 +305,20 @@ begin
     Entries := [GetLocString(MSG_PREFS_FORMAT1), GetLocString(MSG_PREFS_FORMAT2), GetLocString(MSG_PREFS_FORMAT3)];
     Active := Ini.ReadInteger('General', 'Format', 0);
     OnActiveChange := @FormatChanged;
+    Parent := Grp1;
+  end;
+
+  with TMUIText.Create(GetLocString(MSG_PREFS_ALLFORMATS)) do
+  begin
+    Frame := MUIV_FRAME_NONE;
+    Parent := Grp1;
+  end;
+
+  ChooseAllFormats := TMUICheckmark.Create;
+  with ChooseAllFormats do
+  begin
+    Selected := Ini.ReadBool('General', 'AllFormats', False);
+    OnSelected := @AllFormatChange;
     Parent := Grp1;
   end;
 
@@ -307,6 +341,7 @@ begin
   with NumEdit do
   begin
     Accept := '0123456789';
+    MaxLen := 3;
     IntegerValue := Ini.ReadInteger('Search', 'MaxNum', 10);
     OnAcknowledge := @NumEditACK;
     Parent := Grp1;
@@ -326,7 +361,7 @@ begin
     Parent := Grp1;
   end;
 
-  with TMUIText.Create('Auto load Preview Icon'{GetLocString(MSG_PREFS_CLIP)}) do
+  with TMUIText.Create(GetLocString(MSG_PREFS_AUTOICON)) do
   begin
     Frame := MUIV_FRAME_NONE;
     Parent := Grp1;

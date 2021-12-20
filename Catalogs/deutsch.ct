@@ -73,13 +73,13 @@ MSG_GUI_BREAK
 Stopp
 ; Break
 ;
-MSG_GUI_DOWNLOAD_CDXL
-Als CDXL Runterladen
-; Download as CDXL
+MSG_GUI_DOWNLOAD_AS
+Herunterladen als
+; Download as
 ;
-MSG_GUI_DOWNLOAD_MPEG
-Als MPEG Runterladen
-; Download as MPEG
+MSG_GUI_LOAD_ICON
+Lade Vorschau
+; Load Preview
 ;
 MSG_GUI_DELETE
 Film löschen
@@ -157,6 +157,10 @@ MSG_ERROR_CONVERT
 Fehler beim konvertieren:
 ; Error converting:
 ;
+MSG_ERROR_LOAD_ICON
+Fehler beim Laden der Vorschau.
+; Error load Icon.
+;
 MSG_ERROR_PLAYER
 Fehler: "%s" nicht gefunden.
 ; Error: "%s" not found.
@@ -225,4 +229,12 @@ Auswaehlen
 MSG_PREFS_PLAYERPARAM
 Argumente
 ; Parameter
+;
+MSG_PREFS_ALLFORMATS
+Zeige alle Formate
+; Show all Formats
+;
+MSG_PREFS_AUTOICON
+Automatisch Vorschau laden
+; Auto load Preview Icon
 ;

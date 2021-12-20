@@ -23,6 +23,9 @@ const
 
 const
   VERSION = '$VER: AmiTube 0.6 beta (15.12.2021)';
+  DownName: array[0..2] of string = ('CDXL OCS', 'CDXL AGA', 'MPEG1');
+  DownSizes: array[0..2] of Integer = (150, 300, 170);
+
 
 type
 
@@ -65,6 +68,7 @@ type
     ID: String;
     Movies: string;
     Desc: string;
+    Format: Integer;
     OnEnd: TNotifyEvent;
     OnProgress: TProgressEvent;
 
@@ -74,16 +78,19 @@ type
   { TMainWindow }
 
   TMainWindow = class(TMUIWindow)
+  public
     SearchField: TMUIString;
     List: TMUIStringGrid;
     TextOut: TMUIFloatText;
-    DownloadBtn, PlayBtn, DeleteBtn, ShareBtn, StopButton: TMUIButton;
+    DownloadBtn: array[0..2] of TMUIButton;
+    PlayBtn, DeleteBtn, ShareBtn, StopButton: TMUIButton;
     SharedMenu: TMUIMenuItem;
     StatusLabel: TMUIText;
     Progress: TMUIGauge;
     Icon: TMUIDrawPanel;
     IconGrp: TMUIGroup;
     LoadIconBtn: TMUIButton;
+    BtnGroup: TMUIGroup;
     procedure SearchEntry(Sender: TObject);
     procedure EndThread(Sender: TObject);
     procedure EndCThread(Sender: TObject);
@@ -126,13 +133,16 @@ type
       ID: string;
       Desc: string;
       Icon: string;
-      Duration: string;
+      Duration: Integer;
     end;
     SearchThread: TSearchThread;
     ConvertThread: TStartConvertThread;
     ImgSize: TPoint;
     procedure SetStatusText(AText: string);
     procedure DestroyDTObj;
+
+    procedure EnableDownloads(Enabled: Boolean; PlayButtons: Boolean);
+    procedure UpdateDownloadBtns(Duration: Integer);
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -201,11 +211,10 @@ var
   URL, Ext: string;
   Mem: TMemoryStream;
   SL: TStringList;
-  Format: Integer;
 begin
   try
     DoProgress(0, GetLocString(MSG_STATUS_CONVERT));
-    Format := Prefs.Format;
+    //Format := Prefs.Format;
     Url := ConvertURL + ID + '&format=' + IntToStr(Format);
     Mem := TMemoryStream.Create;
     try
@@ -480,7 +489,6 @@ begin
     begin
       Results[i].id := SearchThread.Results[i].id;
       Results[i].Desc := SearchThread.Results[i].Desc;
-      Results[i].Duration := SearchThread.Results[i].Duration;
       Results[i].Icon := SearchThread.Results[i].Icon;
       List.Cells[0, i] := IntToStr(i + 1);
       st := SearchThread.Results[i].Name;
@@ -488,6 +496,7 @@ begin
         st := Copy(st, 1, TextLimit - 3) + '...';
       List.Cells[1, i] := UTF8ToAnsi(st);
       t := StrToIntDef(SearchThread.Results[i].Duration, 0);
+      Results[i].Duration := t;
       s := t mod 60;
       List.Cells[2, i] := IntToStr(t div 60) + ':' + Format('%2.2d',[s]);
       case Prefs.Format of
@@ -511,6 +520,8 @@ begin
   Timer.Enabled := False;
 end;
 
+
+
 procedure Tmainwindow.Endcthread(Sender: Tobject);
 var
   i: Integer;
@@ -533,17 +544,11 @@ begin
     else
       if FileExists(IncludeTrailingPathDelimiter(Movies) + Results[List.Row].ID + '.cdxl') then
         PlayFormat := 1;
-    DownloadBtn.Disabled := PlayFormat > 0;
-    PlayBtn.Disabled := not DownloadBtn.Disabled;
-    DeleteBtn.Disabled := not DownloadBtn.Disabled;
-    ShareBtn.Disabled := not DownloadBtn.Disabled;
+    EnableDownloads(PlayFormat = 0, PlayFormat > 0);
   end
   else
   begin
-    DownloadBtn.Disabled := True;
-    PlayBtn.Disabled := True;
-    DeleteBtn.Disabled := True;
-    ShareBtn.Disabled := True;
+    EnableDownloads(False, False);
   end;
   StopButton.Disabled := True;
   TimerEvent(Timer);
@@ -565,28 +570,26 @@ begin
     else
       if FileExists(IncludeTrailingPathDelimiter(Movies) + Results[List.Row].ID + '.cdxl') then
         PlayFormat := 1;
-    DownloadBtn.Disabled := PlayFormat > 0;
-    PlayBtn.Disabled := not DownloadBtn.Disabled;
-    DeleteBtn.Disabled := not DownloadBtn.Disabled;
-    ShareBtn.Disabled := not DownloadBtn.Disabled;
+    EnableDownloads(PlayFormat = 0, PlayFormat > 0);
     //
     if Prefs.AutoIcon then
       LoadIcon(Sender);
   end
   else
   begin
-    DownloadBtn.Disabled := True;
-    PlayBtn.Disabled := True;
-    DeleteBtn.Disabled := True;
-    ShareBtn.Disabled := True;
+    EnableDownloads(False, False);
   end;
 end;
 
 procedure Tmainwindow.Downloadclick(Sender: Tobject);
 var
   CT: TStartConvertThread;
+  Format: Integer;
 begin
-  DownloadBtn.Disabled := True;
+  Format := 0;
+  if Sender is TMUIButton then
+    Format := TMUIButton(Sender).Tag;
+  EnableDownloads(False, False);
   if Assigned(ConvertThread) then
   begin
     ConvertThread.Terminate;
@@ -597,6 +600,7 @@ begin
   begin
     CT := TStartConvertThread.Create(True);
     CT.Desc := Results[List.Row].Desc;
+    CT.Format := Format;
     CT.OnProgress := @ProgressEvent;
     CT.Movies := Movies;
     CT.OnEnd := @EndCThread;
@@ -665,10 +669,7 @@ begin
       DeleteFile(MPEGName);
     if FileExists(ReadMeName) then
       DeleteFile(ReadMeName);
-    DownloadBtn.Disabled := False;
-    PlayBtn.Disabled := True;
-    DeleteBtn.Disabled := True;
-    ShareBtn.Disabled := True;
+    EnableDownloads(True, False);
   end;
 end;
 
@@ -749,6 +750,7 @@ begin
     begin
       Results[i].id := MyRes[i].id;
       Results[i].Desc := MyRes[i].Desc;
+      Results[i].Duration := 0;
       List.Cells[0, i] := IntToStr(i + 1);
       st := MyRes[i].Name;
       if Length(st) > TextLimit then
@@ -806,10 +808,10 @@ procedure Tmainwindow.Formatchangeevent(Sender: Tobject);
 var
   t,i : Integer;
 begin
-  if Prefs.Format = 2 then
+  {if Prefs.Format = 2 then
     DownloadBtn.Contents := GetLocString(MSG_GUI_DOWNLOAD_MPEG)
   else
-    DownloadBtn.Contents := GetLocString(MSG_GUI_DOWNLOAD_CDXL);
+    DownloadBtn.Contents := GetLocString(MSG_GUI_DOWNLOAD_CDXL);}
   if List.NumColumns > 3 then
   begin
     for i := 0 to High(Results) do
@@ -1055,7 +1057,7 @@ begin
       except
         on E:Exception do
         begin
-          SetStatusText('Error get icon: ' + E.Message);
+          SetStatusText(GetLocString(MSG_ERROR_LOAD_ICON) + '(' + E.Message + ')');
           FS.Free;
           DeleteFile(Filename);
           Exit;
@@ -1063,7 +1065,7 @@ begin
       end;
       if FS.Size = 0 then
       begin
-        SetStatusText('Error get icon file');
+        SetStatusText(GetLocString(MSG_ERROR_LOAD_ICON) + '(1)');
         FS.Free;
         DeleteFile(Filename);
       end
@@ -1079,7 +1081,7 @@ begin
         TAG_END, TAG_END]);
     if not Assigned(DTObj) then
     begin
-      SetStatusText('Error load icon ' + '1');
+      SetStatusText(GetLocString(MSG_ERROR_LOAD_ICON) + '(2)');
       if IconName <> '' then
         DeleteFile(IconName);
       Exit;
@@ -1092,31 +1094,42 @@ begin
       TAG_END]);
     if not Assigned(bm) or not Assigned(bmhd) then
     begin
-      SetStatusText('Error load icon ' + '2');
+      SetStatusText(GetLocString(MSG_ERROR_LOAD_ICON) + '(3)');
       Exit;
     end;
     ImgSize.x := bmhd^.bmh_Width;
     ImgSize.Y := bmhd^.bmh_Height;
     DrawHandle := ObtainDTDrawInfoA(DTObj, nil);
 
-    IconGrp.ShowMe := True;
+    Icon.ShowMe := True;
+    LoadIconBtn.ShowMe := False;
     IconGrp.InitChange;
     Icon.MinHeight := ImgSize.Y;
     Icon.MaxHeight := ImgSize.Y;
     Icon.MinWidth := ImgSize.X;
     Icon.MaxWidth := ImgSize.X;
     IconGrp.ExitChange;
-    LoadIconBtn.ShowMe := False;
     Setstatustext(GetLocString(MSG_STATUS_IDLE));
   end;
 end;
 
 procedure Tmainwindow.Drawicon(Sender: Tobject; Rp: Prastport; Arect: Trect);
+var
+  s: string;
 begin
   //
   //sysdebugln('draw ' + IntToStr(ARect.Left) + '; ' + IntToStr(AREct.Top) + ' size = ' + IntToStr(ImgSize.X) + '; ' + IntToStr(ImgSize.Y));
   if Assigned(DTObj) then
-    DrawDTObjectA(RP, DTObj, ARect.Left, ARect.Top, ImgSize.x, ImgSize.y, 0, 0, nil);
+    DrawDTObjectA(RP, DTObj, ARect.Left, ARect.Top, ImgSize.x, ImgSize.y, 0, 0, nil)
+  else
+  begin
+    SetRast(RP, 0);
+    GFXMove(RP, ARect.Left + 2, ARect.Top + Icon.Height div 2);
+    s := GetLocString(MSG_GUI_LOAD_ICON);
+    SetDrmd(RP, JAM1);
+    SetAPen(RP, 1);
+    GfxText(RP, PChar(S), Length(s));
+  end;
   //
 end;
 
@@ -1137,8 +1150,59 @@ begin
   DTObj := nil;
   DrawHandle := nil;
   IconName := '';
-  IconGrp.ShowMe := False;
+  Icon.ShowMe := False;
   LoadIconBtn.ShowMe := True;
+end;
+
+procedure Tmainwindow.Enabledownloads(Enabled: Boolean; Playbuttons: Boolean);
+var
+  i: Integer;
+begin
+  BtnGroup.InitChange;
+  if Prefs.AllFormats then
+  begin
+    for i := low(DownloadBtn) to High(DownloadBtn) do
+     DownloadBtn[i].ShowMe := Enabled;
+  end
+  else
+  begin
+    for i := low(DownloadBtn) to High(DownloadBtn) do
+    begin
+      DownloadBtn[i].ShowMe := Enabled and (Prefs.Format = i);
+    end;
+  end;
+  PlayBtn.ShowMe := PlayButtons;
+  DeleteBtn.ShowMe := PlayButtons;
+  ShareBtn.ShowMe := PlayButtons;
+  if Enabled then
+  begin
+    if (List.Row >= 0) and (List.Row <= High(Results)) and Prefs.AllFormats then
+      Updatedownloadbtns(Results[List.Row].Duration)
+    else
+      Updatedownloadbtns(0);
+  end;
+  BtnGroup.ExitChange;
+end;
+
+procedure Tmainwindow.Updatedownloadbtns(Duration: Integer);
+var
+  t, i: Integer;
+  s: string;
+begin
+  for i := 0 to 2 do
+  begin
+    t := DownSizes[i] * Duration;
+    s := '';
+    if (Prefs.Format = i) and Prefs.AllFormats then
+      s := MUIX_B;
+    s := s + GetLocString(MSG_GUI_DOWNLOAD_AS) + ' ' + DownName[i];
+    if t > 0 then
+      if t > 1024 then
+        s := s + ' ' + FloatToStrF(t/1024, ffFixed, 8,1) + ' MByte'
+      else
+        s := s + ' ' + IntToStr(t) + ' kByte';
+    DownloadBtn[i].Contents := s;
+  end;
 end;
 
 constructor Tmainwindow.Create;
@@ -1146,6 +1210,7 @@ var
   Grp1, Grp2: TMUIGroup;
   Menu: TMUIMenu;
   MI: TMUIMenuItem;
+  i: Integer;
 begin
   inherited Create;
 
@@ -1214,6 +1279,7 @@ begin
     Parent := Grp1;
   end;
 
+  // Main Group (with splitter)
   Grp1 := TMUIGroup.Create;
   with Grp1 do
   begin
@@ -1221,7 +1287,7 @@ begin
     Horiz := True;
     Parent := Self;
   end;
-
+  // Main Lister
   List := TMUIStringGrid.Create;
   with List do
   begin
@@ -1229,12 +1295,14 @@ begin
     OnClick := @ListClick;
     Parent := Grp1;
   end;
-
+  // Splitter
   with TMUIBalance.Create do
   begin
     Parent := Grp1;
   end;
+  //
 
+  // Right Group over each other: buttons/Image, Text
   Grp2 := TMUIGroup.Create;
   with Grp2 do
   begin
@@ -1242,14 +1310,22 @@ begin
     Horiz := False;
     Parent := Grp1;
   end;
-
+  // first top group, left Image, right Buttons
+  Grp1 := TMUIGroup.Create;
+  with Grp1 do
+  begin
+    Frame := MUIV_FRAME_NONE;
+    Horiz := True;
+    Parent := Grp2;
+  end;
+  //
+  // Image group
   IconGrp := TMUIGroup.Create;
   with IconGrp do
   begin
     Frame := MUIV_FRAME_NONE;
     Horiz := True;
-    ShowMe := False;
-    Parent := Grp2;
+    Parent := Grp1;
   end;
 
   Icon := TMUIDrawPanel.Create;
@@ -1258,53 +1334,60 @@ begin
     MinWidth := 160;
     MinHeight := 80;
     FillArea := True;
+    ShowMe := False;
     OnDrawObject := @DrawIcon;
     Parent := IconGrp;
   end;
 
-  TMUIRectangle.Create.Parent := IconGrp;
-
-  LoadIconBtn := TMUIButton.Create('Load Icon');
+  LoadIconBtn := TMUIButton.Create(GetLocString(MSG_GUI_LOAD_ICON));
   with LoadIconBtn do
   begin
     OnClick := @LoadIcon;
-    ShowMe := False;
-    Parent := Grp2;
+    ShowMe := True;
+    Parent := IconGrp;
   end;
+
+  TMUIRectangle.Create.Parent := IconGrp;
+  //
+  // Button Group
+  BtnGroup := TMUIGroup.Create;
+  with BtnGroup do
+  begin
+    Frame := MUIV_FRAME_NONE;
+    Horiz := False;
+    Parent := Grp1;
+  end;
+
+
+  for i := 0 to High(DownloadBtn) do
+  begin
+    DownloadBtn[i] := TMUIButton.Create(GetLocString(MSG_GUI_DOWNLOAD_AS) + ' ' + DownName[i]);
+    DownloadBtn[i].OnClick := @DownloadClick;
+    //DownloadBtn[0].Disabled := True;
+    DownloadBtn[i].Tag := i;
+    DownloadBtn[i].Parent := BtnGroup;
+  end;
+
+  PlayBtn := TMUIButton.Create(GetLocString(MSG_GUI_PLAY));
+  PlayBtn.OnClick := @PlayClick;
+  //PlayBtn.Disabled := True;
+  PlayBtn.Parent := BtnGroup;
+
+  DeleteBtn := TMUIButton.Create(GetLocString(MSG_GUI_DELETE));
+  DeleteBtn.OnClick := @DeleteClick;
+  //DeleteBtn.Disabled := True;
+  DeleteBtn.Parent := BtnGroup;
+
+  ShareBtn := TMUIButton.Create(GetLocString(MSG_GUI_SHARE));
+  ShareBtn.OnClick := @ShareClick;
+  //ShareBtn.Disabled := True;
+  ShareBtn.Parent := BtnGroup;
 
   TextOut := TMUIFloatText.Create;
   with TextOut do
   begin
     Parent := Grp2;
   end;
-
-  Grp1 := TMUIGroup.Create;
-  with Grp1 do
-  begin
-    Frame := MUIV_FRAME_NONE;
-    Columns := 2;
-    Parent := Grp2;
-  end;
-
-  DownloadBtn := TMUIButton.Create(GetLocString(MSG_GUI_DOWNLOAD_CDXL));
-  DownloadBtn.OnClick := @DownloadClick;
-  DownloadBtn.Disabled := True;
-  DownloadBtn.Parent := Grp1;
-
-  PlayBtn := TMUIButton.Create(GetLocString(MSG_GUI_PLAY));
-  PlayBtn.OnClick := @PlayClick;
-  PlayBtn.Disabled := True;
-  PlayBtn.Parent := Grp1;
-
-  DeleteBtn := TMUIButton.Create(GetLocString(MSG_GUI_DELETE));
-  DeleteBtn.OnClick := @DeleteClick;
-  DeleteBtn.Disabled := True;
-  DeleteBtn.Parent := Grp1;
-
-  ShareBtn := TMUIButton.Create(GetLocString(MSG_GUI_SHARE));
-  ShareBtn.OnClick := @ShareClick;
-  ShareBtn.Disabled := True;
-  ShareBtn.Parent := Grp1;
 
   // the menu
 

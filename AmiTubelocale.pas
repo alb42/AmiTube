@@ -57,11 +57,11 @@ const
   MSG_GUI_BREAK = 20000 ;
   MSG_GUI_BREAK_STR = 'Break'#0;
 
-  MSG_GUI_DOWNLOAD_CDXL = 20001 ;
-  MSG_GUI_DOWNLOAD_CDXL_STR = 'Download as CDXL'#0;
+  MSG_GUI_DOWNLOAD_AS = 20001 ;
+  MSG_GUI_DOWNLOAD_AS_STR = 'Download as'#0;
 
-  MSG_GUI_DOWNLOAD_MPEG = 20002 ;
-  MSG_GUI_DOWNLOAD_MPEG_STR = 'Download as MPEG'#0;
+  MSG_GUI_LOAD_ICON = 20002 ;
+  MSG_GUI_LOAD_ICON_STR = 'Load Preview'#0;
 
   MSG_GUI_DELETE = 20003 ;
   MSG_GUI_DELETE_STR = 'Delete Movies'#0;
@@ -120,7 +120,10 @@ const
   MSG_ERROR_CONVERT = 40003 ;
   MSG_ERROR_CONVERT_STR = 'Error converting:'#0;
 
-  MSG_ERROR_PLAYER = 40004 ;
+  MSG_ERROR_LOAD_ICON = 40004 ;
+  MSG_ERROR_LOAD_ICON_STR = 'Error load Icon.'#0;
+
+  MSG_ERROR_PLAYER = 40005 ;
   MSG_ERROR_PLAYER_STR = 'Error: "%s" not found.'#0;
 
   MSG_PREFS_WINDOW = 50000 ;
@@ -171,6 +174,12 @@ const
   MSG_PREFS_PLAYERPARAM = 50403 ;
   MSG_PREFS_PLAYERPARAM_STR = 'Parameter'#0;
 
+  MSG_PREFS_ALLFORMATS = 50404 ;
+  MSG_PREFS_ALLFORMATS_STR = 'Show all Formats'#0;
+
+  MSG_PREFS_AUTOICON = 50405 ;
+  MSG_PREFS_AUTOICON_STR = 'Auto load Preview Icon'#0;
+
 
 procedure CloseCatalog;
 procedure OpenCatalog(Loc: PLocale);
@@ -190,7 +199,7 @@ type
      str: string;
   end;
 
-  TAppStringArray = array[0..52] of TAppString;
+  TAppStringArray = array[0..55] of TAppString;
 
 const
   AppStrings: TAppStringArray = (
@@ -208,8 +217,8 @@ const
     (id: MSG_MENU_ABOUT_AMITUBE ; str: MSG_MENU_ABOUT_AMITUBE_STR ),
     (id: MSG_MENU_ABOUT_MUI ; str: MSG_MENU_ABOUT_MUI_STR ),
     (id: MSG_GUI_BREAK ; str: MSG_GUI_BREAK_STR ),
-    (id: MSG_GUI_DOWNLOAD_CDXL ; str: MSG_GUI_DOWNLOAD_CDXL_STR ),
-    (id: MSG_GUI_DOWNLOAD_MPEG ; str: MSG_GUI_DOWNLOAD_MPEG_STR ),
+    (id: MSG_GUI_DOWNLOAD_AS ; str: MSG_GUI_DOWNLOAD_AS_STR ),
+    (id: MSG_GUI_LOAD_ICON ; str: MSG_GUI_LOAD_ICON_STR ),
     (id: MSG_GUI_DELETE ; str: MSG_GUI_DELETE_STR ),
     (id: MSG_GUI_SHARE ; str: MSG_GUI_SHARE_STR ),
     (id: MSG_GUI_PLAY ; str: MSG_GUI_PLAY_STR ),
@@ -229,6 +238,7 @@ const
     (id: MSG_ERROR_SHARE ; str: MSG_ERROR_SHARE_STR ),
     (id: MSG_ERROR_GETURL ; str: MSG_ERROR_GETURL_STR ),
     (id: MSG_ERROR_CONVERT ; str: MSG_ERROR_CONVERT_STR ),
+    (id: MSG_ERROR_LOAD_ICON ; str: MSG_ERROR_LOAD_ICON_STR ),
     (id: MSG_ERROR_PLAYER ; str: MSG_ERROR_PLAYER_STR ),
     (id: MSG_PREFS_WINDOW ; str: MSG_PREFS_WINDOW_STR ),
     (id: MSG_PREFS_STARTUP ; str: MSG_PREFS_STARTUP_STR ),
@@ -246,6 +256,8 @@ const
     (id: MSG_PREFS_AUTOSTART ; str: MSG_PREFS_AUTOSTART_STR ),
     (id: MSG_PREFS_CHOOSEPLAYER ; str: MSG_PREFS_CHOOSEPLAYER_STR ),
     (id: MSG_PREFS_PLAYERPARAM ; str: MSG_PREFS_PLAYERPARAM_STR ),
+    (id: MSG_PREFS_ALLFORMATS ; str: MSG_PREFS_ALLFORMATS_STR ),
+    (id: MSG_PREFS_AUTOICON ; str: MSG_PREFS_AUTOICON_STR ),
     (id: 0 ; str: '' )
     );
 
