@@ -22,7 +22,7 @@ const
   DefaultTextLimit = 33;
 
 const
-  VERSION = '$VER: AmiTube 0.6 beta2 (20.12.2021)';
+  VERSION = '$VER: AmiTube 0.6 beta3 (21.12.2021)';
   DownName: array[0..2] of string = ('CDXL OCS', 'CDXL AGA', 'MPEG1');
   DownSizes: array[0..2] of Integer = (150, 300, 170);
 

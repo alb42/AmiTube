@@ -174,7 +174,7 @@ Fehler: "%s" nicht gefunden.
 ; Error: "%s" not found.
 ;
 MSG_ERROR_NO_SPACE
-Festplatte hat nicht genug Platz fuer diesen Film. Trotzdem forfahren?
+Festplatte hat nicht genug Platz für diesen Film. Trotzdem forfahren?
 ; Not enough space to download this movie. Continue anyway?
 ;
 ;--- PREFS

@@ -44,6 +44,8 @@ History:
 0.6
 - Preview Icons
 - Localization (german included)
+- All formats Download buttons on main gui
+- Check for Free space on HD, warn before downloading if not enough space
 
 0.5
 - changed search from json to xml (much faster on slow Amiga)
