@@ -84,6 +84,12 @@ const
   MSG_GUI_NO = 20009 ;
   MSG_GUI_NO_STR = 'No'#0;
 
+  MSG_GUI_DISK_FULL = 20010 ;
+  MSG_GUI_DISK_FULL_STR = 'Disk full'#0;
+
+  MSG_GUI_FREE = 20011 ;
+  MSG_GUI_FREE_STR = 'free'#0;
+
   MSG_STATUS_IDLE = 30000 ;
   MSG_STATUS_IDLE_STR = 'Idle'#0;
 
@@ -125,6 +131,9 @@ const
 
   MSG_ERROR_PLAYER = 40005 ;
   MSG_ERROR_PLAYER_STR = 'Error: "%s" not found.'#0;
+
+  MSG_ERROR_NO_SPACE = 40006 ;
+  MSG_ERROR_NO_SPACE_STR = 'Not enough space to download this movie. Continue anyway?'#0;
 
   MSG_PREFS_WINDOW = 50000 ;
   MSG_PREFS_WINDOW_STR = 'Settings'#0;
@@ -199,7 +208,7 @@ type
      str: string;
   end;
 
-  TAppStringArray = array[0..55] of TAppString;
+  TAppStringArray = array[0..58] of TAppString;
 
 const
   AppStrings: TAppStringArray = (
@@ -226,6 +235,8 @@ const
     (id: MSG_GUI_GOTURLTEXT ; str: MSG_GUI_GOTURLTEXT_STR ),
     (id: MSG_GUI_YES ; str: MSG_GUI_YES_STR ),
     (id: MSG_GUI_NO ; str: MSG_GUI_NO_STR ),
+    (id: MSG_GUI_DISK_FULL ; str: MSG_GUI_DISK_FULL_STR ),
+    (id: MSG_GUI_FREE ; str: MSG_GUI_FREE_STR ),
     (id: MSG_STATUS_IDLE ; str: MSG_STATUS_IDLE_STR ),
     (id: MSG_STATUS_SHARED ; str: MSG_STATUS_SHARED_STR ),
     (id: MSG_STATUS_PREPSEARCH ; str: MSG_STATUS_PREPSEARCH_STR ),
@@ -240,6 +251,7 @@ const
     (id: MSG_ERROR_CONVERT ; str: MSG_ERROR_CONVERT_STR ),
     (id: MSG_ERROR_LOAD_ICON ; str: MSG_ERROR_LOAD_ICON_STR ),
     (id: MSG_ERROR_PLAYER ; str: MSG_ERROR_PLAYER_STR ),
+    (id: MSG_ERROR_NO_SPACE ; str: MSG_ERROR_NO_SPACE_STR ),
     (id: MSG_PREFS_WINDOW ; str: MSG_PREFS_WINDOW_STR ),
     (id: MSG_PREFS_STARTUP ; str: MSG_PREFS_STARTUP_STR ),
     (id: MSG_PREFS_STARTUP1 ; str: MSG_PREFS_STARTUP1_STR ),

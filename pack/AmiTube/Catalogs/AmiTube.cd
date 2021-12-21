@@ -82,6 +82,12 @@ Yes
 MSG_GUI_NO (20009//)
 No
 ;
+MSG_GUI_DISK_FULL (20010//)
+Disk full
+;
+MSG_GUI_FREE (20011//)
+free
+;
 MSG_STATUS_IDLE (30000//)
 Idle
 ;
@@ -123,6 +129,10 @@ Error load Icon.
 ;
 MSG_ERROR_PLAYER (40005//)
 Error: "%s" not found.
+;
+MSG_ERROR_NO_SPACE (40006//)
+Not enough space to download this movie. Continue anyway?
+;
 ;--- PREFS
 ;
 MSG_PREFS_WINDOW (50000//)

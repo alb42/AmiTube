@@ -109,6 +109,14 @@ MSG_GUI_NO
 Nein
 ; No
 ;
+MSG_GUI_DISK_FULL
+Festplatte voll
+; Disk full
+;
+MSG_GUI_FREE
+frei
+; free
+;
 MSG_STATUS_IDLE
 Wartet
 ; Idle
@@ -164,6 +172,11 @@ Fehler beim Laden der Vorschau.
 MSG_ERROR_PLAYER
 Fehler: "%s" nicht gefunden.
 ; Error: "%s" not found.
+;
+MSG_ERROR_NO_SPACE
+Festplatte hat nicht genug Platz fuer diesen Film. Trotzdem forfahren?
+; Not enough space to download this movie. Continue anyway?
+;
 ;--- PREFS
 ;
 MSG_PREFS_WINDOW

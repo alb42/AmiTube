@@ -2,7 +2,7 @@ program AmiTube;
 // search and download Youtube videos to CDXL
 {$mode objfpc}{$H+}
 uses
-  AThreads, clipboard, iffparse, AGraphics, Intuition,
+  AThreads, clipboard, iffparse, AGraphics, Intuition, AmigaDos, Exec,
   Datatypes, Utility,
   Classes, SysUtils, fphttpclient, mui, muihelper, SyncObjs,
   MUIClass.Base, MUIClass.Window, MUIClass.Group, MUIClass.Area, MUIClass.Gadget,
@@ -22,7 +22,7 @@ const
   DefaultTextLimit = 33;
 
 const
-  VERSION = '$VER: AmiTube 0.6 beta (15.12.2021)';
+  VERSION = '$VER: AmiTube 0.6 beta2 (20.12.2021)';
   DownName: array[0..2] of string = ('CDXL OCS', 'CDXL AGA', 'MPEG1');
   DownSizes: array[0..2] of Integer = (150, 300, 170);
 
@@ -91,6 +91,7 @@ type
     IconGrp: TMUIGroup;
     LoadIconBtn: TMUIButton;
     BtnGroup: TMUIGroup;
+    StatText: TMUIText;
     procedure SearchEntry(Sender: TObject);
     procedure EndThread(Sender: TObject);
     procedure EndCThread(Sender: TObject);
@@ -129,6 +130,8 @@ type
     ClipTimer: TMUITimer;
     TextLimit: Integer;
     Movies: string;
+    MovieLock: BPTR;
+    OldFreeAmount: Int64;
     Results: array of record
       ID: string;
       Desc: string;
@@ -143,6 +146,7 @@ type
 
     procedure EnableDownloads(Enabled: Boolean; PlayButtons: Boolean);
     procedure UpdateDownloadBtns(Duration: Integer);
+    procedure UpdateFreeMem;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -585,6 +589,7 @@ procedure Tmainwindow.Downloadclick(Sender: Tobject);
 var
   CT: TStartConvertThread;
   Format: Integer;
+  FileSize: Int64;
 begin
   Format := 0;
   if Sender is TMUIButton then
@@ -598,6 +603,15 @@ begin
   end;
   if (List.Row >= 0) and (List.Row <= High(Results)) then
   begin
+    FileSize := Int64(Results[List.Row].Duration) * DownSizes[Format] * 1024;
+    if FileSize > OldFreeAmount then
+    begin
+      if MessageBox('Error', GetLocString(MSG_ERROR_NO_SPACE), [GetLocString(MSG_GUI_YES), GetLocString(MSG_GUI_NO)]) <> 1 then
+      begin
+        EnableDownloads(True, False);
+        Exit;
+      end;
+    end;
     CT := TStartConvertThread.Create(True);
     CT.Desc := Results[List.Row].Desc;
     CT.Format := Format;
@@ -987,6 +1001,8 @@ var
 begin
   ClipTimer.Enabled := False;
   try
+    UpdateFreeMem;
+    //
     if Assigned(SearchThread) and (not SearchThread.Terminated) or SearchField.Disabled then
       Exit;
     s := GetTextFromClip(PRIMARY_CLIP);
@@ -1003,7 +1019,7 @@ begin
       end;
     end;
   finally
-    ClipTimer.Enabled := Prefs.ObserveClip;
+    ClipTimer.Enabled := True;
   end;
 end;
 
@@ -1076,7 +1092,7 @@ begin
         DTA_GroupID, GID_PICTURE,
         PDTA_Remap, AsTag(TRUE),
         PDTA_DestMode,PMODE_V43,
-        //PDTA_Screen, AsTag(scr),
+        PDTA_Screen, AsTag(Self.Screen),
         OBP_Precision, Precision_Image,
         TAG_END, TAG_END]);
     if not Assigned(DTObj) then
@@ -1162,12 +1178,16 @@ begin
   if Prefs.AllFormats then
   begin
     for i := low(DownloadBtn) to High(DownloadBtn) do
-     DownloadBtn[i].ShowMe := Enabled;
+    begin
+      DownloadBtn[i].Disabled := False;
+      DownloadBtn[i].ShowMe := Enabled;
+    end;
   end
   else
   begin
     for i := low(DownloadBtn) to High(DownloadBtn) do
     begin
+      DownloadBtn[i].Disabled := False;
       DownloadBtn[i].ShowMe := Enabled and (Prefs.Format = i);
     end;
   end;
@@ -1205,6 +1225,46 @@ begin
   end;
 end;
 
+procedure Tmainwindow.Updatefreemem;
+var
+  InfoData: TInfoData;
+  FreeAmount: Int64;
+  f: Single;
+begin
+  //
+  Info(MovieLock, @InfoData);
+  FreeAmount := (InfoData.id_NumBlocks - InfoData.id_NumBlocksUsed) * InfoData.id_BytesPerBlock;
+
+  if FreeAmount <> OldFreeAmount then
+  begin
+    OldFreeAmount := FreeAmount;
+    if FreeAmount = 0 then
+    begin
+      StatText.Contents := MUIX_R +  GetLocString(MSG_GUI_DISK_FULL);
+      Exit;
+    end;
+    if FreeAmount < 1024 then
+    begin
+      StatText.Contents := MUIX_R + IntToStr(FreeAmount) + ' byte ' + GetLocString(MSG_GUI_FREE);
+      Exit;
+    end;
+    f := FreeAmount / 1024;
+    if f < 1024 then
+    begin
+      StatText.Contents := MUIX_R + FloatToStrF(F, ffFixed, 8,1) + ' kB ' + GetLocString(MSG_GUI_FREE);
+      Exit;
+    end;
+    f := f / 1024;
+    if f < 1024 then
+    begin
+      StatText.Contents := MUIX_R + FloatToStrF(F, ffFixed, 8,1) + ' MB ' + GetLocString(MSG_GUI_FREE);
+      Exit;
+    end;
+    f := f / 1024;
+    StatText.Contents := MUIX_R + FloatToStrF(F, ffFixed, 8,1) + ' GB ' + GetLocString(MSG_GUI_FREE);
+  end;
+end;
+
 constructor Tmainwindow.Create;
 var
   Grp1, Grp2: TMUIGroup;
@@ -1230,6 +1290,8 @@ begin
 
   if not DirectoryExists(Movies) then
     CreateDir(Movies);
+
+  MovieLock := Lock(Movies, SHARED_LOCK);
 
   Horizontal := False;
 
@@ -1287,6 +1349,14 @@ begin
     Horiz := True;
     Parent := Self;
   end;
+
+  StatText := TMUIText.Create(MUIX_R  +'Free: 0 b');
+  with StatText do
+  begin
+    Frame := MUIV_FRAME_NONE;
+    Parent := Self;
+  end;
+
   // Main Lister
   List := TMUIStringGrid.Create;
   with List do
@@ -1343,7 +1413,7 @@ begin
   with LoadIconBtn do
   begin
     OnClick := @LoadIcon;
-    ShowMe := True;
+    ShowMe := False;
     Parent := IconGrp;
   end;
 
@@ -1363,24 +1433,24 @@ begin
   begin
     DownloadBtn[i] := TMUIButton.Create(GetLocString(MSG_GUI_DOWNLOAD_AS) + ' ' + DownName[i]);
     DownloadBtn[i].OnClick := @DownloadClick;
-    //DownloadBtn[0].Disabled := True;
+    DownloadBtn[i].Disabled := True;
     DownloadBtn[i].Tag := i;
     DownloadBtn[i].Parent := BtnGroup;
   end;
 
   PlayBtn := TMUIButton.Create(GetLocString(MSG_GUI_PLAY));
   PlayBtn.OnClick := @PlayClick;
-  //PlayBtn.Disabled := True;
+  PlayBtn.Showme := False;
   PlayBtn.Parent := BtnGroup;
 
   DeleteBtn := TMUIButton.Create(GetLocString(MSG_GUI_DELETE));
   DeleteBtn.OnClick := @DeleteClick;
-  //DeleteBtn.Disabled := True;
+  DeleteBtn.Showme := False;
   DeleteBtn.Parent := BtnGroup;
 
   ShareBtn := TMUIButton.Create(GetLocString(MSG_GUI_SHARE));
   ShareBtn.OnClick := @ShareClick;
-  //ShareBtn.Disabled := True;
+  ShareBtn.Showme := False;
   ShareBtn.Parent := BtnGroup;
 
   TextOut := TMUIFloatText.Create;
@@ -1388,6 +1458,7 @@ begin
   begin
     Parent := Grp2;
   end;
+
 
   // the menu
 
@@ -1463,7 +1534,7 @@ begin
   begin
     Interval := 500;
     OnTimer := @ClipTimerEvent;
-    Enabled := False;
+    Enabled := True;
   end;
 
   OnShow := @FormShow;
@@ -1471,6 +1542,7 @@ end;
 
 destructor Tmainwindow.Destroy;
 begin
+  UnLock(MovieLock);
   StopAll(nil);
   if Assigned(SearchThread) then
   begin
