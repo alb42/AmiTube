@@ -588,13 +588,14 @@ end;
 procedure Tmainwindow.Downloadclick(Sender: Tobject);
 var
   CT: TStartConvertThread;
-  Format: Integer;
+  Format, i: Integer;
   FileSize: Int64;
 begin
   Format := 0;
   if Sender is TMUIButton then
     Format := TMUIButton(Sender).Tag;
-  EnableDownloads(False, False);
+  for i := 0 to High(DownloadBtn) do
+    DownloadBtn[i].Disabled := True;
   if Assigned(ConvertThread) then
   begin
     ConvertThread.Terminate;
@@ -1350,7 +1351,7 @@ begin
     Parent := Self;
   end;
 
-  StatText := TMUIText.Create(MUIX_R  +'Free: 0 b');
+  StatText := TMUIText.Create('');
   with StatText do
   begin
     Frame := MUIV_FRAME_NONE;
