@@ -43,6 +43,7 @@ type
     FBufPos: PByte;
     FBytes: LongInt;
     StartTime: LongWord;
+    BuffSize: LongInt;
   public
     constructor Create(AStream: TStream; ASize: int64);
     destructor Destroy; override;
@@ -55,13 +56,9 @@ type
   end;
 
 procedure DonwloadFile(OnProgress: TOnProgress; cURL: string; cFile: string);
-//const
-//  cUrl = 'http://www.imagemagick.org/download/binaries/ImageMagick-6.8.6-8-Q8-x86-static.exe';
-//  cFile = 'ImageMagick-6.8.6-8-Q8-x86-static.exe';
 var
   vStream: TStreamAdapter;
   VSize: int64 = 0;
-
   I: integer;
   S: string;
 begin
@@ -97,7 +94,9 @@ end;
 
 { TStreamAdapter }
 
-const BUFFSIZE = 1024000;
+const
+  DefBUFFSIZE = 1024000;
+  DefSmallBUFFSIZE = 10240;
 
 constructor TStreamAdapter.Create(AStream: TStream; ASize: int64);
 begin
@@ -108,7 +107,17 @@ begin
   fStream.Position := 0;
   FSize := ASize;
   FPos := 0;
-  FBuffer := AllocMem(BUFFSIZE);
+  BuffSize := DefBUFFSIZE;
+  try
+    FBuffer := AllocMem(BUFFSIZE);
+  except
+    FBuffer := nil;
+  end;
+  if FBuffer = nil then
+  begin
+    BuffSize := DefSmallBUFFSIZE;
+    FBuffer := AllocMem(BUFFSIZE);
+  end;
   FBufPos := FBuffer;
   FBytes := 0;
 end;
