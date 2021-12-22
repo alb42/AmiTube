@@ -3,7 +3,7 @@ program AmiTube;
 {$mode objfpc}{$H+}
 uses
   AThreads, clipboard, iffparse, AGraphics, Intuition, AmigaDos, Exec,
-  Datatypes, Utility,
+  Datatypes, Utility, workbench, icon,
   Classes, SysUtils, fphttpclient, mui, muihelper, SyncObjs,
   MUIClass.Base, MUIClass.Window, MUIClass.Group, MUIClass.Area, MUIClass.Gadget,
   MUIClass.Menu, MUIClass.DrawPanel,
@@ -22,7 +22,7 @@ const
   DefaultTextLimit = 33;
 
 const
-  VERSION = '$VER: AmiTube 0.6 beta3 (21.12.2021)';
+  VERSION = '$VER: AmiTube 0.6 (22.12.2021)';
   DownName: array[0..2] of string = ('CDXL OCS', 'CDXL AGA', 'MPEG1');
   DownSizes: array[0..2] of Integer = (150, 300, 170);
 
@@ -128,7 +128,6 @@ type
     FTxt: string;
     Timer: TMUITimer;
     ClipTimer: TMUITimer;
-    TextLimit: Integer;
     Movies: string;
     MovieLock: BPTR;
     OldFreeAmount: Int64;
@@ -496,8 +495,8 @@ begin
       Results[i].Icon := SearchThread.Results[i].Icon;
       List.Cells[0, i] := IntToStr(i + 1);
       st := SearchThread.Results[i].Name;
-      if Length(st) > TextLimit then
-        st := Copy(st, 1, TextLimit - 3) + '...';
+      if Length(st) > Prefs.MaxTitleLen + 3 then
+        st := Copy(st, 1, Prefs.MaxTitleLen) + '...';
       List.Cells[1, i] := UTF8ToAnsi(st);
       t := StrToIntDef(SearchThread.Results[i].Duration, 0);
       Results[i].Duration := t;
@@ -768,8 +767,8 @@ begin
       Results[i].Duration := 0;
       List.Cells[0, i] := IntToStr(i + 1);
       st := MyRes[i].Name;
-      if Length(st) > TextLimit then
-        st := Copy(st, 1, TextLimit - 3) + '...';
+      if Length(st) > Prefs.MaxTitleLen + 3 then
+        st := Copy(st, 1, Prefs.MaxTitleLen) + '...';
       List.Cells[1, i] := UTF8ToAnsi(st);
       List.Cells[2, i] := MyRes[i].Size;
     end;
@@ -1266,28 +1265,46 @@ begin
   end;
 end;
 
+function GetStrToolType(DObj: PDiskObject; Entry: string; Default: string): string;
+var
+  Res: PChar;
+begin
+  Result := Default;
+  if not assigned(Dobj) then
+    Exit;
+  if not Assigned(Dobj^.do_Tooltypes) then
+    Exit;
+  Res := FindToolType(Dobj^.do_Tooltypes, PChar(Entry));
+  if Assigned(Res) then
+    Result := Res;
+end;
+
 constructor Tmainwindow.Create;
 var
   Grp1, Grp2: TMUIGroup;
   Menu: TMUIMenu;
   MI: TMUIMenuItem;
   i: Integer;
+  DObj: PDiskObject;
 begin
   inherited Create;
-
   DTObj := nil;
-
   OnCloseRequest := @CloseWindow;
-
   ValLock := TCriticalSection.Create;
-  //
-  Title := ShortVer;
   ID := Make_ID('A','M','T','U');
-  TextLimit := DefaultTextLimit;
   ConvertThread := nil;
   SearchThread := nil;
+  //
+  Title := ShortVer;
 
   Movies := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + MovieTemplateFolder;
+
+  DObj := GetDiskObject(PChar(ParamStr(0)));
+  if Assigned(DObj) then
+  begin
+    Movies := ExcludeTrailingPathDelimiter(GetStrToolType(DObj, 'MOVIEDIR', Movies));
+    FreeDiskObject(DObj);
+  end;
 
   if not DirectoryExists(Movies) then
     CreateDir(Movies);

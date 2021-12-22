@@ -189,6 +189,9 @@ const
   MSG_PREFS_AUTOICON = 50405 ;
   MSG_PREFS_AUTOICON_STR = 'Auto load Preview Icon'#0;
 
+  MSG_PREFS_MAXTITLELEN = 50406 ;
+  MSG_PREFS_MAXTITLELEN_STR = 'Maximum Title length'#0;
+
 
 procedure CloseCatalog;
 procedure OpenCatalog(Loc: PLocale);
@@ -208,7 +211,7 @@ type
      str: string;
   end;
 
-  TAppStringArray = array[0..58] of TAppString;
+  TAppStringArray = array[0..59] of TAppString;
 
 const
   AppStrings: TAppStringArray = (
@@ -270,6 +273,7 @@ const
     (id: MSG_PREFS_PLAYERPARAM ; str: MSG_PREFS_PLAYERPARAM_STR ),
     (id: MSG_PREFS_ALLFORMATS ; str: MSG_PREFS_ALLFORMATS_STR ),
     (id: MSG_PREFS_AUTOICON ; str: MSG_PREFS_AUTOICON_STR ),
+    (id: MSG_PREFS_MAXTITLELEN ; str: MSG_PREFS_MAXTITLELEN_STR ),
     (id: 0 ; str: '' )
     );
 

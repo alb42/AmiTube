@@ -17,6 +17,7 @@ type
   private
     Ini: TIniFile;
     NumEdit: TMUIString;
+    MaxLenEdit: TMUIString;
     MPEGPlayerEdit, PlayerEdit: TMUIString;
     MPEGParamEdit, ParamEdit: TMUIString;
     ChooseFormat: TMUICycle;
@@ -30,6 +31,7 @@ type
     procedure ChoosePlayerClick(Sender: TObject);
     procedure ChooseMPEGPlayerClick(Sender: TObject);
     procedure NumEditACK(Sender: TObject);
+    procedure MaxLenACK(Sender: TObject);
     procedure FormatChanged(Sender: TObject);
     procedure StartupChanged(Sender: TObject);
     procedure AutoChange(Sender: TObject);
@@ -49,6 +51,7 @@ type
     function GetPlayerParam: string;
     function GetMPEGPlayerParam: string;
     function GetAllFormats: Boolean;
+    function GetMaxTitleLen: Integer;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -68,6 +71,7 @@ type
     property Startup: Integer read GetStartup;
     property ObserveClip: Boolean read GetClip;
     property AllFormats: Boolean read GetAllFormats;
+    property MaxTitleLen: Integer read GetMaxTitleLen;
     //
     property OnFormatChanged: TNotifyEvent read FOnFormatChanged write FOnFormatChanged;
     property OnClipChanged: TNotifyEvent read FOnClipChanged write FOnClipChanged;
@@ -172,6 +176,11 @@ begin
   Result := EnsureRange(NumEdit.IntegerValue, 1, 100);
 end;
 
+function TPrefsWindow.GetMaxTitleLen: Integer;
+begin
+  Result := EnsureRange(MaxLenEdit.IntegerValue, 1, 999);
+end;
+
 function TPrefsWindow.GetFormat: Integer;
 begin
   Result := ChooseFormat.Active;
@@ -211,6 +220,13 @@ begin
   //
   NumEdit.IntegerValue := EnsureRange(NumEdit.IntegerValue, 1, 100);
   Ini.WriteInteger('Search', 'MaxNum', NumEdit.IntegerValue);
+end;
+
+procedure TPrefsWindow.MaxLenACK(Sender: TObject);
+begin
+  //
+  MaxLenEdit.IntegerValue := EnsureRange(MaxLenEdit.IntegerValue, 1, 999);
+  Ini.WriteInteger('Search', 'MaxLen', MaxLenEdit.IntegerValue);
 end;
 
 procedure TPrefsWindow.FormatChanged(Sender: TObject);
@@ -344,6 +360,22 @@ begin
     MaxLen := 3;
     IntegerValue := Ini.ReadInteger('Search', 'MaxNum', 10);
     OnAcknowledge := @NumEditACK;
+    Parent := Grp1;
+  end;
+
+  with TMUIText.Create(GetLocString(MSG_PREFS_MAXTITLELEN)) do
+  begin
+    Frame := MUIV_FRAME_NONE;
+    Parent := Grp1;
+  end;
+
+  MaxLenEdit := TMUIString.Create;
+  with MaxLenEdit do
+  begin
+    Accept := '0123456789';
+    MaxLen := 3;
+    IntegerValue := Ini.ReadInteger('Search', 'MaxLen', 30);
+    OnAcknowledge := @MaxLenACK;
     Parent := Grp1;
   end;
 

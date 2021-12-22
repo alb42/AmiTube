@@ -30,6 +30,10 @@ https://mschordan.github.io/amiga/agablaster.html
 for MPEG videos use RiVA:
 http://aminet.net/gfx/show/RiVA-0.54.lha
 
+if you want to have the movie folder on an other harddisk you can use the MOVIEDIR tooltype
+eg. ToolType of the main program:
+MOVIEDIR=dh1:movies
+saves the movies in dh1:movies
 
 Conversation to CDXL is done on my Server so don't overdo it please.
 
@@ -46,6 +50,8 @@ History:
 - Localization (german included)
 - All formats Download buttons on main gui
 - Check for Free space on HD, warn before downloading if not enough space
+- Icon tooltype MOVIEDIR to set directory for movies
+- smaller network buffer for low memory systems 
 
 0.5
 - changed search from json to xml (much faster on slow Amiga)

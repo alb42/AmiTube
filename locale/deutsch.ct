@@ -251,3 +251,7 @@ MSG_PREFS_AUTOICON
 Automatisch Vorschau laden
 ; Auto load Preview Icon
 ;
+MSG_PREFS_MAXTITLELEN
+Maximale Titel Länge
+; Maximum Title length
+;

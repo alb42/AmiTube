@@ -189,3 +189,6 @@ Show all Formats
 MSG_PREFS_AUTOICON (50405//)
 Auto load Preview Icon
 ;
+MSG_PREFS_MAXTITLELEN (50406//)
+Maximum Title length
+;
