@@ -1,0 +1,79 @@
+AmiTube by ALB42
+
+idea by Michal Bergseth http://www.amitopia.com
+
+A YouTube Client for AROS i386 AROS and ARM RasPi+
+made with FreePascal for Amiga Systems
+
+How to use:
+
+enter a search word or youtube URL to search bar in main window
+found video names with length and estimated size on HD is shown in the list underneath.
+Click to an entry to read the longer description.
+Click to the Button Download CDXL/MPEG to start the conversation and download.
+
+After the movies is converted an downloaded to your Amiga you can use the "Play" button to
+show the movie. The Share button is used to tell other AmiTube users about that particullar video.
+Delete removes the video from the harddisk (so you have to download it again if you want to watch it again)
+
+In the menu you find two different lists to show.
+1- "Local Files" - Shows the already downloaded videos on your harddisk in the list
+2- "Remote Shared" - Shows the global share list, videos other users suggested
+
+For movie playing you can choose an own player, by default MultiView is used, but MultiView is too slow most of the time
+
+if you want to have the movie folder on an other harddisk you can use the MOVIEDIR tooltype
+eg. ToolType of the main program:
+MOVIEDIR=dh1:movies
+saves the movies in dh1:movies
+
+Conversation is done on my Server so don't overdo it please.
+
+Do not share or publish this program, but point other people to my website.
+
+https://blog.alb42.de
+
+Have fun!
+
+History:
+
+0.6
+- Preview Icons
+- Localization (german included)
+- All formats Download buttons on main gui
+- Check for Free space on HD, warn before downloading if not enough space
+- Icon tooltype MOVIEDIR to set directory for movies
+- smaller network buffer for low memory systems 
+
+0.5
+- changed search from json to xml (much faster on slow Amiga)
+- new formats (CDXL AGA, MPEG, choose via Settings)
+- choose your MPEG1 Player
+- About for MUI and program
+- Share your favourite movies
+- list shared movies
+- auto load shared or local movies at startup
+- youtube urls can be entered to search bar ("https://www.youtube.com/watch?v=xxxxx" or "https://youtu.be/xxxxx")
+- observe clipboard for yoututbe urls, automatically search for them (turn on in prefs)
+- Auto start movie after download
+- Parameter for CDXL Player and MPEG Player
+- special Version for 68000 processor
+
+0.4:
+- converter speed increase (server side, also active for 0.3 already)
+
+0.3:
+- first official release
+- download speed increase
+- cutting title length
+- Show list of already saved movies
+- Settings
+- number of search results
+
+0.2:
+- bugfixes on converting longer files
+- progress bar for download/search
+- show time an resulting file size
+
+0.1
+- Initial Release
