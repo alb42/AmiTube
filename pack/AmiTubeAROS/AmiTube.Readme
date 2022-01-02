@@ -2,7 +2,7 @@ AmiTube by ALB42
 
 idea by Michal Bergseth http://www.amitopia.com
 
-A YouTube Client for AROS i386 AROS and ARM RasPi+
+A YouTube Client for m68k Amiga / NG Amiga
 made with FreePascal for Amiga Systems
 
 How to use:
@@ -22,12 +22,20 @@ In the menu you find two different lists to show.
 
 For movie playing you can choose an own player, by default MultiView is used, but MultiView is too slow most of the time
 
+My suggestions are:
+
+for CDXL videos use AGABlaster:
+https://mschordan.github.io/amiga/agablaster.html
+
+for MPEG videos use RiVA:
+http://aminet.net/gfx/show/RiVA-0.54.lha
+
 if you want to have the movie folder on an other harddisk you can use the MOVIEDIR tooltype
 eg. ToolType of the main program:
 MOVIEDIR=dh1:movies
 saves the movies in dh1:movies
 
-Conversation is done on my Server so don't overdo it please.
+Conversation to CDXL is done on my Server so don't overdo it please.
 
 Do not share or publish this program, but point other people to my website.
 
@@ -36,6 +44,13 @@ https://blog.alb42.de
 Have fun!
 
 History:
+
+0.7
+- New CDXL Option 320px and AGA colors
+- direct download from youtube without conversation
+- select resolution on direct download
+- Update checking
+- Download latest version
 
 0.6
 - Preview Icons

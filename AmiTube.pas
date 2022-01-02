@@ -3,31 +3,42 @@ program AmiTube;
 {$mode objfpc}{$H+}
 uses
   AThreads, clipboard, iffparse, AGraphics, Intuition, AmigaDos, Exec,
-  Datatypes, Utility, workbench, icon,
+  Datatypes, Utility, workbench, icon, fgl,
   Classes, SysUtils, fphttpclient, mui, muihelper, SyncObjs,
   MUIClass.Base, MUIClass.Window, MUIClass.Group, MUIClass.Area, MUIClass.Gadget,
   MUIClass.Menu, MUIClass.DrawPanel,
   MUIClass.StringGrid, MUIClass.Dialog, MUIClass.List, filedownloadunit, prefsunit,
-  XMLRead, DOM, AmiTubelocale;
+  XMLRead, DOM, AmiTubelocale, resolutionselunit;
 
 const
-  BaseURL = 'http://amitube.alb42.de/ytsearch2.php?q=';
-  BaseURLID = 'http://amitube.alb42.de/ytsearch2.php?id=';
-  ConvertURL = 'http://amitube.alb42.de/ytcdxl2.php?id=';
-  ShareURL = 'http://amitube.alb42.de/ytshare2.php?id=';
-  SharedURL = 'http://amitube.alb42.de/ytshares.xml';
-  IconURL = 'http://amitube.alb42.de/yticon.php?id=';
+  BaseURL = 'http://amitube.alb42.de/yt3/';
+
+  SearchBase = 'ytsearch.php?q=';
+  SearchBaseID = 'ytsearch.php?id=';
+  ConvertBase = 'ytcdxl.php?id=';
+  ShareBase = 'ytshare.php?id=';
+  SharedFile = 'ytshares.xml';
+  IconBase = 'yticon.php?id=';
+  DownloadBase = 'ytdownload.php?id=';
+  DoneBase = 'ytdone.php';
+
+  UpdateURL = 'http://amitube.alb42.de/amitubeversion';
 
   MovieTemplateFolder = 'movies';
   DefaultTextLimit = 33;
 
 const
-  VERSION = '$VER: AmiTube 0.6 (22.12.2021)';
-  DownName: array[0..2] of string = ('CDXL OCS', 'CDXL AGA', 'MPEG1');
-  DownSizes: array[0..2] of Integer = (150, 300, 170);
+  VERSION = '$VER: AmiTube 0.7 beta (31.12.2021)';
+  DownName: array[0..3] of string = ('CDXL OCS', 'CDXL AGA', 'MPEG1', 'CDXL AGA Large');
+  DownSizes: array[0..3] of Integer = (150, 300, 170, 900);
 
 
 type
+  TMyVersion = record
+    Major: Integer;
+    Minor: Integer;
+    isBeta: Boolean;
+  end;
 
   TProgressEvent = procedure(Sender: TObject; Percent: Integer; Text: string) of object;
 
@@ -39,13 +50,10 @@ type
     procedure DoProgress(APercent: integer; AText: string);
     procedure Execute; override;
   public
-    Results: array of record
-      Name: string;
-      ID: string;
-      Duration: string;
-      Icon: string;
-      Desc: string;
-    end;
+    constructor Create; virtual;
+    destructor Destroy; override;
+  public
+    SearchRes: TResultEntries;
     GetSharedList: Boolean;
     ErrMsg: string;
     IsError: Boolean;
@@ -60,18 +68,21 @@ type
   private
     LastTime: Cardinal;
     procedure DoProgress(APercent: integer; AText: string);
-    procedure ProgressUpdate(Sender: TObject; Percent: integer; Speed: Integer);
+    procedure ProgressUpdate(Sender: TObject; Percent, Speed: Integer; ASize: Int64);
   protected
     procedure Execute; override;
     procedure DoOnEnd;
   public
-    ID: String;
+    //
+    FormatID: string;
+    Filename: string;
+    //
+    ID: string;
     Movies: string;
     Desc: string;
     Format: Integer;
     OnEnd: TNotifyEvent;
     OnProgress: TProgressEvent;
-
   end;
 
 
@@ -82,8 +93,8 @@ type
     SearchField: TMUIString;
     List: TMUIStringGrid;
     TextOut: TMUIFloatText;
-    DownloadBtn: array[0..2] of TMUIButton;
-    PlayBtn, DeleteBtn, ShareBtn, StopButton: TMUIButton;
+    DownloadBtn: array[0..3] of TMUIButton;
+    DownloadOriginal, PlayBtn, DeleteBtn, ShareBtn, StopButton: TMUIButton;
     SharedMenu: TMUIMenuItem;
     StatusLabel: TMUIText;
     Progress: TMUIGauge;
@@ -117,6 +128,9 @@ type
     procedure CloseWindow(Sender: TObject; var CloseAction: TCloseAction);
     procedure LoadIcon(Sender: TObject);
     procedure DrawIcon(Sender: TObject; RP: PRastPort; ARect: TRect);
+    procedure GetOriginal(Sender: TObject);
+    procedure CloseRes(Sender: TObject; var CloseAction: TCloseAction);
+    procedure CheckForUpdate(Sender: TObject);
   private
     PlayFormat: Integer;
     DTObj: PObject_;
@@ -131,21 +145,19 @@ type
     Movies: string;
     MovieLock: BPTR;
     OldFreeAmount: Int64;
-    Results: array of record
-      ID: string;
-      Desc: string;
-      Icon: string;
-      Duration: Integer;
-    end;
+    ResultEntries: TResultEntries;
     SearchThread: TSearchThread;
     ConvertThread: TStartConvertThread;
     ImgSize: TPoint;
-    procedure SetStatusText(AText: string);
+    BaseServer: string;
+    procedure SetStatusText(AText: string; APos: LongInt = -1);
     procedure DestroyDTObj;
 
     procedure EnableDownloads(Enabled: Boolean; PlayButtons: Boolean);
     procedure UpdateDownloadBtns(Duration: Integer);
     procedure UpdateFreeMem;
+    procedure StartDownload(AID, AFormatID, AFilename: string);
+    procedure StartDownloadURL(URL, AFilename: string);
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -153,7 +165,22 @@ type
 
 var
   hp: TFPHTTPClient;
+  MyVersion: TMyVersion;
 
+  SearchURL, SearchURLID, ConvertURL, ShareURL,
+  SharedURL, IconURL, DownloadURL, DoneURL: string;
+
+procedure MakeURLs(NewBaseURL: string);
+begin
+  SearchURL := NewBaseURL + SearchBase;
+  SearchURLID := NewBaseURL + SearchBaseID;
+  ConvertURL := NewBaseURL + ConvertBase;
+  ShareURL := NewBaseURL + ShareBase;
+  SharedURL := NewBaseURL + SharedFile;
+  IconURL := NewBaseURL + IconBase;
+  DownloadURL := NewBaseURL + DownloadBase;
+  DoneURL := NewBaseURL + DoneBase;
+end;
 {
 const
   AFF_68080 = 1 shl 10;
@@ -188,17 +215,55 @@ begin
   end;
 end;
 
-procedure TStartConvertThread.ProgressUpdate(Sender: TObject; Percent: integer; Speed: Integer);
+procedure WeAreDone;
+var
+  Mem: TMemoryStream;
+begin
+  Mem := TMemoryStream.Create;
+  try
+    Getfile(DoneURL, Mem);
+  except
+  end;
+  Mem.Free;
+end;
+
+function MakeVersionNumber(s: string): TMyVersion;
+begin
+  s := Trim(s);
+  Result.IsBeta := Pos('beta', s) > 0;
+  if Pos(' ', s) > 0 then
+    Delete(s, Pos(' ', s), Length(s));
+  Result.Major := StrToIntDef(Copy(s, 1, Pos('.', s) - 1), -1);
+  Result.Minor := StrToIntDef(Copy(s, Pos('.', s) + 1, Length(s)), -1);
+end;
+
+function PrintVersionNumber(Mv: TMyVersion): string;
+begin
+  Result := '';
+  if (Mv.Major >= 0) and (MV.Minor >= 0) then
+  begin
+    Result := IntToStr(Mv.Major) + '.' + IntToStr(Mv.Minor);
+    if Mv.IsBeta then
+      Result := Result + ' beta';
+  end;
+end;
+
+procedure TStartConvertThread.ProgressUpdate(Sender: TObject; Percent: integer; Speed: Integer; ASize: Int64);
 var
   t1: Cardinal;
+  s: string;
 begin
   t1 := GetTickCount;
-  if t1-LastTime > 500 then
+  if t1 - LastTime > 500 then
   begin
+    s := GetLocString(MSG_STATUS_DOWNLOADING) + '...' + FloatToStrF(ASize/1000/1000, ffFixed, 8, 3) + ' MB';
     if Speed > 0 then
-      DoProgress(Percent, GetLocString(MSG_STATUS_DOWNLOADING) + '...' + FloatToStrF(Speed/1000, ffFixed, 8,2) + ' kbyte/s')
-    else
-      DoProgress(Percent, GetLocString(MSG_STATUS_DOWNLOADING) + '...');
+      s := s + ' @' + FloatToStrF(Speed/1000, ffFixed, 8,2) + ' kb/s';
+    //
+    if Percent = 0 then
+      Percent := -1;
+    DoProgress(Percent, s);
+    //
     LastTime := GetTickCount;
   end;
 end;
@@ -211,60 +276,88 @@ end;
 
 procedure TStartConvertThread.Execute;
 var
-  URL, Ext: string;
+  Url, Ext: string;
   Mem: TMemoryStream;
   SL: TStringList;
+  FS: TFileStream;
 begin
   try
-    DoProgress(0, GetLocString(MSG_STATUS_CONVERT));
-    //Format := Prefs.Format;
-    Url := ConvertURL + ID + '&format=' + IntToStr(Format);
-    Mem := TMemoryStream.Create;
-    try
-      //if CheckMe then
-      //  Exit;
-      if GetFile(Url, Mem) then
-      begin
-        if Terminated then
-          Exit;
-        SL := TStringList.Create;
-        Mem.Position := 0;
-        SL.LoadFromStream(Mem);
-        //
-        LastTime := GetTickCount;
-        DoProgress(0, GetLocString(MSG_STATUS_DOWNLOADING) + '...');
-        if Pos('http', sl[0]) >= 1 then
+    //writeln('start Thread ', FormatID);
+    if FormatID = '' then
+    begin
+      DoProgress(0, GetLocString(MSG_STATUS_CONVERT));
+      //Format := Prefs.Format;
+      Url := ConvertURL + ID + '&format=' + IntToStr(Format);
+      Mem := TMemoryStream.Create;
+      try
+        //if CheckMe then
+        //  Exit;
+        if GetFile(Url, Mem) then
         begin
-          //writeln('download file');
-          if Format = 2 then
-            Ext := '.mpeg'
-          else
-            Ext := '.cdxl';
-          DonwloadFile(@ProgressUpdate, sl[0], IncludeTrailingPathDelimiter(Movies) + ID + Ext);
+          if Terminated then
+            Exit;
+          SL := TStringList.Create;
+          Mem.Position := 0;
+          SL.LoadFromStream(Mem);
           //
-          if FileExists(IncludeTrailingPathDelimiter(Movies) + ID + Ext) then
+          LastTime := GetTickCount;
+          DoProgress(0, GetLocString(MSG_STATUS_DOWNLOADING) + '...');
+          if Pos('http', sl[0]) >= 1 then
           begin
-            if Terminated then
+            //writeln('download file');
+            if Format = 2 then
+              Ext := '.mpeg'
+            else
+              Ext := '.cdxl';
+            DonwloadFile(@ProgressUpdate, sl[0], IncludeTrailingPathDelimiter(Movies) + ID + Ext, True);
+            WeAreDone;
+            //
+            if FileExists(IncludeTrailingPathDelimiter(Movies) + ID + Ext) then
             begin
-              DeleteFile(IncludeTrailingPathDelimiter(Movies) + ID + Ext);
-              Exit;
+              if Terminated then
+              begin
+                DeleteFile(IncludeTrailingPathDelimiter(Movies) + ID + Ext);
+                Exit;
+              end;
+              with TStringList.Create do
+              begin
+                Text := Desc;
+                SaveToFile(IncludeTrailingPathDelimiter(Movies) + ID + '.txt');
+                Free;
+              end;
             end;
-            with TStringList.Create do
-            begin
-              Text := Desc;
-              SaveToFile(IncludeTrailingPathDelimiter(Movies) + ID + '.txt');
-              Free;
-            end;
-          end;
-        end
-        else
-          DoProgress(0, GetLocString(MSG_ERROR_CONVERT) +  ' ' + SL.Text);//writeln('no download');
+          end
+          else
+            DoProgress(0, GetLocString(MSG_ERROR_CONVERT) +  ' ' + SL.Text);//writeln('no download');
+        end;
+        Mem.Free;
+        SL.Free;
+      except
+        on e:Exception do
+        begin
+          writeln('Convert Thread Exception ' + E.Message);
+          WeAreDone;
+        end;
       end;
-      Mem.Free;
-      SL.Free;
-    except
-      on e:Exception do
-        writeln('Exception ' + E.Message);
+    end
+    else
+    begin
+      //writeln('start with FormatID');
+      if Pos('http', FormatID) = 1 then
+        Url := FormatID
+      else
+        Url := DownloadURL + ID + '&format=' + FormatID;
+      //writeln('URL ', URL);
+      {FS := TFileStream.Create(Filename, fmCreate);
+      try
+      GetFile(Url, FS);
+      except
+        ON E:Exception do
+          writeln(E.MEssage);
+      end;
+      FS.Free;}
+      DonwloadFile(@ProgressUpdate, Url, Filename, False);
+      //writeln('done?');
     end;
   finally
     Synchronize(@DoOnEnd);
@@ -279,14 +372,14 @@ begin
     OnEnd(Self)
 end;
 
-procedure TSearchThread.DoOnEnd;
+procedure Tsearchthread.Doonend;
 begin
   if Assigned(OnEnd) then
     OnEnd(Self);
 end;
 
 
-procedure TSearchThread.DoProgress(APercent: integer; AText: string);
+procedure Tsearchthread.Doprogress(Apercent: Integer; Atext: String);
 begin
   if Assigned(OnProgress) then
     OnProgress(Self, APercent, AText);
@@ -302,17 +395,18 @@ begin
     Result := string(Node.NodeValue);
 end;
 
-procedure TSearchThread.Execute;
+procedure Tsearchthread.Execute;
 var
   Url, SearchTerm, EncStr: string;
   i, Idx: Integer;
   Mem: TMemoryStream;
   Doc: TXMLDocument;
-  Child, Node: TDOMNode;
+  Child, Node, FNode: TDOMNode;
   s: String;
   p: Integer;
   Count: Integer;
   AsID: Boolean;
+  SRes: TResultEntry;
 begin
   DoProgress(0, GetLocString(MSG_STATUS_PREPSEARCH));
   Doc := nil;
@@ -352,9 +446,9 @@ begin
       for i := 1 to Length(SearchTerm) do
         EncStr := EncStr + '%' + IntToHex(Ord(SearchTerm[i]),2);
       if AsId then
-        Url := BaseURLID + EncStr
+        Url := SearchURLID + EncStr
       else
-        Url := BaseURL + EncStr + '&num=' + IntToStr(Prefs.NumSearch);
+        Url := SearchURL + EncStr + '&num=' + IntToStr(Prefs.NumSearch);
     end;
     Mem := TMemoryStream.Create;
     ErrMsg := '';
@@ -401,28 +495,55 @@ begin
           Inc(i);
           if Child.NodeName <> 'result' then
             Continue;
-          Idx := Length(Results);
-          SetLength(Results, Idx + 1);
-          Results[Idx].Name := GetStringAttribute(Child, 'fulltitle');
-          Results[Idx].Id := GetStringAttribute(Child, 'id');
-          Results[Idx].Icon := GetStringAttribute(Child, 'icon');
-          Results[Idx].Duration := GetStringAttribute(Child, 'duration');
-          Results[Idx].Desc := Results[Idx].Name + #10#10;
+          SRes := TResultEntry.Create;
+          SearchRes.Add(SRes);
+          SRes.Name := GetStringAttribute(Child, 'fulltitle');
+          SRes.Id := GetStringAttribute(Child, 'id');
+          SRes.Icon := GetStringAttribute(Child, 'icon');
+          SRes.Duration := StrToIntDef(GetStringAttribute(Child, 'duration'), 0);
+          SRes.Desc := SRes.Name + #10#10;
           s := GetStringAttribute(Child, 'uploader');
           if s <> '' then
-            Results[Idx].Desc := Results[Idx].Desc + 'Uploader: ' + s + #10;
+            SRes.Desc := SRes.Desc + 'Uploader: ' + s + #10;
           s := GetStringAttribute(Child, 'like_count');
           if s <> '' then
-            Results[Idx].Desc := Results[Idx].Desc + 'Likes: ' + s + #10;
+            SRes.Desc := SRes.Desc + 'Likes: ' + s + #10;
           s := GetStringAttribute(Child, 'view_count');
           if s <> '' then
-            Results[Idx].Desc := Results[Idx].Desc + 'Views: ' + s + #10;
+            SRes.Desc := SRes.Desc + 'Views: ' + s + #10;
           s := GetStringAttribute(Child, 'license');
           if s <> '' then
-            Results[Idx].Desc := Results[Idx].Desc + 'License: ' + s + #10;
+            SRes.Desc := SRes.Desc + 'License: ' + s + #10;
           Node := Child.FirstChild;
-          if Assigned(Node) then
-            Results[Idx].Desc := Results[Idx].Desc + #10 + string(Node.TextContent);
+          while Assigned(Node) do
+          begin
+            if Node.NodeName = 'description' then
+              SRes.Desc := SRes.Desc + #10 + string(Node.TextContent);
+            if Node.NodeName = 'formats' then
+            begin
+              FNode := Node.FirstChild;
+              while Assigned(FNode) do
+              begin
+                if FNode.NodeName = 'format' then
+                begin
+                  Idx := Length(SRes.Formats);
+                  SetLength(SRes.Formats, Idx + 1);
+                  SRes.Formats[idx].Title := GetStringAttribute(FNode, 'title');
+                  SRes.Formats[idx].ACodec := GetStringAttribute(FNode, 'acodec');
+                  SRes.Formats[idx].VCodec := GetStringAttribute(FNode, 'vcodec');
+                  SRes.Formats[idx].URL := GetStringAttribute(FNode, 'url');
+                  SRes.Formats[idx].Ext := GetStringAttribute(FNode, 'ext');
+                  SRes.Formats[idx].FormatID := GetStringAttribute(FNode, 'format_id');
+                end;
+                FNode := FNode.NextSibling;
+              end;
+            end;
+            Node := Node.NextSibling;
+          // get formats
+          end;
+
+
+
           Child := Child.NextSibling;
         end;
         DoProgress(100, GetLocString(MSG_STATUS_SEARCHDONE));
@@ -445,6 +566,18 @@ begin
 
 end;
 
+constructor Tsearchthread.Create;
+begin
+  inherited Create(True);
+  SearchRes := TResultEntries.Create(False);
+end;
+
+destructor Tsearchthread.Destroy;
+begin
+  SearchRes.Free;
+  inherited Destroy;
+end;
+
 { TMainWindow }
 
 procedure Tmainwindow.Searchentry(Sender: Tobject);
@@ -459,7 +592,7 @@ begin
     SearchThread.WaitFor;
     SearchThread.Free;
   end;
-  SearchThread := TSearchThread.Create(True);
+  SearchThread := TSearchThread.Create;
   SearchThread.GetSharedList := False;
   SearchThread.Search := SearchField.Contents;
   SearchThread.OnProgress := @ProgressEvent;
@@ -475,6 +608,7 @@ var
   i: Integer;
   t, s: Integer;
   st: string;
+  SRes: TResultEntry;
 begin
   ProgressEvent(Self, 0, GetLocString(MSG_STATUS_IDLE));
   if SearchThread.IsError then
@@ -486,32 +620,25 @@ begin
     // get lists
     List.Quiet := True;
     List.NumColumns := 4;
-    List.NumRows := Length(SearchThread.Results);
-    SetLength(Results, Length(SearchThread.Results));
+    List.NumRows := SearchThread.SearchRes.Count;
+    ResultEntries.Clear;
     for i := 0 to List.NumRows - 1 do
     begin
-      Results[i].id := SearchThread.Results[i].id;
-      Results[i].Desc := SearchThread.Results[i].Desc;
-      Results[i].Icon := SearchThread.Results[i].Icon;
+      SRes := SearchThread.SearchRes[i];
+      ResultEntries.Add(Sres);
       List.Cells[0, i] := IntToStr(i + 1);
-      st := SearchThread.Results[i].Name;
+      st := SRes.Name;
       if Length(st) > Prefs.MaxTitleLen + 3 then
         st := Copy(st, 1, Prefs.MaxTitleLen) + '...';
       List.Cells[1, i] := UTF8ToAnsi(st);
-      t := StrToIntDef(SearchThread.Results[i].Duration, 0);
-      Results[i].Duration := t;
+      t := SRes.Duration;
       s := t mod 60;
-      List.Cells[2, i] := IntToStr(t div 60) + ':' + Format('%2.2d',[s]);
-      case Prefs.Format of
-        1: t := t * 300;
-        2: t := t * 170;
-      else
-        t := t * 150;
-      end;
+      List.Cells[2, i] := IntToStr(t div 60) + ':' + Format('%2.2d',[s]) + ' ';
+      t := t * DownSizes[Prefs.Format];
       if t > 1000 then
-        List.Cells[3, i] := FloatToStrF(t/1024, ffFixed, 8,1) + ' MByte'
+        List.Cells[3, i] := FloatToStrF(t/1024, ffFixed, 8,1) + ' MB '
       else
-        List.Cells[3, i] := IntToStr(t) + ' kByte'
+        List.Cells[3, i] := IntToStr(t) + ' kB '
     end;
     List.Quiet := False;
     SearchField.Contents := '';
@@ -528,24 +655,26 @@ end;
 procedure Tmainwindow.Endcthread(Sender: Tobject);
 var
   i: Integer;
+  SRes: TResultEntry;
 begin
   ProgressEvent(Self, 0, GetLocString(MSG_STATUS_IDLE));
 
-  for i := 0 to High(Results) do
+  for i := 0 to ResultEntries.Count do
   begin
-    if ConvertThread.Id = Results[i].Id then
+    SRes := ResultEntries[i];
+    if ConvertThread.Id = SRes.Id then
     begin
       List.Row := i;
       Break;
     end;
   end;
-  if (List.Row >= 0) and (List.Row <= High(Results)) then
+  if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
   begin
     PlayFormat := 0;
-    if FileExists(IncludeTrailingPathDelimiter(Movies) + Results[List.Row].ID + '.mpeg') then
+    if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[List.Row].ID + '.mpeg') then
       PlayFormat := 2
     else
-      if FileExists(IncludeTrailingPathDelimiter(Movies) + Results[List.Row].ID + '.cdxl') then
+      if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[List.Row].ID + '.cdxl') then
         PlayFormat := 1;
     EnableDownloads(PlayFormat = 0, PlayFormat > 0);
   end
@@ -557,21 +686,23 @@ begin
   TimerEvent(Timer);
   Timer.Enabled := False;
   ClipChanged(nil);
-  if Prefs.AutoStart and (not PlayBtn.Disabled) then
-    PlayClick(PlayBtn)
+  if Prefs.AutoStart and (not PlayBtn.Disabled) and (ConvertThread.FormatID = '') then
+    PlayClick(PlayBtn);
+  //if ConvertThread.FormatID <> '' then
+  //  ShowMessage('Download Done');
 end;
 
 procedure Tmainwindow.Listclick(Sender: Tobject);
 begin
   Destroydtobj;
-  if (List.Row >= 0) and (List.Row <= High(Results)) then
+  if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
   begin
-    TextOut.Text := UTF8ToAnsi(Results[List.Row].Desc);
+    TextOut.Text := UTF8ToAnsi(ResultEntries[List.Row].Desc);
     PlayFormat := 0;
-    if FileExists(IncludeTrailingPathDelimiter(Movies) + Results[List.Row].ID + '.mpeg') then
+    if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[List.Row].ID + '.mpeg') then
       PlayFormat := 2
     else
-      if FileExists(IncludeTrailingPathDelimiter(Movies) + Results[List.Row].ID + '.cdxl') then
+      if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[List.Row].ID + '.cdxl') then
         PlayFormat := 1;
     EnableDownloads(PlayFormat = 0, PlayFormat > 0);
     //
@@ -601,9 +732,10 @@ begin
     ConvertThread.WaitFor;
     ConvertThread.Free;
   end;
-  if (List.Row >= 0) and (List.Row <= High(Results)) then
+  if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
   begin
-    FileSize := Int64(Results[List.Row].Duration) * DownSizes[Format] * 1024;
+    FileSize := Int64(ResultEntries[List.Row].Duration) * DownSizes[Format] * 1024;
+    UpdateFreeMem;
     if FileSize > OldFreeAmount then
     begin
       if MessageBox('Error', GetLocString(MSG_ERROR_NO_SPACE), [GetLocString(MSG_GUI_YES), GetLocString(MSG_GUI_NO)]) <> 1 then
@@ -613,12 +745,12 @@ begin
       end;
     end;
     CT := TStartConvertThread.Create(True);
-    CT.Desc := Results[List.Row].Desc;
+    CT.Desc := ResultEntries[List.Row].Desc;
     CT.Format := Format;
     CT.OnProgress := @ProgressEvent;
     CT.Movies := Movies;
     CT.OnEnd := @EndCThread;
-    CT.Id :=  Results[List.Row].ID;
+    CT.Id :=  ResultEntries[List.Row].ID;
     CT.Start;
     ConvertThread := CT;
     StopButton.Disabled := False;
@@ -637,9 +769,9 @@ var
 begin
   if GetTickCount - LastStart < 200 then
     Exit;
-  if (List.Row >= 0) and (List.Row <= High(Results)) then
+  if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
   begin
-    MyID := Results[List.Row].ID;
+    MyID := ResultEntries[List.Row].ID;
     if PlayFormat = 2 then
     begin
       MovieName := IncludeTrailingPathDelimiter(Movies) + MyID + '.mpeg';
@@ -671,9 +803,9 @@ var
   MyID: string;
   MovieName, ReadMeName, MPEGName: string;
 begin
-  if (List.Row >= 0) and (List.Row <= High(Results)) then
+  if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
   begin
-    MyID := Results[List.Row].ID;
+    MyID := ResultEntries[List.Row].ID;
     MovieName := IncludeTrailingPathDelimiter(Movies) + MyID + '.cdxl';
     MPEGName := IncludeTrailingPathDelimiter(Movies) + MyID + '.mpeg';
     ReadmeName := IncludeTrailingPathDelimiter(Movies) + MyID + '.txt';
@@ -714,6 +846,7 @@ var
   Idx,i : Integer;
   st: string;
   Format: Integer;
+  SRes: TResultEntry;
 begin
   // make a list
   MyRes := [];
@@ -754,17 +887,19 @@ begin
   if Length(MyRes) > 0 then
   begin
     List.NumRows := 0;
-    SetLength(Results, 0);
+    ResultEntries.Clear;
 
     List.Quiet := True;
     List.NumColumns := 3;
     List.NumRows := Length(MyRes);
-    SetLength(Results, Length(MyRes));
+    //SetLength(Results, Length(MyRes));
     for i := 0 to List.NumRows - 1 do
     begin
-      Results[i].id := MyRes[i].id;
-      Results[i].Desc := MyRes[i].Desc;
-      Results[i].Duration := 0;
+      SRes := TResultEntry.Create;
+      ResultEntries.Add(SRes);
+      SRes.id := MyRes[i].id;
+      SRes.Desc := MyRes[i].Desc;
+      SRes.Duration := 0;
       List.Cells[0, i] := IntToStr(i + 1);
       st := MyRes[i].Name;
       if Length(st) > Prefs.MaxTitleLen + 3 then
@@ -828,19 +963,14 @@ begin
     DownloadBtn.Contents := GetLocString(MSG_GUI_DOWNLOAD_CDXL);}
   if List.NumColumns > 3 then
   begin
-    for i := 0 to High(Results) do
+    for i := 0 to ResultEntries.Count - 1 do
     begin
-      t := StrToIntDef(SearchThread.Results[i].Duration, 0);
-      case Prefs.Format of
-        1: t := t * 300;
-        2: t := t * 170;
-      else
-        t := t * 150;
-      end;
+      t := ResultEntries[i].Duration;
+      t := t * DownSizes[Prefs.Format];
       if t > 1000 then
-        List.Cells[3, i] := FloatToStrF(t/1024, ffFixed, 8,1) + ' MByte'
+        List.Cells[3, i] := FloatToStrF(t/1024, ffFixed, 8,1) + ' MB'
       else
-        List.Cells[3, i] := IntToStr(t) + ' kByte'
+        List.Cells[3, i] := IntToStr(t) + ' kB'
     end;
   end;
 end;
@@ -855,9 +985,9 @@ begin
   ShareBtn.Disabled := True;
   hp := nil;
   try
-    if (List.Row >= 0) and (List.Row <= High(Results)) then
+    if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
     begin
-      MyID := Results[List.Row].ID;
+      MyID := ResultEntries[List.Row].ID;
       MyID := StringReplace(MyID, '/', ' ', [rfReplaceAll]);
       MyID := StringReplace(MyID, '?', ' ', [rfReplaceAll]);
       MyID := StringReplace(MyID, '#', ' ', [rfReplaceAll]);
@@ -898,7 +1028,7 @@ begin
     SearchThread.WaitFor;
     SearchThread.Free;
   end;
-  SearchThread := TSearchThread.Create(True);
+  SearchThread := TSearchThread.Create;
   SearchThread.GetSharedList := True;
   SearchThread.OnProgress := @ProgressEvent;
   SearchThread.OnEnd := @EndThread;
@@ -915,11 +1045,16 @@ begin
 end;
 
 procedure Tmainwindow.Aboutamitube(Sender: Tobject);
+var
+  s: string;
 begin
-  ShowMessage(MUIX_C + #10 + MUIX_B + '---   ' + ShortVer + '   ---' + MUIX_N+ #10#10 +
-              'made with Free Pascal for Amiga by ALB42'#10 +
-              'special thanks to Michal Bergseth for idea and encouragement.'#10#10 +
-              'Check ' + MUIX_U + 'https://blog.alb42.de' + MUIX_N + ' for updates.'#10);
+  s := (MUIX_C + #10 + MUIX_B + '---   ' + ShortVer + '   ---' + MUIX_N+ #10#10 +
+       'made with Free Pascal for Amiga by ALB42'#10 +
+       'special thanks to Michal Bergseth for idea and encouragement.'#10#10 +
+       'Check ' + MUIX_U + 'https://blog.alb42.de' + MUIX_N + ' for updates.'#10);
+  if BaseServer <> '' then
+    s := s + 'Used Server: ' + BaseServer + #10;
+  ShowMessage(s);
 end;
 
 procedure Tmainwindow.Muisettingsstart(Sender: Tobject);
@@ -1025,7 +1160,7 @@ end;
 
 procedure Tmainwindow.Clipchanged(Sender: Tobject);
 begin
-  ClipTimer.Enabled := Prefs.ObserveClip;
+  ClipTimer.Enabled := True;
 end;
 
 procedure Tmainwindow.Closewindow(Sender: Tobject; var Closeaction: Tcloseaction);
@@ -1042,26 +1177,26 @@ var
   Filename: string;
 begin
   Destroydtobj;
-  if (List.Row>=0) and (List.Row <= High(Results)) then
+  if (List.Row>=0) and (List.Row < ResultEntries.Count) then
   begin
     Setstatustext('Load Icon');
-    URL := IconURL + Results[List.Row].ID;
+    URL := IconURL + ResultEntries[List.Row].ID;
 
-    if FileExists(IncludeTrailingPathDelimiter(Movies) + Results[List.Row].ID + '.jpg') then
+    if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[List.Row].ID + '.jpg') then
     begin
-      Filename := IncludeTrailingPathDelimiter(Movies) + Results[List.Row].ID + '.jpg';
+      Filename := IncludeTrailingPathDelimiter(Movies) + ResultEntries[List.Row].ID + '.jpg';
       IconName := '';
     end
     else
     begin
-      if FileExists(IncludeTrailingPathDelimiter(Movies) + Results[List.Row].ID + '.txt') then
+      if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[List.Row].ID + '.txt') then
       begin
-        Filename := IncludeTrailingPathDelimiter(Movies) + Results[List.Row].ID + '.jpg';
+        Filename := IncludeTrailingPathDelimiter(Movies) + ResultEntries[List.Row].ID + '.jpg';
         IconName := '';
       end
       else
       begin
-        IconName := 'T:' + Results[List.Row].ID + '.jpg';
+        IconName := 'T:' + ResultEntries[List.Row].ID + '.jpg';
         FileName := IconName;
       end;
 
@@ -1149,9 +1284,218 @@ begin
   //
 end;
 
-procedure Tmainwindow.Setstatustext(Atext: String);
+procedure Tmainwindow.Getoriginal(Sender: Tobject);
+var
+  i, Count: Integer;
+  EncStr, URL: string;
+  SRes: TResultEntry;
+  Mem: TMemoryStream;
+  Doc: TXMLDocument;
+  Idx: Integer;
+  Child, Node, FNode: TDOMNode;
+  s: string;
+begin
+  if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
+  begin
+    Self.Sleep := True;
+    SRes := ResultEntries[List.Row];
+    // no formats until now, so go and get them
+    if Length(SRes.Formats) = 0 then
+    begin
+      EncStr := '';
+      for i := 1 to Length(SRes.ID) do
+        EncStr := EncStr + '%' + IntToHex(Ord(SRes.ID[i]),2);
+      Url := SearchURLID + EncStr;
+      Mem := TMemoryStream.Create;
+      try
+        if GetFile(Url, Mem) then
+        begin
+          try
+            Mem.Position := 0;
+            ReadXMLFile(Doc, Mem);
+          except
+            on E: Exception do
+            begin
+              writeln('Exception in ReadXMLFile ', E.Message);
+              Mem.Position := 0;
+              With TStringList.Create do
+              begin
+                LoadFromStream(Mem);
+                Writeln(Text);
+                Exit;
+                Free;
+              end;
+            end;
+          end;
+          Child := Doc.DocumentElement.FirstChild;
+          Count := Doc.DocumentElement.ChildNodes.Count;
+        if Count = 0 then
+          Count := 1;
+        i := 0;
+        if Assigned(Child) then
+        begin
+          SRes.Name := GetStringAttribute(Child, 'fulltitle');
+          SRes.Id := GetStringAttribute(Child, 'id');
+          SRes.Icon := GetStringAttribute(Child, 'icon');
+          SRes.Duration := StrToIntDef(GetStringAttribute(Child, 'duration'), 0);
+          SRes.Desc := SRes.Name + #10#10;
+          s := GetStringAttribute(Child, 'uploader');
+          if s <> '' then
+            SRes.Desc := SRes.Desc + 'Uploader: ' + s + #10;
+          s := GetStringAttribute(Child, 'like_count');
+          if s <> '' then
+            SRes.Desc := SRes.Desc + 'Likes: ' + s + #10;
+          s := GetStringAttribute(Child, 'view_count');
+          if s <> '' then
+            SRes.Desc := SRes.Desc + 'Views: ' + s + #10;
+          s := GetStringAttribute(Child, 'license');
+          if s <> '' then
+            SRes.Desc := SRes.Desc + 'License: ' + s + #10;
+          Node := Child.FirstChild;
+          while Assigned(Node) do
+          begin
+            if Node.NodeName = 'description' then
+              SRes.Desc := SRes.Desc + #10 + string(Node.TextContent);
+            if Node.NodeName = 'formats' then
+            begin
+              FNode := Node.FirstChild;
+              while Assigned(FNode) do
+              begin
+                if FNode.NodeName = 'format' then
+                begin
+                  Idx := Length(SRes.Formats);
+                  SetLength(SRes.Formats, Idx + 1);
+                  SRes.Formats[idx].Title := GetStringAttribute(FNode, 'title');
+                  SRes.Formats[idx].ACodec := GetStringAttribute(FNode, 'acodec');
+                  SRes.Formats[idx].VCodec := GetStringAttribute(FNode, 'vcodec');
+                  SRes.Formats[idx].URL := GetStringAttribute(FNode, 'url');
+                  SRes.Formats[idx].Ext := GetStringAttribute(FNode, 'ext');
+                  SRes.Formats[idx].FormatID := GetStringAttribute(FNode, 'format_id');
+                end;
+                FNode := FNode.NextSibling;
+              end;
+            end;
+            Node := Node.NextSibling;
+          // get formats
+          end;
+          Child := Child.NextSibling;
+        end;
+        end;
+      finally
+        Mem.Free;
+      end;
+    end;
+    ResWin.FOnStartDownLoad := @Startdownload;
+    ResWin.OnCloseRequest := @CloseRes;
+    ResWin.Openreslist(SRes);
+  end;
+end;
+
+procedure Tmainwindow.Closeres(Sender: Tobject; var Closeaction: Tcloseaction);
+begin
+  //
+  Self.Sleep := False;
+end;
+
+function IsNewerVersion(NewVers: TMyVersion): Boolean;
+begin
+  Result := NewVers.Major > MyVersion.Major;
+  if Result then
+    Exit;
+  if (NewVers.Major = MyVersion.Major) then
+  begin
+    Result := NewVers.Minor > MyVersion.Minor;
+    if Result then
+      Exit;
+    if NewVers.Minor = MyVersion.Minor then
+    begin
+      if (not NewVers.IsBeta) and MyVersion.isBeta then
+        Result := True;
+    end;
+  end;
+end;
+
+procedure Tmainwindow.Checkforupdate(Sender: Tobject);
+var
+  Mem: TMemoryStream;
+  OnlineVersion, Link, s, TargetName: string;
+begin
+  Mem := TMemoryStream.Create;
+  try
+    try
+      OnlineVersion := '';
+      Link := '';
+      if GetFile(UpdateURL, Mem) then
+      begin
+        Mem.Position := 0;
+
+        with TStringList.Create do
+        begin
+          LoadFromStream(Mem);
+          if Count > 0 then
+            OnlineVersion := Strings[0];
+          if Count > 1 then
+            Link := Strings[1];
+          Free;
+        end;
+        //
+        //Check for Version
+        if IsNewerVersion(MakeVersionNumber(OnlineVersion)) then
+        begin
+          TargetName := '';
+          s := StringReplace(GetLocString(MSG_GUI_UPDATEAVAIL), '%o', PrintVersionNumber(MyVersion), [rfReplaceAll]);
+          s := StringReplace(s, '%n', OnlineVersion, [rfReplaceAll]);
+          s := StringReplace(s, '\n', #10, [rfReplaceAll]);
+          if MessageBox('Update', s, [GetLocString(MSG_GUI_YES), GetLocString(MSG_GUI_NO)]) = 1 then
+          begin
+            s := ExtractFilename(Link);
+            with TFileDialog.Create do
+            begin
+              TitleText := GetLocString(MSG_GUI_SELECTFILE);//'Select name/path for file.';
+              Pattern := '#?' + ExtractFileExt(s);
+              Directory := LastDir;
+              Filename := s;
+              SaveMode := True;
+              if Execute then
+              begin
+                LastDir := IncludeTrailingPathDelimiter(Directory);
+                TargetName := Filename;
+              end;
+              Free;
+            end;
+            if TargetName <> '' then
+              StartDownloadURL(Link, TargetName);
+          end;
+      begin
+        EnableDownloads(True, False);
+        Exit;
+      end;
+        end
+        else
+        begin
+          ShowMessage(GetLocString(MSG_GUI_NOUPDATE));
+        end;
+      end;
+      if (Link = '') or (OnlineVersion = '') then
+      begin
+        ShowMessage(GetLocString(MSG_ERROR_UPDATE));
+      end;
+    except
+      on E: Exception do
+      begin
+        ShowMessage(GetLocString(MSG_ERROR_UPDATE) + ' ' + E.Message);
+      end;
+    end;
+  finally
+    Mem.Free;
+  end;
+end;
+
+procedure Tmainwindow.Setstatustext(Atext: String; Apos: Longint);
 begin
   StatusLabel.Contents := AText;
+  if APos >= 0 then
+    Progress.Current := APos;
 end;
 
 procedure Tmainwindow.Destroydtobj;
@@ -1196,11 +1540,12 @@ begin
   ShareBtn.ShowMe := PlayButtons;
   if Enabled then
   begin
-    if (List.Row >= 0) and (List.Row <= High(Results)) and Prefs.AllFormats then
-      Updatedownloadbtns(Results[List.Row].Duration)
+    if (List.Row >= 0) and (List.Row < ResultEntries.Count) and Prefs.AllFormats then
+      Updatedownloadbtns(ResultEntries[List.Row].Duration)
     else
       Updatedownloadbtns(0);
   end;
+  DownloadOriginal.Disabled := not(Enabled or PlayButtons);
   BtnGroup.ExitChange;
 end;
 
@@ -1209,7 +1554,7 @@ var
   t, i: Integer;
   s: string;
 begin
-  for i := 0 to 2 do
+  for i := 0 to High(DownSizes) do
   begin
     t := DownSizes[i] * Duration;
     s := '';
@@ -1233,7 +1578,7 @@ var
 begin
   //
   Info(MovieLock, @InfoData);
-  FreeAmount := (InfoData.id_NumBlocks - InfoData.id_NumBlocksUsed) * InfoData.id_BytesPerBlock;
+  FreeAmount := (Int64(InfoData.id_NumBlocks) - Int64(InfoData.id_NumBlocksUsed)) * InfoData.id_BytesPerBlock;
 
   if FreeAmount <> OldFreeAmount then
   begin
@@ -1265,6 +1610,46 @@ begin
   end;
 end;
 
+procedure Tmainwindow.Startdownload(Aid, Aformatid, Afilename: String);
+begin
+  //
+  SetStatusText(GetLocString(MSG_STATUS_DOWNLOADING) + '...', 50);
+  if Assigned(ConvertThread) then
+  begin
+    ConvertThread.WaitFor;
+    ConvertThread.Free;
+  end;
+  ConvertThread := TStartConvertThread.Create(True);
+  ConvertThread.Id := Aid;
+  ConvertThread.FormatID := AFormatID;
+  ConvertThread.filename := AFilename;
+  ConvertThread.OnProgress := @ProgressEvent;
+  ConvertThread.OnEnd := @EndCThread;
+  ConvertThread.start;
+  Timer.Enabled := True;
+  ResWin.Close;
+  self.Sleep := False;
+end;
+
+procedure Tmainwindow.StartDownloadURL(URL, AFilename: string);
+begin
+  SetStatusText(GetLocString(MSG_STATUS_DOWNLOADING) + '...', 50);
+  if Assigned(ConvertThread) then
+  begin
+    ConvertThread.WaitFor;
+    ConvertThread.Free;
+  end;
+  ConvertThread := TStartConvertThread.Create(True);
+  ConvertThread.FormatID := Url;
+  ConvertThread.filename := AFilename;
+  ConvertThread.OnProgress := @ProgressEvent;
+  ConvertThread.OnEnd := @EndCThread;
+  ConvertThread.start;
+  Timer.Enabled := True;
+  ResWin.Close;
+  self.Sleep := False;
+end;
+
 function GetStrToolType(DObj: PDiskObject; Entry: string; Default: string): string;
 var
   Res: PChar;
@@ -1291,6 +1676,7 @@ begin
   DTObj := nil;
   OnCloseRequest := @CloseWindow;
   ValLock := TCriticalSection.Create;
+  ResultEntries := TResultEntries.Create(True);
   ID := Make_ID('A','M','T','U');
   ConvertThread := nil;
   SearchThread := nil;
@@ -1298,18 +1684,29 @@ begin
   Title := ShortVer;
 
   Movies := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + MovieTemplateFolder;
+  BaseServer := '';
 
   DObj := GetDiskObject(PChar(ParamStr(0)));
   if Assigned(DObj) then
   begin
     Movies := ExcludeTrailingPathDelimiter(GetStrToolType(DObj, 'MOVIEDIR', Movies));
+    BaseServer := GetStrToolType(DObj, 'SERVERURL', '');
     FreeDiskObject(DObj);
   end;
+
+  if (BaseServer <> '') and (Pos('http://', lowercase(BaseServer)) = 1) then
+  begin
+    if BaseServer[Length(BaseServer)] <> '/' then
+      BaseServer := BaseServer + '/';
+    MakeURLs(BaseServer);
+  end
+  else
+    BaseServer := '';
 
   if not DirectoryExists(Movies) then
     CreateDir(Movies);
 
-  MovieLock := Lock(Movies, SHARED_LOCK);
+  MovieLock := Lock(Pchar(Movies), SHARED_LOCK);
 
   Horizontal := False;
 
@@ -1381,6 +1778,9 @@ begin
   begin
     ShowLines := True;
     OnClick := @ListClick;
+    {$ifdef AROS}
+    OnSelectChange := @ListClick;
+    {$endif}
     Parent := Grp1;
   end;
   // Splitter
@@ -1455,6 +1855,11 @@ begin
     DownloadBtn[i].Tag := i;
     DownloadBtn[i].Parent := BtnGroup;
   end;
+
+  DownloadOriginal := TMUIButton.Create(GetLocString(MSG_GUI_GETORIGINAL){'Get Original'});
+  DownloadOriginal.OnClick := @GetOriginal;
+  DownloadOriginal.Disabled := True;
+  DownloadOriginal.Parent := BtnGroup;
 
   PlayBtn := TMUIButton.Create(GetLocString(MSG_GUI_PLAY));
   PlayBtn.OnClick := @PlayClick;
@@ -1535,6 +1940,11 @@ begin
   MI.Parent := Menu;
 
   MI := TMUIMenuItem.Create;
+  MI.Title := GetLocString(MSG_MENU_CHECK_UPDATES); //'Check for Update ...';
+  MI.OnTrigger := @CheckForUpdate;
+  MI.Parent := Menu;
+
+  MI := TMUIMenuItem.Create;
   MI.Title := GetLocString(MSG_MENU_ABOUT_MUI); //'About MUI ...';
   MI.OnTrigger := @AboutMUI;
   MI.Parent := Menu;
@@ -1575,15 +1985,26 @@ begin
     ConvertThread.Free;
   end;
   DestroyDTObj;
+  ResultEntries.Free;
   ValLock.Free;
   inherited Destroy;
 end;
 
 procedure MakeVersions;
+var
+  NumVer: string;
 begin
   ShortVer := VERSION;
   Delete(ShortVer, 1, Pos(':', ShortVer) + 1);
   Delete(ShortVer, Pos('(', ShortVer) - 1, Length(ShortVer));
+
+  NumVer := ShortVer;
+  Delete(NumVer, 1, Pos(' ', NumVer));
+  NumVer := Trim(NumVer);
+  // make the number
+  MyVersion := MakeVersionNumber(NumVer);
+
+  //writeln('my numVersion := ', PrintVersionNumber(MyVersion));
   {$ifdef CPU68000}
   ShortVer := ShortVer + ' 68000';
   {$endif}
@@ -1593,9 +2014,11 @@ end;
 var
   Main: TMainWindow;
 begin
+  MakeURLs(BaseURL);
   MakeVersions;
   Main := TMainWindow.Create;
   Prefs := TPrefsWindow.Create;
+  ResWin := TResWindow.Create;
   Prefs.OnFormatChanged := @Main.FormatChangeEvent;
   Prefs.OnFormatChanged(nil);
   MUIApp.Title := ShortVer;

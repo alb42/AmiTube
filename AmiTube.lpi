@@ -42,6 +42,10 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="AmiTubeLocale"/>
       </Unit>
+      <Unit>
+        <Filename Value="resolutionselunit.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

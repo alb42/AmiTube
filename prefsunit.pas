@@ -18,8 +18,8 @@ type
     Ini: TIniFile;
     NumEdit: TMUIString;
     MaxLenEdit: TMUIString;
-    MPEGPlayerEdit, PlayerEdit: TMUIString;
-    MPEGParamEdit, ParamEdit: TMUIString;
+    MPEGPlayerEdit, PlayerEdit, URLPlayerEdit, WGetEdit: TMUIString;
+    MPEGParamEdit, ParamEdit, URLParamEdit, WGetParamEdit: TMUIString;
     ChooseFormat: TMUICycle;
     ChooseAllFormats: TMUICheckmark;
     FOnFormatChanged: TNotifyEvent;
@@ -28,8 +28,11 @@ type
     ChooseBootup: TMUICycle;
     ChooseClip: TMUICheckmark;
     FOnClipChanged: TNotifyEvent;
+    Reg: TMUIRegister;
     procedure ChoosePlayerClick(Sender: TObject);
     procedure ChooseMPEGPlayerClick(Sender: TObject);
+    procedure ChooseURLPlayerClick(Sender: TObject);
+    procedure ChooseWGetClick(Sender: TObject);
     procedure NumEditACK(Sender: TObject);
     procedure MaxLenACK(Sender: TObject);
     procedure FormatChanged(Sender: TObject);
@@ -42,14 +45,20 @@ type
 
     function GetPlayerPath: string;
     function GetMPEGPlayerPath: string;
+    function GetURLPlayerPath: string;
+    function GetWGetPath: string;
+
+    function GetPlayerParam: string;
+    function GetMPEGPlayerParam: string;
+    function GetURLPlayerParam: string;
+    function GetWGetParam: string;
+
     function GetNumSearch: Integer;
     function GetFormat: Integer;
     function GetAutoStart: Boolean;
     function GetAutoIcon: Boolean;
     function GetStartup: Integer;
     function GetClip: Boolean;
-    function GetPlayerParam: string;
-    function GetMPEGPlayerParam: string;
     function GetAllFormats: Boolean;
     function GetMaxTitleLen: Integer;
   public
@@ -60,9 +69,13 @@ type
 
     property PlayerPath: string read GetPlayerPath;
     property MPEGPlayerPath: string read GetMPEGPlayerPath;
+    property URLPlayerPath: string read GetURLPlayerPath;
+    property WGetPath: string read GetWGetPath;
 
     property PlayerParam: string read GetPlayerParam;
     property MPEGPlayerParam: string read GetMPEGPlayerParam;
+    property URLPlayerParam: string read GetURLPlayerParam;
+    property WGetParam: string read GetWGetParam;
 
     property NumSearch: Integer read GetNumSearch;
     property Format: integer read GetFormat;
@@ -95,6 +108,10 @@ begin
   Ini.WriteString('Player', 'Parameter', PlayerParam);
   Ini.WriteString('Player', 'MPEGPath', MPEGPlayerEdit.Contents);
   Ini.WriteString('Player', 'MPEGParameter', MPEGPlayerParam);
+  Ini.WriteString('Player', 'URLPlayerPath', URLPlayerEdit.Contents);
+  Ini.WriteString('Player', 'URLParameter', URLPlayerParam);
+  Ini.WriteString('Player', 'WGetPath', WGetEdit.Contents);
+  Ini.WriteString('Player', 'WGetParameter', WGetParam);
 end;
 
 procedure TPrefsWindow.ChoosePlayerClick(Sender: TObject);
@@ -147,6 +164,56 @@ begin
   end;
 end;
 
+procedure TPrefsWindow.ChooseURLPlayerClick(Sender: TObject);
+var
+  Player: string;
+begin
+  Player :=  URLPlayerEdit.Contents;
+  with TFileDialog.Create do
+  begin
+    SaveMode := False;
+    Directory := ExtractFilePath(Player);
+    Filename := ExtractFilename(Player);
+    if Execute then
+    begin
+      Player := Filename;
+      if FileExists(Player) then
+      begin
+        URLPlayerEdit.Contents := Player;
+        Ini.WriteString('Player', 'URLPlayerPath', URLPlayerEdit.Contents);
+      end
+      else
+        ShowMessage(StringReplace(GetLocString(MSG_ERROR_PLAYER), '%s', Player, [rfReplaceAll]));
+    end;
+    Free;
+  end;
+end;
+
+procedure TPrefsWindow.ChooseWGetClick(Sender: TObject);
+var
+  Player: string;
+begin
+  Player :=  WGetEdit.Contents;
+  with TFileDialog.Create do
+  begin
+    SaveMode := False;
+    Directory := ExtractFilePath(Player);
+    Filename := ExtractFilename(Player);
+    if Execute then
+    begin
+      Player := Filename;
+      if FileExists(Player) then
+      begin
+        URLPlayerEdit.Contents := Player;
+        Ini.WriteString('Player', 'WGetPath', WGetEdit.Contents);
+      end
+      else
+        ShowMessage(StringReplace(GetLocString(MSG_ERROR_PLAYER), '%s', Player, [rfReplaceAll]));
+    end;
+    Free;
+  end;
+end;
+
 function TPrefsWindow.GetPlayerPath: string;
 begin
   Result := PlayerEdit.Contents;
@@ -155,6 +222,16 @@ end;
 function TPrefsWindow.GetMPEGPlayerPath: string;
 begin
   Result := MPEGPlayerEdit.Contents;
+end;
+
+function TPrefsWindow.GetURLPlayerPath: string;
+begin
+  Result := URLPlayerEdit.Contents;
+end;
+
+function TPrefsWindow.GetWGetPath: string;
+begin
+  Result := WGetEdit.Contents;
 end;
 
 function TPrefsWindow.GetPlayerParam: string;
@@ -169,6 +246,20 @@ begin
   Result := MPEGParamEdit.Contents;
   if Pos('%f', Result) = 0 then
     Result := Result + ' %f';
+end;
+
+function TPrefsWindow.GetURLPlayerParam: string;
+begin
+  Result := URLParamEdit.Contents;
+  if Pos('%u', Result) = 0 then
+    Result := Result + ' %u';
+end;
+
+function TPrefsWindow.GetWGetParam: string;
+begin
+  Result := WGetParamEdit.Contents;
+  if Pos('%u', Result) = 0 then
+    Result := Result + ' %u';
 end;
 
 function TPrefsWindow.GetNumSearch: Integer;
@@ -318,7 +409,7 @@ begin
   ChooseFormat := TMUICycle.Create;
   with ChooseFormat do
   begin
-    Entries := [GetLocString(MSG_PREFS_FORMAT1), GetLocString(MSG_PREFS_FORMAT2), GetLocString(MSG_PREFS_FORMAT3)];
+    Entries := [GetLocString(MSG_PREFS_FORMAT1), GetLocString(MSG_PREFS_FORMAT2), GetLocString(MSG_PREFS_FORMAT3), GetLocString(MSG_PREFS_FORMAT4)];
     Active := Ini.ReadInteger('General', 'Format', 0);
     OnActiveChange := @FormatChanged;
     Parent := Grp1;
@@ -437,14 +528,21 @@ begin
     Parent := Grp2;
   end;
 
+
+  Reg := TMUIRegister.Create;
+  with Reg do
+  begin
+    Titles := ['CDXL', 'MPEG', 'Play URL', 'Download URL'];
+    Parent := Grp1;
+  end;
+
   // CDXL Player
 
   Grp2 := TMUIGroup.Create;
   with Grp2 do
   begin
-    FrameTitle := 'CDXL';
     Columns := 2;
-    Parent := Grp1;
+    Parent := Reg;
   end;
 
   PlayerEdit := TMUIString.Create;
@@ -482,9 +580,8 @@ begin
   Grp2 := TMUIGroup.Create;
   with Grp2 do
   begin
-    FrameTitle := 'MPEG';
     Columns := 2;
-    Parent := Grp1;
+    Parent := Reg;
   end;
 
   MPEGPlayerEdit := TMUIString.Create;
@@ -507,6 +604,84 @@ begin
   with MPEGParamEdit do
   begin
     Contents := Ini.ReadString('Player', 'MPEGParameter', '%f');
+    Parent := Grp2;
+  end;
+
+  with TMUIText.Create(GetLocString(MSG_PREFS_PLAYERPARAM)) do
+  begin
+    FixWidthTxt := ' ' + GetLocString(MSG_PREFS_PLAYERPARAM) + ' ';
+    Frame := MUIV_FRAME_NONE;
+    Parent := Grp2;
+  end;
+
+  // URL Player
+
+  Grp2 := TMUIGroup.Create;
+  with Grp2 do
+  begin
+    Columns := 2;
+    Parent := Reg;
+  end;
+
+  URLPlayerEdit := TMUIString.Create;
+  with URLPlayerEdit do
+  begin
+    Contents := Ini.ReadString('Player', 'URLPlayerPath', 'MPlayer:MPlayer');
+    Parent := Grp2;
+  end;
+
+  with TMUIButton.Create do
+  begin
+    HorizWeight := 20;
+    Contents := GetLocString(MSG_PREFS_CHOOSEPLAYER);
+    FixWidthTxt := ' '+GetLocString(MSG_PREFS_CHOOSEPLAYER)+' ';
+    OnClick := @ChooseURLPlayerClick;
+    Parent := Grp2;
+  end;
+
+  URLParamEdit := TMUIString.Create;
+  with URLParamEdit do
+  begin
+    Contents := Ini.ReadString('Player', 'URLParameter', '%u');
+    Parent := Grp2;
+  end;
+
+  with TMUIText.Create(GetLocString(MSG_PREFS_PLAYERPARAM)) do
+  begin
+    FixWidthTxt := ' ' + GetLocString(MSG_PREFS_PLAYERPARAM) + ' ';
+    Frame := MUIV_FRAME_NONE;
+    Parent := Grp2;
+  end;
+
+  // WGet Player
+
+  Grp2 := TMUIGroup.Create;
+  with Grp2 do
+  begin
+    Columns := 2;
+    Parent := Reg;
+  end;
+
+  WGetEdit := TMUIString.Create;
+  with WGetEdit do
+  begin
+    Contents := Ini.ReadString('Player', 'WGetPath', {$ifdef MorphOS}'gg:bin/wget'{$else}'C:wget'{$endif});
+    Parent := Grp2;
+  end;
+
+  with TMUIButton.Create do
+  begin
+    HorizWeight := 20;
+    Contents := GetLocString(MSG_PREFS_CHOOSEPLAYER);
+    FixWidthTxt := ' '+GetLocString(MSG_PREFS_CHOOSEPLAYER)+' ';
+    OnClick := @ChooseWGetClick;
+    Parent := Grp2;
+  end;
+
+  WGetParamEdit := TMUIString.Create;
+  with WGetParamEdit do
+  begin
+    Contents := Ini.ReadString('Player', 'WGetParameter', '%u -O %f');
     Parent := Grp2;
   end;
 

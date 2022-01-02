@@ -52,6 +52,9 @@ About AmiTube ...
 MSG_MENU_ABOUT_MUI (12002//)
 About MUI ...
 ;
+MSG_MENU_CHECK_UPDATES (12003//)
+Check for Updates ...
+;
 MSG_GUI_BREAK (20000//)
 Break
 ;
@@ -88,6 +91,28 @@ Disk full
 MSG_GUI_FREE (20011//)
 free
 ;
+MSG_GUI_SELECTFILE (20012//)
+Select name/path for file.
+;
+MSG_GUI_GETORIGINAL (20013//)
+Get Original
+;
+MSG_GUI_DOWNLOADHD (20014//)
+Download to HD
+;
+MSG_GUI_DOWNLOADTOOL (20015//)
+Use Download Tool
+;
+MSG_GUI_USEURLPLAYER (20016//)
+Use URL Player
+;
+MSG_GUI_NOUPDATE (20017//)
+No Update available
+;
+MSG_GUI_UPDATEAVAIL (20018//)
+There is an Update available.\n\nYour Version: %o \n Online Version: %n \n\n Download latest Version?
+;
+; ### Status
 MSG_STATUS_IDLE (30000//)
 Idle
 ;
@@ -133,6 +158,9 @@ Error: "%s" not found.
 MSG_ERROR_NO_SPACE (40006//)
 Not enough space to download this movie. Continue anyway?
 ;
+MSG_ERROR_UPDATE (40007//)
+Error checking for Update.
+;
 ;--- PREFS
 ;
 MSG_PREFS_WINDOW (50000//)
@@ -161,6 +189,9 @@ CDXL 256 Colors AGA
 ;
 MSG_PREFS_FORMAT3 (50203//)
 MPEG1
+;
+MSG_PREFS_FORMAT4 (50204//)
+CDXL 256 Colors Larger
 ;
 MSG_PREFS_SEARCH (50300//)
 Search Results

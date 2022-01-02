@@ -8,9 +8,9 @@ uses
   Classes, SysUtils;
 
 type
-  TOnProgress = procedure(Sender: TObject; Percent: integer; Speed: Integer) of object;
+  TOnProgress = procedure(Sender: TObject; Percent, Speed: integer; FullSize: Int64) of object;
 
-procedure DonwloadFile(OnProgress: TOnProgress; cURL: string; cFile: string);
+procedure DonwloadFile(OnProgress: TOnProgress; cURL: string; cFile: string; GetSize: Boolean);
 
 procedure KillDownload;
 
@@ -51,38 +51,45 @@ type
     function Write(const Buffer; Count: longint): longint; override;
     function Seek(Offset: longint; Origin: word): longint; override;
     procedure DoProgress(Writing: boolean); virtual;
+    procedure HeaderEvent(Sender: TObject);
   published
     property OnProgress: TOnProgress read FOnProgress write FOnProgress;
   end;
 
-procedure DonwloadFile(OnProgress: TOnProgress; cURL: string; cFile: string);
+procedure DonwloadFile(OnProgress: TOnProgress; cURL: string; cFile: string; GetSize: Boolean);
 var
   vStream: TStreamAdapter;
   VSize: int64 = 0;
-  I: integer;
-  S: string;
+  //I: integer;
+  //S: string;
 begin
   vStream := nil;
   vHTTP := nil;
-  vSize := 1000000;
+  vSize := 0;
   try
     vHTTP := TFPHTTPClient.Create(nil);
     vHTTP.AllowRedirect := True;
     vHTTP.AddHeader('User-Agent', ShortVer + ' ' + {$INCLUDE %FPCTARGETCPU%} + '-' + {$INCLUDE %FPCTARGETOS%});
-    vHTTP.HTTPMethod('HEAD', cUrl, nil, [200]);
-    for I := 0 to pred(vHTTP.ResponseHeaders.Count) do
+    //
+    {if GetSize then
     begin
-      S := UpperCase(vHTTP.ResponseHeaders[I]);
-      if Pos('CONTENT-LENGTH:', S) > 0 then
+      vSize := 1000000;
+      vHTTP.HTTPMethod('HEAD', cUrl, nil, [200]);
+      for I := 0 to pred(vHTTP.ResponseHeaders.Count) do
       begin
-        VSize := StrToIntDef(Copy(S, Pos(':', S) + 1, Length(S)), 0);
-        Break;
+        S := UpperCase(vHTTP.ResponseHeaders[I]);
+        if Pos('CONTENT-LENGTH:', S) > 0 then
+        begin
+          VSize := StrToIntDef(Copy(S, Pos(':', S) + 1, Length(S)), 0);
+          Break;
+        end;
       end;
-    end;
-
+    end;}
+    //
     vStream := TStreamAdapter.Create(TFileStream.Create(cFile, fmCreate), VSize);
     vStream.OnProgress := OnProgress;
-
+    //
+    vHttp.OnHeaders := @(vStream.HeaderEvent);
     vHTTP.HTTPMethod('GET', cUrl, vStream, [200]);
     // vHTTP.Get(cUrl, vStream);
   finally
@@ -161,22 +168,48 @@ begin
   Result := FStream.Seek(Offset, Origin);
 end;
 
+procedure TStreamAdapter.HeaderEvent(Sender: TObject);
+var
+  mhp: TFPHTTPClient;
+  i: Integer;
+  s: String;
+begin
+  if Sender is TFPHTTPClient then
+  begin
+    mhp := TFPHTTPClient(Sender);
+    for I := 0 to pred(mhp.ResponseHeaders.Count) do
+    begin
+      S := UpperCase(mhp.ResponseHeaders[I]);
+      if Pos('CONTENT-LENGTH:', S) > 0 then
+      begin
+        //writeln('got size: ', StrToIntDef(Copy(S, Pos(':', S) + 1, Length(S)), 0), ' should be: ', FSize);
+        FSize := StrToIntDef(Copy(S, Pos(':', S) + 1, Length(S)), 0);
+        Break;
+      end;
+    end;
+  end;
+end;
+
 procedure TStreamAdapter.DoProgress(Writing: boolean);
 var
   t1: LongWord;
   Speed: Integer;
 begin
   //fPercent := Trunc((FStream.Position) / (FStream.Size) * 100);
-  fPercent := Trunc((FPos) / (FSize) * 100);
+  if FSize > 0 then
+  begin
+    fPercent := Trunc((FPos) / (FSize) * 100);
+  end
+  else
+    fPercent := 0;
+  //
   t1 := GetTickCount;
   Speed := 0;
   t1 := t1 - StartTime;
   if t1 > 0 then
     Speed := Round(FPos / (t1 / 1000));
   if Assigned(OnProgress) then
-  begin
-    OnProgress(self, FPercent, Speed);
-  end;
+    OnProgress(self, FPercent, Speed, FPos);
 end;
 
 end.

@@ -69,6 +69,10 @@ MSG_MENU_ABOUT_MUI
 Über MUI ...
 ; About MUI ...
 ;
+MSG_MENU_CHECK_UPDATES
+Prüfe auf Aktualisierungen ...
+; Check for Updates ...
+;
 MSG_GUI_BREAK
 Stopp
 ; Break
@@ -117,6 +121,35 @@ MSG_GUI_FREE
 frei
 ; free
 ;
+MSG_GUI_SELECTFILE
+Wähle Name/Pfad für Datei
+; Select name/path for file.
+;
+MSG_GUI_GETORIGINAL
+Hole Original
+; Get Original
+;
+MSG_GUI_DOWNLOADHD
+Herunterladen
+; Download to HD
+;
+MSG_GUI_DOWNLOADTOOL
+Benutze Download Tool
+; Use Download Tool
+;
+MSG_GUI_USEURLPLAYER
+Benutze URL Player
+; Use URL Player
+;
+MSG_GUI_NOUPDATE
+Keine Aktualisierung verfügbar.
+; No Update available
+;
+MSG_GUI_UPDATEAVAIL
+Aktualisierung verfügbar.\n\n Deine Version: %o \n Online Version: %n \n\n Neuste Version herunterladen?
+; There is an Update available.\n\nYour Version: %o \n Online Version: %n \n\n Download latest Version?
+;
+; ### Status
 MSG_STATUS_IDLE
 Wartet
 ; Idle
@@ -177,6 +210,10 @@ MSG_ERROR_NO_SPACE
 Festplatte hat nicht genug Platz für diesen Film. Trotzdem forfahren?
 ; Not enough space to download this movie. Continue anyway?
 ;
+MSG_ERROR_UPDATE
+Fehler beim Prüfen auf Aktualisierungen.
+; Error checking for Update.
+;
 ;--- PREFS
 ;
 MSG_PREFS_WINDOW
@@ -215,6 +252,10 @@ MSG_PREFS_FORMAT3
 MPEG1
 ; MPEG1
 ;
+MSG_PREFS_FORMAT4
+CDXL 256 Farben Größer
+; CDXL 256 Colors Larger
+;
 MSG_PREFS_SEARCH
 Suchergebnisse
 ; Search Results
@@ -224,7 +265,7 @@ Maximale Anzahl
 ; Maximum Number
 ;
 MSG_PREFS_CLIP
-Zwischenablage auf URLs ueberwachen
+Zwischenablage auf URLs überwachen
 ; Observe clipboard for URLs
 ;
 MSG_PREFS_PLAYER
@@ -236,7 +277,7 @@ Automatisch Film abspielen nach Konvertierung
 ; Auto start movie after download
 ;
 MSG_PREFS_CHOOSEPLAYER
-Auswaehlen
+Auswählen
 ; Choose
 ;
 MSG_PREFS_PLAYERPARAM

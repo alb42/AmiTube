@@ -54,6 +54,9 @@ const
   MSG_MENU_ABOUT_MUI = 12002 ;
   MSG_MENU_ABOUT_MUI_STR = 'About MUI ...'#0;
 
+  MSG_MENU_CHECK_UPDATES = 12003 ;
+  MSG_MENU_CHECK_UPDATES_STR = 'Check for Updates ...'#0;
+
   MSG_GUI_BREAK = 20000 ;
   MSG_GUI_BREAK_STR = 'Break'#0;
 
@@ -89,6 +92,27 @@ const
 
   MSG_GUI_FREE = 20011 ;
   MSG_GUI_FREE_STR = 'free'#0;
+
+  MSG_GUI_SELECTFILE = 20012 ;
+  MSG_GUI_SELECTFILE_STR = 'Select name/path for file.'#0;
+
+  MSG_GUI_GETORIGINAL = 20013 ;
+  MSG_GUI_GETORIGINAL_STR = 'Get Original'#0;
+
+  MSG_GUI_DOWNLOADHD = 20014 ;
+  MSG_GUI_DOWNLOADHD_STR = 'Download to HD'#0;
+
+  MSG_GUI_DOWNLOADTOOL = 20015 ;
+  MSG_GUI_DOWNLOADTOOL_STR = 'Use Download Tool'#0;
+
+  MSG_GUI_USEURLPLAYER = 20016 ;
+  MSG_GUI_USEURLPLAYER_STR = 'Use URL Player'#0;
+
+  MSG_GUI_NOUPDATE = 20017 ;
+  MSG_GUI_NOUPDATE_STR = 'No Update available'#0;
+
+  MSG_GUI_UPDATEAVAIL = 20018 ;
+  MSG_GUI_UPDATEAVAIL_STR = 'There is an Update available.\n\nYour Version: %o \n Online Version: %n \n\n Download latest Version?'#0;
 
   MSG_STATUS_IDLE = 30000 ;
   MSG_STATUS_IDLE_STR = 'Idle'#0;
@@ -135,6 +159,9 @@ const
   MSG_ERROR_NO_SPACE = 40006 ;
   MSG_ERROR_NO_SPACE_STR = 'Not enough space to download this movie. Continue anyway?'#0;
 
+  MSG_ERROR_UPDATE = 40007 ;
+  MSG_ERROR_UPDATE_STR = 'Error checking for Update.'#0;
+
   MSG_PREFS_WINDOW = 50000 ;
   MSG_PREFS_WINDOW_STR = 'Settings'#0;
 
@@ -161,6 +188,9 @@ const
 
   MSG_PREFS_FORMAT3 = 50203 ;
   MSG_PREFS_FORMAT3_STR = 'MPEG1'#0;
+
+  MSG_PREFS_FORMAT4 = 50204 ;
+  MSG_PREFS_FORMAT4_STR = 'CDXL 256 Colors Larger'#0;
 
   MSG_PREFS_SEARCH = 50300 ;
   MSG_PREFS_SEARCH_STR = 'Search Results'#0;
@@ -211,7 +241,7 @@ type
      str: string;
   end;
 
-  TAppStringArray = array[0..59] of TAppString;
+  TAppStringArray = array[0..69] of TAppString;
 
 const
   AppStrings: TAppStringArray = (
@@ -228,6 +258,7 @@ const
     (id: MSG_MENU_ABOUT ; str: MSG_MENU_ABOUT_STR ),
     (id: MSG_MENU_ABOUT_AMITUBE ; str: MSG_MENU_ABOUT_AMITUBE_STR ),
     (id: MSG_MENU_ABOUT_MUI ; str: MSG_MENU_ABOUT_MUI_STR ),
+    (id: MSG_MENU_CHECK_UPDATES ; str: MSG_MENU_CHECK_UPDATES_STR ),
     (id: MSG_GUI_BREAK ; str: MSG_GUI_BREAK_STR ),
     (id: MSG_GUI_DOWNLOAD_AS ; str: MSG_GUI_DOWNLOAD_AS_STR ),
     (id: MSG_GUI_LOAD_ICON ; str: MSG_GUI_LOAD_ICON_STR ),
@@ -240,6 +271,13 @@ const
     (id: MSG_GUI_NO ; str: MSG_GUI_NO_STR ),
     (id: MSG_GUI_DISK_FULL ; str: MSG_GUI_DISK_FULL_STR ),
     (id: MSG_GUI_FREE ; str: MSG_GUI_FREE_STR ),
+    (id: MSG_GUI_SELECTFILE ; str: MSG_GUI_SELECTFILE_STR ),
+    (id: MSG_GUI_GETORIGINAL ; str: MSG_GUI_GETORIGINAL_STR ),
+    (id: MSG_GUI_DOWNLOADHD ; str: MSG_GUI_DOWNLOADHD_STR ),
+    (id: MSG_GUI_DOWNLOADTOOL ; str: MSG_GUI_DOWNLOADTOOL_STR ),
+    (id: MSG_GUI_USEURLPLAYER ; str: MSG_GUI_USEURLPLAYER_STR ),
+    (id: MSG_GUI_NOUPDATE ; str: MSG_GUI_NOUPDATE_STR ),
+    (id: MSG_GUI_UPDATEAVAIL ; str: MSG_GUI_UPDATEAVAIL_STR ),
     (id: MSG_STATUS_IDLE ; str: MSG_STATUS_IDLE_STR ),
     (id: MSG_STATUS_SHARED ; str: MSG_STATUS_SHARED_STR ),
     (id: MSG_STATUS_PREPSEARCH ; str: MSG_STATUS_PREPSEARCH_STR ),
@@ -255,6 +293,7 @@ const
     (id: MSG_ERROR_LOAD_ICON ; str: MSG_ERROR_LOAD_ICON_STR ),
     (id: MSG_ERROR_PLAYER ; str: MSG_ERROR_PLAYER_STR ),
     (id: MSG_ERROR_NO_SPACE ; str: MSG_ERROR_NO_SPACE_STR ),
+    (id: MSG_ERROR_UPDATE ; str: MSG_ERROR_UPDATE_STR ),
     (id: MSG_PREFS_WINDOW ; str: MSG_PREFS_WINDOW_STR ),
     (id: MSG_PREFS_STARTUP ; str: MSG_PREFS_STARTUP_STR ),
     (id: MSG_PREFS_STARTUP1 ; str: MSG_PREFS_STARTUP1_STR ),
@@ -264,6 +303,7 @@ const
     (id: MSG_PREFS_FORMAT1 ; str: MSG_PREFS_FORMAT1_STR ),
     (id: MSG_PREFS_FORMAT2 ; str: MSG_PREFS_FORMAT2_STR ),
     (id: MSG_PREFS_FORMAT3 ; str: MSG_PREFS_FORMAT3_STR ),
+    (id: MSG_PREFS_FORMAT4 ; str: MSG_PREFS_FORMAT4_STR ),
     (id: MSG_PREFS_SEARCH ; str: MSG_PREFS_SEARCH_STR ),
     (id: MSG_PREFS_SEARCHNUM ; str: MSG_PREFS_SEARCHNUM_STR ),
     (id: MSG_PREFS_CLIP ; str: MSG_PREFS_CLIP_STR ),
