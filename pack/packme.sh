@@ -8,5 +8,5 @@ rm -f AmiTubeAROS/*.uaem
 cp AmiTube.Readme AmiTube/AmiTube.Readme
 cp AmiTube.Readme AmiTubeAROS/AmiTube.Readme
 
-lha ao5 AmiTube.lha AmiTube AmiTube.info
-lha ao5 AmiTubeAROS.lha AmiTubeAROS AmiTubeAROS.info
+#lha ao5 AmiTube.lha AmiTube AmiTube.info
+#lha ao5 AmiTubeAROS.lha AmiTubeAROS AmiTubeAROS.info
