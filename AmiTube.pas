@@ -15,20 +15,18 @@ const
 
   SearchBase = 'ytsearch.php?q=';
   SearchBaseID = 'ytsearch.php?id=';
-  ConvertBase = 'ytcdxl.php?id=';
+  ConvertBase = 'ytconvert.php?id=';
   ShareBase = 'ytshare.php?id=';
   SharedFile = 'ytshares.xml';
   IconBase = 'yticon.php?id=';
   DownloadBase = 'ytdownload.php?id=';
-  DoneBase = 'ytdone.php';
 
   UpdateURL = 'http://amitube.alb42.de/amitubeversion';
 
   MovieTemplateFolder = 'movies';
-  DefaultTextLimit = 33;
 
 const
-  VERSION = '$VER: AmiTube 0.7 beta (31.12.2021)';
+  VERSION = '$VER: AmiTube 0.7 beta2 (03.01.2022)';
   DownName: array[0..3] of string = ('CDXL OCS', 'CDXL AGA', 'MPEG1', 'CDXL AGA Large');
   DownSizes: array[0..3] of Integer = (150, 300, 170, 900);
 
@@ -168,7 +166,7 @@ var
   MyVersion: TMyVersion;
 
   SearchURL, SearchURLID, ConvertURL, ShareURL,
-  SharedURL, IconURL, DownloadURL, DoneURL: string;
+  SharedURL, IconURL, DownloadURL: string;
 
 procedure MakeURLs(NewBaseURL: string);
 begin
@@ -179,7 +177,6 @@ begin
   SharedURL := NewBaseURL + SharedFile;
   IconURL := NewBaseURL + IconBase;
   DownloadURL := NewBaseURL + DownloadBase;
-  DoneURL := NewBaseURL + DoneBase;
 end;
 {
 const
@@ -213,18 +210,6 @@ begin
     hp.Free;
     hp := nil;
   end;
-end;
-
-procedure WeAreDone;
-var
-  Mem: TMemoryStream;
-begin
-  Mem := TMemoryStream.Create;
-  try
-    Getfile(DoneURL, Mem);
-  except
-  end;
-  Mem.Free;
 end;
 
 function MakeVersionNumber(s: string): TMyVersion;
@@ -277,66 +262,39 @@ end;
 procedure TStartConvertThread.Execute;
 var
   Url, Ext: string;
-  Mem: TMemoryStream;
-  SL: TStringList;
-  FS: TFileStream;
 begin
   try
     //writeln('start Thread ', FormatID);
     if FormatID = '' then
     begin
       DoProgress(0, GetLocString(MSG_STATUS_CONVERT));
-      //Format := Prefs.Format;
       Url := ConvertURL + ID + '&format=' + IntToStr(Format);
-      Mem := TMemoryStream.Create;
       try
-        //if CheckMe then
-        //  Exit;
-        if GetFile(Url, Mem) then
+        if Format = 2 then
+          Ext := '.mpeg'
+        else
+          Ext := '.cdxl';
+        DonwloadFile(@ProgressUpdate, URL, IncludeTrailingPathDelimiter(Movies) + ID + Ext, True);
+        //
+        if FileExists(IncludeTrailingPathDelimiter(Movies) + ID + Ext) then
         begin
           if Terminated then
-            Exit;
-          SL := TStringList.Create;
-          Mem.Position := 0;
-          SL.LoadFromStream(Mem);
-          //
-          LastTime := GetTickCount;
-          DoProgress(0, GetLocString(MSG_STATUS_DOWNLOADING) + '...');
-          if Pos('http', sl[0]) >= 1 then
           begin
-            //writeln('download file');
-            if Format = 2 then
-              Ext := '.mpeg'
-            else
-              Ext := '.cdxl';
-            DonwloadFile(@ProgressUpdate, sl[0], IncludeTrailingPathDelimiter(Movies) + ID + Ext, True);
-            WeAreDone;
-            //
-            if FileExists(IncludeTrailingPathDelimiter(Movies) + ID + Ext) then
-            begin
-              if Terminated then
-              begin
-                DeleteFile(IncludeTrailingPathDelimiter(Movies) + ID + Ext);
-                Exit;
-              end;
-              with TStringList.Create do
-              begin
-                Text := Desc;
-                SaveToFile(IncludeTrailingPathDelimiter(Movies) + ID + '.txt');
-                Free;
-              end;
-            end;
-          end
-          else
-            DoProgress(0, GetLocString(MSG_ERROR_CONVERT) +  ' ' + SL.Text);//writeln('no download');
+            DeleteFile(IncludeTrailingPathDelimiter(Movies) + ID + Ext);
+            Exit;
+          end;
+          with TStringList.Create do
+          begin
+            Text := Desc;
+            SaveToFile(IncludeTrailingPathDelimiter(Movies) + ID + '.txt');
+            Free;
+          end;
         end;
-        Mem.Free;
-        SL.Free;
+            //DoProgress(0, GetLocString(MSG_ERROR_CONVERT));//writeln('no download');
       except
         on e:Exception do
         begin
           writeln('Convert Thread Exception ' + E.Message);
-          WeAreDone;
         end;
       end;
     end
@@ -348,14 +306,6 @@ begin
       else
         Url := DownloadURL + ID + '&format=' + FormatID;
       //writeln('URL ', URL);
-      {FS := TFileStream.Create(Filename, fmCreate);
-      try
-      GetFile(Url, FS);
-      except
-        ON E:Exception do
-          writeln(E.MEssage);
-      end;
-      FS.Free;}
       DonwloadFile(@ProgressUpdate, Url, Filename, False);
       //writeln('done?');
     end;
