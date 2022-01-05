@@ -759,13 +759,17 @@ begin
     MovieName := IncludeTrailingPathDelimiter(Movies) + MyID + '.cdxl';
     MPEGName := IncludeTrailingPathDelimiter(Movies) + MyID + '.mpeg';
     ReadmeName := IncludeTrailingPathDelimiter(Movies) + MyID + '.txt';
-    if FileExists(MovieName) then
-      DeleteFile(MovieName);
-    if FileExists(MPEGName) then
-      DeleteFile(MPEGName);
-    if FileExists(ReadMeName) then
-      DeleteFile(ReadMeName);
-    EnableDownloads(True, False);
+
+    if MessageBox(GetLocString(MSG_GUI_DELETE), GetLocString(MSG_GUI_DELETE)+ #10' "' + List.Cells[1, List.Row] + '"?' , [GetLocString(MSG_GUI_YES), GetLocString(MSG_GUI_NO)]) = 1 then
+    begin
+      if FileExists(MovieName) then
+        DeleteFile(MovieName);
+      if FileExists(MPEGName) then
+        DeleteFile(MPEGName);
+      if FileExists(ReadMeName) then
+        DeleteFile(ReadMeName);
+      EnableDownloads(True, False);
+    end;
   end;
 end;
 
@@ -1816,15 +1820,15 @@ begin
   PlayBtn.Showme := False;
   PlayBtn.Parent := BtnGroup;
 
-  DeleteBtn := TMUIButton.Create(GetLocString(MSG_GUI_DELETE));
-  DeleteBtn.OnClick := @DeleteClick;
-  DeleteBtn.Showme := False;
-  DeleteBtn.Parent := BtnGroup;
-
   ShareBtn := TMUIButton.Create(GetLocString(MSG_GUI_SHARE));
   ShareBtn.OnClick := @ShareClick;
   ShareBtn.Showme := False;
   ShareBtn.Parent := BtnGroup;
+
+  DeleteBtn := TMUIButton.Create(GetLocString(MSG_GUI_DELETE));
+  DeleteBtn.OnClick := @DeleteClick;
+  DeleteBtn.Showme := False;
+  DeleteBtn.Parent := BtnGroup;
 
   TextOut := TMUIFloatText.Create;
   with TextOut do

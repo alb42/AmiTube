@@ -1,6 +1,7 @@
 #!/bin/bash
 rm -f AmiTube.lha
 rm -f AmiTubeAROS.lha
+rm -f *.lha.uaem
 rm -f AmiTube/*.uaem
 rm -f AmiTube/*.ini
 rm -f AmiTubeAROS/*.uaem

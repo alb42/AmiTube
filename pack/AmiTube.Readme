@@ -1,9 +1,15 @@
 AmiTube by ALB42
-
-idea by Michal Bergseth http://www.amitopia.com
+################
 
 A YouTube Client for m68k Amiga / NG Amiga
 made with FreePascal for Amiga Systems
+
+idea by:
+   Michal Bergseth http://www.amitopia.com
+
+translations by:
+  Eric 'Tarzin' Luczyszyn (french)
+  Michal Bergseth (norwegian)
 
 How to use:
 
