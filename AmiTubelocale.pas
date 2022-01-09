@@ -61,7 +61,7 @@ const
   MSG_GUI_BREAK_STR = 'Break'#0;
 
   MSG_GUI_DOWNLOAD_AS = 20001 ;
-  MSG_GUI_DOWNLOAD_AS_STR = 'Download as'#0;
+  MSG_GUI_DOWNLOAD_AS_STR = 'Get as'#0;
 
   MSG_GUI_LOAD_ICON = 20002 ;
   MSG_GUI_LOAD_ICON_STR = 'Load Preview'#0;
@@ -162,6 +162,9 @@ const
   MSG_ERROR_UPDATE = 40007 ;
   MSG_ERROR_UPDATE_STR = 'Error checking for Update.'#0;
 
+  MSG_ERROR_ALREADYRUN = 40008 ;
+  MSG_ERROR_ALREADYRUN_STR = 'Another downloading job is running, wait for finish before starting a new one'#0;
+
   MSG_PREFS_WINDOW = 50000 ;
   MSG_PREFS_WINDOW_STR = 'Settings'#0;
 
@@ -241,7 +244,7 @@ type
      str: string;
   end;
 
-  TAppStringArray = array[0..69] of TAppString;
+  TAppStringArray = array[0..70] of TAppString;
 
 const
   AppStrings: TAppStringArray = (
@@ -294,6 +297,7 @@ const
     (id: MSG_ERROR_PLAYER ; str: MSG_ERROR_PLAYER_STR ),
     (id: MSG_ERROR_NO_SPACE ; str: MSG_ERROR_NO_SPACE_STR ),
     (id: MSG_ERROR_UPDATE ; str: MSG_ERROR_UPDATE_STR ),
+    (id: MSG_ERROR_ALREADYRUN ; str: MSG_ERROR_ALREADYRUN_STR ),
     (id: MSG_PREFS_WINDOW ; str: MSG_PREFS_WINDOW_STR ),
     (id: MSG_PREFS_STARTUP ; str: MSG_PREFS_STARTUP_STR ),
     (id: MSG_PREFS_STARTUP1 ; str: MSG_PREFS_STARTUP1_STR ),

@@ -78,8 +78,8 @@ Stopp
 ; Break
 ;
 MSG_GUI_DOWNLOAD_AS
-Herunterladen als
-; Download as
+Hole als
+; Get as
 ;
 MSG_GUI_LOAD_ICON
 Lade Vorschau
@@ -213,6 +213,10 @@ Festplatte hat nicht genug Platz für diesen Film. Trotzdem forfahren?
 MSG_ERROR_UPDATE
 Fehler beim Prüfen auf Aktualisierungen.
 ; Error checking for Update.
+;
+MSG_ERROR_ALREADYRUN
+Es wird schon heruntergeladen. Bitte erst auf Beendigung warten.
+; Another downloading job is running, wait for finish before starting a new one
 ;
 ;--- PREFS
 ;

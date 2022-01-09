@@ -1,5 +1,16 @@
 program AmiTube;
 // search and download Youtube videos to CDXL
+
+{
+TODO:
+- ordering of Buttons -> cdxl ocs, cdxl aga, cdxl aga+ mpeg1
+- settings to choose that he askes everytime for destination for the cdxl/mpeg as well
+- Check moviedir on bootup
+-> Laden des vorschaubilds während download -> absturz?
+-> neue convert währen download- friert ein --> besser ablehnen
+-> clipboard device wird geöffnet auch ohne das setting
+}
+
 {$mode objfpc}{$H+}
 uses
   AThreads, clipboard, iffparse, AGraphics, Intuition, AmigaDos, Exec,
@@ -26,7 +37,7 @@ const
   MovieTemplateFolder = 'movies';
 
 const
-  VERSION = '$VER: AmiTube 0.7 beta2 (03.01.2022)';
+  VERSION = '$VER: AmiTube 0.8 beta1 (09.01.2022)';
   DownName: array[0..3] of string = ('CDXL OCS', 'CDXL AGA', 'MPEG1', 'CDXL AGA Large');
   DownSizes: array[0..3] of Integer = (150, 300, 170, 900);
 
@@ -162,7 +173,9 @@ type
   end;
 
 var
-  hp: TFPHTTPClient;
+  //hp: TFPHTTPClient;
+  HPsLock: TCriticalSection;
+  HPs: TList;
   MyVersion: TMyVersion;
 
   SearchURL, SearchURLID, ConvertURL, ShareURL,
@@ -188,25 +201,41 @@ begin
 end;}
 
 procedure KillSearch;
+var
+  i: Integer;
 begin
-  if Assigned(hp) then
+  if Assigned(HPs) then
   begin
-    hp.Terminate;
+    HPsLock.Enter;
+    try
+      for i := 0 to HPs.Count - 1 do
+        TFPHTTPClient(HPs[i]).Terminate;
+    finally
+      HPsLock.Leave;
+    end;
   end;
 end;
 
 function GetFile(address: string; AStream: TStream): Boolean;
+var
+  hp: TFPHTTPClient;
 begin
   Result := False;
   //if not IsOnline then
   //  Exit;
   hp := TFPHTTPClient.Create(nil);
   try
+    HPsLock.Enter;
+    HPs.Add(hp);
+    HPsLock.Leave;
     hp.AllowRedirect := True;
     hp.AddHeader('User-Agent', ShortVer + ' ' + {$INCLUDE %FPCTARGETCPU%} + '-' + {$INCLUDE %FPCTARGETOS%});
     hp.Get(address, AStream);
     Result := True;
   finally
+    HPsLock.Enter;
+    HPs.Remove(HP);
+    HPsLock.Leave;
     hp.Free;
     hp := nil;
   end;
@@ -671,17 +700,21 @@ var
   Format, i: Integer;
   FileSize: Int64;
 begin
+  if Assigned(ConvertThread) then
+  begin
+    if not ConvertThread.Terminated then
+    begin
+      ShowMessage(GetLocString(MSG_ERROR_ALREADYRUN));
+      Exit;
+    end;
+    ConvertThread.WaitFor;
+    ConvertThread.Free;
+  end;
   Format := 0;
   if Sender is TMUIButton then
     Format := TMUIButton(Sender).Tag;
   for i := 0 to High(DownloadBtn) do
     DownloadBtn[i].Disabled := True;
-  if Assigned(ConvertThread) then
-  begin
-    ConvertThread.Terminate;
-    ConvertThread.WaitFor;
-    ConvertThread.Free;
-  end;
   if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
   begin
     FileSize := Int64(ResultEntries[List.Row].Duration) * DownSizes[Format] * 1024;
@@ -1094,17 +1127,20 @@ begin
     //
     if Assigned(SearchThread) and (not SearchThread.Terminated) or SearchField.Disabled then
       Exit;
-    s := GetTextFromClip(PRIMARY_CLIP);
-    if s = LastClip then
-      Exit;
-    LastClip := s;
-    s := Trim(s);
-    if ((Pos('https://', lowercase(s)) = 1) and (Pos('youtube', lowercase(s)) > 0)) or (Pos('https://youtu.be/', lowercase(s)) = 1) then
+    if Prefs.ObserveClip then
     begin
-      if MessageBox(GetLocString(MSG_GUI_GOTURL), StringReplace(GetLocString(MSG_GUI_GOTURLTEXT), '%s', s, [rfReplaceAll]), [GetLocString(MSG_GUI_YES), GetLocString(MSG_GUI_NO)]) = 1 then
+      s := GetTextFromClip(PRIMARY_CLIP);
+      if s = LastClip then
+        Exit;
+      LastClip := s;
+      s := Trim(s);
+      if ((Pos('https://', lowercase(s)) = 1) and (Pos('youtube', lowercase(s)) > 0)) or (Pos('https://youtu.be/', lowercase(s)) = 1) then
       begin
-        SearchField.Contents := s;
-        SearchEntry(SearchField);
+        if MessageBox(GetLocString(MSG_GUI_GOTURL), StringReplace(GetLocString(MSG_GUI_GOTURLTEXT), '%s', s, [rfReplaceAll]), [GetLocString(MSG_GUI_YES), GetLocString(MSG_GUI_NO)]) = 1 then
+        begin
+          SearchField.Contents := s;
+          SearchEntry(SearchField);
+        end;
       end;
     end;
   finally
@@ -1388,8 +1424,13 @@ begin
           LoadFromStream(Mem);
           if Count > 0 then
             OnlineVersion := Strings[0];
+          {$ifdef AROS}
+          if Count > 2 then
+            Link := Strings[2];
+          {$else}
           if Count > 1 then
             Link := Strings[1];
+          {$endif}
           Free;
         end;
         //
@@ -1567,12 +1608,17 @@ end;
 procedure Tmainwindow.Startdownload(Aid, Aformatid, Afilename: String);
 begin
   //
-  SetStatusText(GetLocString(MSG_STATUS_DOWNLOADING) + '...', 50);
   if Assigned(ConvertThread) then
   begin
+    if not ConvertThread.Terminated then
+    begin
+      ShowMessage(GetLocString(MSG_ERROR_ALREADYRUN));
+      Exit;
+    end;
     ConvertThread.WaitFor;
     ConvertThread.Free;
   end;
+  SetStatusText(GetLocString(MSG_STATUS_DOWNLOADING) + '...', 50);
   ConvertThread := TStartConvertThread.Create(True);
   ConvertThread.Id := Aid;
   ConvertThread.FormatID := AFormatID;
@@ -1587,12 +1633,17 @@ end;
 
 procedure Tmainwindow.StartDownloadURL(URL, AFilename: string);
 begin
-  SetStatusText(GetLocString(MSG_STATUS_DOWNLOADING) + '...', 50);
   if Assigned(ConvertThread) then
   begin
+    if not ConvertThread.Terminated then
+    begin
+      ShowMessage(GetLocString(MSG_ERROR_ALREADYRUN));
+      Exit;
+    end;
     ConvertThread.WaitFor;
     ConvertThread.Free;
   end;
+  SetStatusText(GetLocString(MSG_STATUS_DOWNLOADING) + '...', 50);
   ConvertThread := TStartConvertThread.Create(True);
   ConvertThread.FormatID := Url;
   ConvertThread.filename := AFilename;
@@ -1625,6 +1676,7 @@ var
   MI: TMUIMenuItem;
   i: Integer;
   DObj: PDiskObject;
+  TextView: TMUIListView;
 begin
   inherited Create;
   DTObj := nil;
@@ -1644,6 +1696,8 @@ begin
   if Assigned(DObj) then
   begin
     Movies := ExcludeTrailingPathDelimiter(GetStrToolType(DObj, 'MOVIEDIR', Movies));
+    if not DirectoryExists(Movies) then
+      Movies := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + MovieTemplateFolder;
     BaseServer := GetStrToolType(DObj, 'SERVERURL', '');
     FreeDiskObject(DObj);
   end;
@@ -1659,6 +1713,7 @@ begin
 
   if not DirectoryExists(Movies) then
     CreateDir(Movies);
+
 
   MovieLock := Lock(Pchar(Movies), SHARED_LOCK);
 
@@ -1830,9 +1885,19 @@ begin
   DeleteBtn.Showme := False;
   DeleteBtn.Parent := BtnGroup;
 
+
+
+
   TextOut := TMUIFloatText.Create;
-  with TextOut do
+  {with TextOut do
   begin
+    Parent := Grp2;
+  end;}
+
+  TextView := TMUIListView.Create;
+  with TextView do
+  begin
+    List := TextOut;
     Parent := Grp2;
   end;
 
@@ -1941,6 +2006,8 @@ begin
   DestroyDTObj;
   ResultEntries.Free;
   ValLock.Free;
+  HPsLock.Free;
+  HPs.Free;
   inherited Destroy;
 end;
 
@@ -1968,6 +2035,8 @@ end;
 var
   Main: TMainWindow;
 begin
+  HPsLock := TCriticalSection.Create;
+  HPs := TList.Create;
   MakeURLs(BaseURL);
   MakeVersions;
   Main := TMainWindow.Create;

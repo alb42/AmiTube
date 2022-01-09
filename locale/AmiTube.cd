@@ -59,7 +59,7 @@ MSG_GUI_BREAK (20000//)
 Break
 ;
 MSG_GUI_DOWNLOAD_AS (20001//)
-Download as
+Get as
 ;
 MSG_GUI_LOAD_ICON (20002//)
 Load Preview
@@ -160,6 +160,9 @@ Not enough space to download this movie. Continue anyway?
 ;
 MSG_ERROR_UPDATE (40007//)
 Error checking for Update.
+;
+MSG_ERROR_ALREADYRUN (40008//)
+Another downloading job is running, wait for finish before starting a new one
 ;
 ;--- PREFS
 ;
