@@ -3,9 +3,9 @@ program AmiTube;
 
 {
 TODO:
-- ordering of Buttons -> cdxl ocs, cdxl aga, cdxl aga+ mpeg1
+-> ordering of Buttons -> cdxl ocs, cdxl aga, cdxl aga+ mpeg1
 - settings to choose that he askes everytime for destination for the cdxl/mpeg as well
-- Check moviedir on bootup
+-> Check moviedir on bootup
 -> Laden des vorschaubilds während download -> absturz?
 -> neue convert währen download- friert ein --> besser ablehnen
 -> clipboard device wird geöffnet auch ohne das setting
@@ -38,8 +38,9 @@ const
 
 const
   VERSION = '$VER: AmiTube 0.8 beta1 (09.01.2022)';
-  DownName: array[0..3] of string = ('CDXL OCS', 'CDXL AGA', 'MPEG1', 'CDXL AGA Large');
-  DownSizes: array[0..3] of Integer = (150, 300, 170, 900);
+  DownName: array[0..3] of string = ('CDXL OCS', 'CDXL AGA', 'CDXL AGA Large', 'MPEG1');
+  DownSizes: array[0..3] of Integer = (150, 300, 850, 170);
+  DownFormat: array[0..3] of Integer = (0, 1, 3, 2);
 
 
 type
@@ -712,7 +713,7 @@ begin
   end;
   Format := 0;
   if Sender is TMUIButton then
-    Format := TMUIButton(Sender).Tag;
+    Format := DownFormat[TMUIButton(Sender).Tag];
   for i := 0 to High(DownloadBtn) do
     DownloadBtn[i].Disabled := True;
   if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
@@ -1527,7 +1528,7 @@ begin
     for i := low(DownloadBtn) to High(DownloadBtn) do
     begin
       DownloadBtn[i].Disabled := False;
-      DownloadBtn[i].ShowMe := Enabled and (Prefs.Format = i);
+      DownloadBtn[i].ShowMe := Enabled and (Prefs.Format = DownFormat[i]);
     end;
   end;
   PlayBtn.ShowMe := PlayButtons;
@@ -1553,7 +1554,7 @@ begin
   begin
     t := DownSizes[i] * Duration;
     s := '';
-    if (Prefs.Format = i) and Prefs.AllFormats then
+    if (Prefs.Format = DownFormat[i]) and Prefs.AllFormats then
       s := MUIX_B;
     s := s + GetLocString(MSG_GUI_DOWNLOAD_AS) + ' ' + DownName[i];
     if t > 0 then
@@ -1677,6 +1678,7 @@ var
   i: Integer;
   DObj: PDiskObject;
   TextView: TMUIListView;
+  SB: TMUIScrollGroup;
 begin
   inherited Create;
   DTObj := nil;
@@ -1799,14 +1801,24 @@ begin
   end;
   //
 
+  SB := TMUIScrollGroup.Create;
+  with SB do
+  begin
+    Frame := MUIV_FRAME_NONE;
+    FreeVert := False;
+    Parent := Grp1;
+  end;
+
   // Right Group over each other: buttons/Image, Text
   Grp2 := TMUIGroup.Create;
   with Grp2 do
   begin
     Frame := MUIV_FRAME_NONE;
     Horiz := False;
-    Parent := Grp1;
+    Parent := SB.Contents; // Grp1;
   end;
+
+
   // first top group, left Image, right Buttons
   Grp1 := TMUIGroup.Create;
   with Grp1 do
