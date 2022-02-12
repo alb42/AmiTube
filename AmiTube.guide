@@ -45,6 +45,7 @@ MorphOS and AmigaOS4 users should use 68020 version.
 AROS Versions:
   - i386 ABIv0, 8 MB RAM, Internet connection
   - ARM RasPi+ 8 MB RAM, Internet connection
+  - x64 ABIv11 8 MB RAM, Internet connection
 
 Optional:
   - JPEG Datatype to show the preview icons
@@ -525,11 +526,12 @@ For the translations:
 
 For the Icons in Icons directory:
   Lukas 'Ponki' Paczko
+  Carlo 'AmigaSystem' 
 
 For AGAConv and AGABlaster
   Markus Schordan
 
-For Free Pascal on Amiga
+For Free Pascal on Amiga-Systems
   Karoly 'ChainQ' Balogh
   Florian Klaempfl
 
@@ -540,6 +542,12 @@ For Free Pascal on Amiga
 
 History
 -------
+
+1.0
+-
+- AROS64 ABIv11 bit version
+- Download more Amiga-like audio only formats: mp3 and 8svx
+- dual PNG Icons by AmigaSystem
 
 0.8
 - Faster download speed
