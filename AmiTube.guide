@@ -1,0 +1,609 @@
+@DATABASE
+@TOC MAIN
+@NODE MAIN "AmiTube"
+
+AmiTube
+=======
+
+AmiTube is a YouTube Client for m68k Amiga. That means searching and
+watching YouTube videos on a classic Amiga is possible now. To make this
+possible the video it will be converted on a Server to CDXL or MPEG1
+and downloaded to the Amiga Hard disk, where it can be watched with any
+eligible player (by default MultiView).
+
+@{" Requirements " LINK Requirements}
+@{" Installation " LINK Install}
+@{" Acknowledgements " LINK Acknowledgements}
+@{" History " LINK History}
+
+GUI
+===
+
+@{" Main Window  " LINK MainWindow}
+@{" Prefs Window " LINK PrefsWindow}
+@{" Resolution Window " LINK ResWindow}
+
+@{" AmiTube Conversation Server " LINK AmiTubeServer}
+
+For more information, checkout the AmiTube website
+http://blog.alb42.de/amitube
+
+@ENDNODE
+
+
+@NODE Requirements "Requirements"
+
+Requirements
+------------
+
+Amiga68k Versions:
+  - 68020, 8MB RAM, OS 3.x, MUI 3.8+, Internet connection
+  - 68000, 8MB RAM, OS 3.x, MUI 3.8+, Internet connection
+
+MorphOS and AmigaOS4 users should use 68020 version.
+
+AROS Versions:
+  - i386 ABIv0, 8 MB RAM, Internet connection
+  - ARM RasPi+ 8 MB RAM, Internet connection
+
+Optional:
+  - JPEG Datatype to show the preview icons
+  - CDXL Player to play CDXL movies
+    e.g. AGABlaster https://mschordan.github.io/amiga/agablaster.html
+  - MPEG1 Player to play MPEG1 movies
+    e.g. RiVa http://aminet.net/gfx/show/RiVA-0.54.lha
+  - WGet to download original formats directly from YouTube
+    e.g. https://sourceforge.net/projects/amiga/files/wget/1.12/
+  - MPlayer to stream directly from YouTube
+
+@ENDNODE
+
+@NODE Install "Installation"
+
+Installation
+------------
+
+To install AmiTube drag the Folder to the favourite position on the hard
+drive. After first start one should first go to the @{"Prefs" LINK PrefsWindow}
+to set some basic settings, especially the prefered video format should
+be set depending on the used machine and presonal preference.
+
+Available ToolTypes:
+
+MOVIEDIR
+  Sets the position of the movie folder, hence where AmiTube saves and
+  searches for CDXL and MPEG1 videos.
+  e.g.
+    MOVIEDIR=dh1:movies
+  Saves the downloaded MPEG1 and CDXL videos to dh1:movies
+
+SERVERURL
+  It is possible to setup a @{" own conversation server for AmiTube " LINK AmiTubeServer}.
+  To set the URL for that server use this tool type
+  e.g.
+    SERVERURL=http://192.168.0.234:1234
+  Uses the given server instead of ALBs Server
+
+@ENDNODE
+
+@NODE MainWindow "Main Window"
+
+Main Window
+-----------
+
+the main window contains:
+         @{"                Main Menu                " LINK MainMenu}
++----------------------------------------------------------------------+
+|                        @{"  Search bar  " LINK SearchBar}
++----------------------------------------------------------------------+
+|                        @{"  Status bar  " LINK StatusBar}
++-----------------------------+----------------------------------------+
+|                             | @{"  Preview Icon  " LINK PreviewIcon} @{"  Convert Buttons  " LINK Convert}
+|                             |                     @{"  Video Buttons  " LINK VideoButtons}
+|     @{"  Video List  " LINK List}         |
+|                             |            @{"  Video Description  " LINK VideoText}
+|                             |
++-----------------------------+----------------------------------------+
+|                                             @{"  Free Hard disk space  " LINK FreeSpace}
++-----------------------------+----------------------------------------+
+
+
+
+@ENDNODE
+
+
+@NODE SearchBar "Search Bar"
+
+Search Bar
+----------
+
+Type the search terms into the search bar and press the Enter key
+to start the YouTube search. By default it will search for 10 results.
+The maximum number of results can be changed in the @{"Prefs window" LINK PrefsWindow}.
+
+YouTube URLs can be pasted into the search bar to search for one
+special video.
+There are two different URL types supported:
+
+https://www.youtube.com/watch?v=ID
+https://youtu.be/ID
+
+AmiTube will then load the properties of the video describe by ID.
+
+If the automatic clipboard observation is enabled, these URL types are
+automatically loaded (with a requester asking for conformation).
+
+@ENDNODE
+
+
+@NODE StatusBar "Status Bar"
+
+Status Bar
+----------
+
+Shows the status of AmiTube, especially the network status or error
+messages.
+
+The Break Button tries to stop the running download job. The download
+will stop at the next possible moment. It is possible that this takes
+some time.
+
+@ENDNODE
+
+
+@NODE List "Video List"
+
+Video List
+----------
+
+This is the main list of videos formed either by a search or a loaded
+list from the HD or the shared online list.
+
+In the list are shown the entry number, name, run time (if available)
+and estimated download size.
+
+
+By clicking on an entry, the entry will be activated and its description
+is shown on the right side of the window in the @{"Video Description" LINK VideoText}
+text field. One can either load the @{"Preview Icon" LINK PreviewIcon} or if
+in @{"Prefs" LINK PrefsWindow} the automatic loading is activated it
+will automatically shown.
+If the selected movie is already present in the movie folder it will
+show the @{"Video Buttons" LINK VideoButtons}.
+If the movie is not present the @{"Convert Buttons" LINK Convert} are shown.
+
+(Attn: Zune on AROS has a little bug at the moment, therefore one have
+to click twice to really activate an entry and get the right description)
+
+The list can be sorted by double clicking on an entry. It will sort by
+the clicked column, if the list is already sorted by that column, the
+sort order will be reverted. (MUI does not give an event when clicking
+on the titles of the list, so one have to double click on an entry)
+As second method the sorting columns are available in the @{"Sort by Menu" LINK MainMenu}.
+
+@ENDNODE
+
+@NODE PreviewIcon "Preview Icon"
+
+Preview Icon
+------------
+
+Shows a preview Image of the video.
+By default here is only a Button "Load Preview", press it to start the
+image loading. For videos on harddisk first it is checked if the image
+is already saved on hard disk (next to the video file with the same name
+just .jpg extension). If not (or the video is from an other source) the
+image is downloaded from the server.
+
+The status of downloading the image or error messages are show in the @{"Status bar" LINK StatusBar}.
+
+if the "Auto load Preview Icon" in @{"Prefs Window" LINK PrefsWindow} is activated
+the image will automatically loaded when an entry in the @{"Video List" LINK List}
+is selected, no matter which source.
+
+
+@ENDNODE
+
+@NODE Convert "Convert Buttons"
+
+Convert Buttons
+---------------
+
+Used to convert and download YouTube videos.
+Depending on your Settings there will be one or all four converting
+buttons visible.
+
+The status of conversation, download and error messages are shown in
+the @{"Status bar" LINK StatusBar}.
+
+The convert buttons are only visible if the video is not already
+present on the hard disk, if you want to download with a different
+setting, first delete the video from your HD using the @{"Delete Button" LINK VideoButtons}.
+
+
+Get Original Button
+-------------------
+
+Download the video in its original format directly from YouTube.
+This Button is always visible, even when the video is already downloaded
+as MPEG1 or CDXL.
+
+It opens a new @{"Window" LINK ResWindow} to select the original format
+and resolution.
+
+@ENDNODE
+
+
+@NODE Convert "Convert Buttons"
+
+Convert Buttons
+---------------
+
+Used to convert and download YouTube videos.
+Depending on your Settings there will be one or all four converting
+buttons visible.
+
+The status of conversation, download and error messages are shown in
+the @{"Status bar" LINK StatusBar}.
+
+
+@ENDNODE
+
+
+@NODE VideoButtons "Video Buttons"
+
+VideoButtons
+------------
+
+These buttons are visible when a video is already available on the
+hard disk.
+
+Play Button
+  Starts the assigned player for the selected video type (CDXL or Prefs)
+  Select the player in @{"Prefs" LINK PrefsWindow}.
+
+Share Button
+  Shares the current video with other AmiTube users all over the world
+  (the online list you can load via @{"Main Menu/Remote Shared" LINK MainMenu})
+
+Delete Button
+  Deletes the current video from the harddisk, it must be converted and
+  downloaded again before can watched again. There is a requester
+  asking for confirmation before it getrs actualy deleted
+
+
+@ENDNODE
+
+
+@NODE VideoText "Video Description"
+
+Video Description
+-----------------
+
+Details about the selected video in the @{"Video List" LINK List}
+including Name of uploader, likes, views and the description.
+(as you would see on the YouTube page of the video)
+
+@ENDNODE
+
+
+
+@NODE FreeSpace "Free Hard disk space"
+
+Free Hard disk space
+--------------------
+
+Shows the free hard disk space on the drive the movies dir is
+situated (by @{"tool type" LINK Install} or location of AmiTube program itself)
+
+
+@ENDNODE
+
+
+@NODE ResWindow "Resolution Window"
+
+Resolution Window
+-----------------
+
+Shows a list of available formats/resolution/quality one can directly
+download from YouTube.
+Usually there are some audio only formats (which are very good for music
+videos to only get the audio and maybe recode them to mp3 with ffmpeg)
+and some video with sound in different resolutions.
+In the list the name/id the extension of the resulting file audio and
+video codec is noted. Choose a format and click one of the three Buttons
+underneath.
+
+The main window is block as long the resolution chooser window is open.
+
+Download to HD
+--------------
+
+Downloads the selected video via the conversation server (to remove the
+need for modern SSL). Will asks for a filename and path before start.
+
+Use Download Tool
+-----------------
+
+Usually that should be wget, but can be also any other tool to supporting
+modern SSL connections. Will asks for a filename and path before start.
+Configure the Download Tool in @{"Prefs" LINK PrefsWindow}
+
+Use URL Player
+--------------
+
+Start a player which can directly play video from a URL, like mplayer or
+ffplay. (not all versions are compiled with SSL/network activated)
+Configure the URL Player in @{"Prefs" LINK PrefsWindow}
+
+
+
+@ENDNODE
+
+
+
+@NODE PrefsWindow "Prefs Window"
+
+Prefs Window
+------------
+
+Startup list contents:
+  Select the contents of the @{"Video List" LINK List} when the programs start.
+  Either nothing, the list of the locally saved videos or the online
+  shared list.
+
+File Format
+  Choose the prefered file format the video from youtube should be
+  converted to atm. there are these options:
+    CDXL 32 colors OCS - for OCS/ECS Amigas (Width 160 pixel)
+    CDXL 256 colors AGA - for AGA and RTG Amigas (Width 160 pixel)
+    CDXL 256 colors Larger - for AGA or RTG Amigas (Width 320 pixel)
+    MPEG1 - for fast RTG Amigas (Width 320 pixel)
+
+Show all Formats
+  Show all format buttons on the main window, instead only the selected
+  one, the selected one has bold text.
+
+Ask for destination
+  Ask everytime for a name and path when converting a movie instead of
+  automatically save them to movie dir. if the file requester is
+  canceled the movie will be saved to movie dir as default.
+
+Search Results
+..............
+
+Maximum Number
+  Defines how many search results should be shown on every search.
+  More results need longer time to load and process (on the server).
+
+Maximum Title length
+  Cut the length of the title to this maximum length. This is done
+  because the listview columns can't be resized. With long names it
+  is difficult to read the last two columsn. This value is a way
+  to limit the width of the Name column in @{"Video List" LINK List}
+  make it easier to get all columns on a screen.
+
+
+Observe clipboard for URLs
+  If activated it will check the clipboard contents for Youtube URLs.
+  If a YouTube URL is found it will ask if one wants to search for that
+  video. It will search for the properties of that video.
+
+Auto load Preview Icon
+  For every video a preview icon exists. Usually it can be loaded by
+  Clicking on the Load Icon Button, for faster Amigas or NG Amigas it
+  is possible to activate that options, and every time a video is
+  clicked the preview icon is automatically loaded and shown.
+
+
+Player
+......
+
+Auto Start movie after download
+  if the movie is completly downloaded it will automatically play it
+  with the assigned player. (Only applies to MPEG1 and CDXL if saved
+  into the movie dir)
+
+Player programs for CDXL, MPEG, Play URL, Download URL
+  each of this tabs have a setting for the player and a Argument field.
+  Use the Choose button to get a file requester to select the player.
+  Type in the needed arguments for the player into the arguments field.
+  %f stands for the filename with path (for CDXL, MPEG, Download URL)
+  %u stands for the URL (for Download URL, Play URL)
+
+@ENDNODE
+
+@NODE AmiTubeServer "AmiTube Conversation Server"
+
+Custom AmiTube Conversation Server
+----------------------------------
+
+To install a own converation server for AmiTube a x86_64 Linux server
+with docker installed is needed (maybe Windows with docker is possible
+as well, untested).
+
+To install the docker container start:
+
+docker pull alb42/amitubeserver
+
+and then to start the actual docker container:
+
+docker run -p 1234:80 alb42/amitubeserver
+
+Here the 1234 is just as example the port where the server should run on
+running on (if 80 is free of course one can also use -p 80:80).
+Then go to the AmiTube icon and add the SERVERURL= parameter for example
+
+SERVERURL=http://192.168.0.234:1234
+
+Ready to use.
+
+@ENDNODE
+
+@NODE MainMenu "Main Menu"
+
+Project Menu
+------------
+
+Local Files
+  Check the movies dir and show all locally available videos in the
+  @{"video list" LINK List}.
+
+Remote Shared
+  Load the online shared list of videos.
+
+Quit
+  End the program
+
+
+Sort By
+-------
+
+Sort the current contents of the @{"video list" LINK List} by its
+contents. If an entry is selected and the list is already sorted by that
+the sort direction is reverted.
+
+Nr.
+  Sort the List by the original sorting
+  - local list, as found on HD
+  - online shared list, date of sharing
+  - search results as provided by YouTube
+
+Name
+  Sort list by title of the video (Alphabetically)
+
+Duration
+  Sort list by length of the video (if available)
+
+Filesize
+  Sort list by estimated or actual filesize
+
+
+Settings
+--------
+
+Prefs...
+  Open the @{"Prefs Window" LINK PrefsWindow}
+
+MUI...
+  Open the MUI Settings for this application.
+
+
+About
+-----
+
+About AmiTube...
+  About dialog with some informations about the program and its maker
+
+Check for Updates...
+  Check the Server for an updated Version of AmiTube, if available
+  AmiTube can directly download the newest archive to a chosen
+  destination.
+
+About MUI...
+  About dialog with informations about MUI and its maker
+
+@ENDNODE
+
+@NODE Acknowledgements "Acknowledgements"
+
+Acknowledgements
+----------------
+
+Thanks to all users and beta testers.
+
+Some special thanks and greetings go to
+
+For initial idea and stead encouragement
+  Michal Bergseth (http://www.amitopia.com)
+
+For the translations:
+  Eric 'Tarzin' Luczyszyn (french)
+  Michal Bergseth (norwegian)
+  Samir Hawamdeh (italian)
+  Lukas 'Ponki' Paczko (Polish, ISO 8859-2)
+
+For the Icons in Icons directory:
+  Lukas 'Ponki' Paczko
+
+For AGAConv and AGABlaster
+  Markus Schordan
+
+For Free Pascal on Amiga
+  Karoly 'ChainQ' Balogh
+  Florian Klaempfl
+
+
+@ENDNODE
+
+@NODE History "History"
+
+History
+-------
+
+0.8
+- Faster download speed
+- bugfix download speed
+- bugfix invalid moviedir
+- bugfix load icon when a download is running
+- bugfix start a download when one is already running
+- bugfix clipboard device
+- sort results in list by name, duration or size
+- choice to ask for a path everytime a conversation job is started,
+  if canceled the default moviedir is used
+- italian and polish translation
+- alternative more colorful icons for AmiTube and folder
+- AmigaGuide Help
+
+0.7
+- New CDXL Option 320px and AGA colors
+- direct download from youtube without conversation
+- select resolution on direct download
+- Update checking
+- Download latest version
+- Question before ddelete movie
+- french and norwegian translation
+
+0.6
+- Preview Icons
+- Localization (german included)
+- All formats Download buttons on main gui
+- Check for Free space on HD, warn before downloading if not enough space
+- Icon tooltype MOVIEDIR to set directory for movies
+- smaller network buffer for low memory systems
+
+0.5
+- changed search from json to xml (much faster on slow Amiga)
+- new formats (CDXL AGA, MPEG, choose via Settings)
+- choose your MPEG1 Player
+- About for MUI and program
+- Share your favourite movies
+- list shared movies
+- auto load shared or local movies at startup
+- youtube urls can be entered to search bar ("https://www.youtube.com/watch?v=xxxxx" or "https://youtu.be/xxxxx")
+- observe clipboard for yoututbe urls, automatically search for them (turn on in prefs)
+- Auto start movie after download
+- Parameter for CDXL Player and MPEG Player
+- special Version for 68000 processor
+
+0.4:
+- converter speed increase (server side, also active for 0.3 already)
+
+0.3:
+- first official release
+- download speed increase
+- cutting title length
+- Show list of already saved movies
+- Settings
+- number of search results
+
+0.2:
+- bugfixes on converting longer files
+- progress bar for download/search
+- show time an resulting file size
+
+0.1
+- Initial Release
+
+
+@ENDNODE
