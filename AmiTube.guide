@@ -134,6 +134,14 @@ AmiTube will then load the properties of the video describe by ID.
 If the automatic clipboard observation is enabled, these URL types are
 automatically loaded (with a requester asking for conformation).
 
+Next to the searchbar is a button with an arrow down. A click on this
+button will open the history list directly next to the search bar.
+To recall a search bar contents click on it and it will be filled
+to search bar can then be edited and performed again.
+Every search performed by AmiTube will sent to the history and saved
+to history.dat in the same folder as AmiTube. To delete the history
+delete this file it will be recreated on next start.
+
 @ENDNODE
 
 
@@ -526,7 +534,7 @@ For the translations:
 
 For the Icons in Icons directory:
   Lukas 'Ponki' Paczko
-  Carlo 'AmigaSystem' 
+  Carlo 'AmigaSystem'
 
 For AGAConv and AGABlaster
   Markus Schordan
@@ -544,7 +552,7 @@ History
 -------
 
 1.0
--
+- History for search
 - AROS64 ABIv11 bit version
 - Download more Amiga-like audio only formats: mp3 and 8svx
 - dual PNG Icons by AmigaSystem
