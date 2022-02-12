@@ -1270,7 +1270,8 @@ procedure TMainWindow.AboutAmiTube(Sender: TObject);
 var
   s: string;
 begin
-  s := (MUIX_C + #10 + MUIX_B + '---   ' + ShortVer + '   ---' + MUIX_N+ #10#10 +
+  s := (MUIX_C + #10 + MUIX_B + '---   ' + ShortVer + '   ---' + MUIX_N+ #10 +
+        {$INCLUDE %FPCTARGETCPU%} + '-' + {$INCLUDE %FPCTARGETOS%} + #10#10 +
        'made with Free Pascal for Amiga by ALB42'#10 +
        'special thanks to Michal Bergseth for idea and encouragement.'#10#10 +
        'Check ' + MUIX_U + 'https://blog.alb42.de' + MUIX_N + ' for updates.'#10);
