@@ -9,3 +9,14 @@ backup/
 movies/
 search.log
 lib/
+pack/AmiTube/Icons
+pack/AmiTubeAROS/Icons
+pack/AmiTube/AmiTube
+pack/AmiTube/AmiTube.000
+pack/AmiTubeAROS/AmiTube.i386
+pack/AmiTubeAROS/AmiTube.arm
+pack/AmiTubeAROS/AmiTube.x64
+pack/AmiTube/AmiTube.guide
+pack/AmiTubeAROS/AmiTube.guide
+pack/AmiTube/Catalogs
+pack/AmiTubeAROS/Catalogs
