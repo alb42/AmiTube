@@ -7,9 +7,9 @@ uses
   Datatypes, Utility, workbench, icon, fgl,
   Classes, SysUtils, fphttpclient, mui, muihelper, SyncObjs,
   MUIClass.Base, MUIClass.Window, MUIClass.Group, MUIClass.Area, MUIClass.Gadget,
-  MUIClass.Menu, MUIClass.DrawPanel,
+  MUIClass.Menu, MUIClass.DrawPanel, MUIClass.Image,
   MUIClass.StringGrid, MUIClass.Dialog, MUIClass.List, filedownloadunit, prefsunit,
-  XMLRead, DOM, AmiTubelocale, resolutionselunit;
+  XMLRead, DOM, AmiTubelocale, resolutionselunit, historyunit;
 
 const
   // base URL on my server
@@ -104,6 +104,7 @@ type
   TMainWindow = class(TMUIWindow)
   public
     SearchField: TMUIString;
+    ArrowButton: TMUIImage;
     List: TMUIStringGrid;
     TextOut: TMUIFloatText;
     DownloadBtn: array[0..NumFormats - 1] of TMUIButton;
@@ -118,6 +119,7 @@ type
     StatText: TMUIText;
     ListClickTimer: TMUITimer;
     procedure SearchEntry(Sender: TObject);
+    procedure ClickHistory(Sender: TObject);
     procedure EndThread(Sender: TObject);
     procedure EndCThread(Sender: TObject);
     //
@@ -621,6 +623,20 @@ begin
   SearchThread.OnProgress := @ProgressEvent;
   SearchThread.OnEnd := @EndThread;
   SearchThread.Start;
+  AddToHistory(SearchField.Contents);
+end;
+
+procedure TMainWindow.ClickHistory(Sender: TObject);
+var
+  T: TPoint;
+begin
+  // Calculate the window position
+
+  with THistoryWin.Create do
+  begin
+    Execute(SearchField);
+  end;
+
 end;
 
 //##### End Search Thread
@@ -2090,12 +2106,33 @@ begin
     Horiz := False;
     Parent := Self;
   end;
+
+  Grp2 := TMUIGroup.create;
+  With Grp2 do
+  begin
+    HelpNode := 'StatusBar';
+    Frame := MUIV_FRAME_NONE;
+    Horiz := True;
+    Parent := Grp1
+  end;
+
+
   // Search field
   SearchField := TMUIString.Create;
   with SearchField do
   begin
     OnAcknowledge := @SearchEntry;
-    Parent := Grp1;
+    Parent := Grp2;
+  end;
+
+  ArrowButton := TMUIImage.Create;
+  with ArrowButton do
+  begin
+    InputMode := MUIV_InputMode_RelVerify;
+    Frame := MUIV_FRAME_BUTTON;
+    OnClick := @ClickHistory;
+    Spec.Spec := MUII_ArrowDown;
+    Parent := Grp2;
   end;
 
   // Status bar, progress and label
@@ -2159,7 +2196,7 @@ begin
     OnClick := @ListClick;
     OnDoubleClick := @ListDblClick;
     {$ifdef AROS}
-    //OnSelectChange := @ListSelAROS;
+    OnSelectChange := @ListSelAROS;
     {$endif}
     Parent := Grp1;
   end;
@@ -2431,8 +2468,6 @@ begin
   ValLock.Free;
   HPsLock.Free;
   HPs.Free;
-  MainTimer.Free;
-  ListClickTimer.Free;
   inherited Destroy;
 end;
 
