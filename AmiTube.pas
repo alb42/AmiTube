@@ -116,11 +116,13 @@ type
     LoadIconBtn: TMUIButton;
     BtnGroup: TMUIGroup;
     StatText: TMUIText;
+    ListClickTimer: TMUITimer;
     procedure SearchEntry(Sender: TObject);
     procedure EndThread(Sender: TObject);
     procedure EndCThread(Sender: TObject);
     //
     procedure ListClick(Sender: TObject);
+    procedure ListSelAROS(Sender: TObject);
     procedure ListDblClick(Sender: TObject);
     procedure StopAll(Sender: TObject);
     //
@@ -722,6 +724,7 @@ end;
 {####### event for clicking the list}
 procedure TMainWindow.ListClick(Sender: TObject);
 begin
+  ListClickTimer.Enabled := False;
   Destroydtobj; // destroy loaded preview image, if any
   // check for new clicked entry
   if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
@@ -744,6 +747,11 @@ begin
   begin
     EnableDownloads(False, False); // nothing to do
   end;
+end;
+
+procedure TMainWindow.ListSelAROS(Sender: TObject);
+begin
+  ListClickTimer.Enabled := True;
 end;
 
 var
@@ -2151,7 +2159,7 @@ begin
     OnClick := @ListClick;
     OnDoubleClick := @ListDblClick;
     {$ifdef AROS}
-    OnSelectChange := @ListClick;
+    //OnSelectChange := @ListSelAROS;
     {$endif}
     Parent := Grp1;
   end;
@@ -2392,6 +2400,14 @@ begin
     OnTimer := @MainTimerEvent;
     Enabled := True;
   end;
+
+  ListClickTimer := TMUITimer.Create;
+  with ListClickTimer do
+  begin
+    Interval := 100;
+    OnTimer := @ListClick;
+    Enabled := False;
+  end;
 end;
 
 destructor TMainWindow.Destroy;
@@ -2415,6 +2431,8 @@ begin
   ValLock.Free;
   HPsLock.Free;
   HPs.Free;
+  MainTimer.Free;
+  ListClickTimer.Free;
   inherited Destroy;
 end;
 
