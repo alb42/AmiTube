@@ -55,6 +55,9 @@ About MUI ...
 MSG_MENU_CHECK_UPDATES (12003//)
 Check for Updates ...
 ;
+MSG_MENU_SORTBY (13000//)
+Sort by
+;
 MSG_GUI_BREAK (20000//)
 Break
 ;
@@ -111,6 +114,18 @@ No Update available
 ;
 MSG_GUI_UPDATEAVAIL (20018//)
 There is an Update available.\n\nYour Version: %o \n Online Version: %n \n\n Download latest Version?
+;
+MSG_GUI_LISTNUMBER (20019//)
+Nr.
+;
+MSG_GUI_LISTNAME (20020//)
+Name
+;
+MSG_GUI_LISTDURATION (20021//)
+Duration
+;
+MSG_GUI_LISTSIZE (20022//)
+Filesize
 ;
 ; ### Status
 MSG_STATUS_IDLE (30000//)
@@ -225,4 +240,7 @@ Auto load Preview Icon
 ;
 MSG_PREFS_MAXTITLELEN (50406//)
 Maximum Title length
+;
+MSG_PREFS_ASKDESTINATION (50407//)
+Ask for destination path
 ;

@@ -57,6 +57,9 @@ const
   MSG_MENU_CHECK_UPDATES = 12003 ;
   MSG_MENU_CHECK_UPDATES_STR = 'Check for Updates ...'#0;
 
+  MSG_MENU_SORTBY = 13000 ;
+  MSG_MENU_SORTBY_STR = 'Sort by'#0;
+
   MSG_GUI_BREAK = 20000 ;
   MSG_GUI_BREAK_STR = 'Break'#0;
 
@@ -113,6 +116,18 @@ const
 
   MSG_GUI_UPDATEAVAIL = 20018 ;
   MSG_GUI_UPDATEAVAIL_STR = 'There is an Update available.\n\nYour Version: %o \n Online Version: %n \n\n Download latest Version?'#0;
+
+  MSG_GUI_LISTNUMBER = 20019 ;
+  MSG_GUI_LISTNUMBER_STR = 'Nr.'#0;
+
+  MSG_GUI_LISTNAME = 20020 ;
+  MSG_GUI_LISTNAME_STR = 'Name'#0;
+
+  MSG_GUI_LISTDURATION = 20021 ;
+  MSG_GUI_LISTDURATION_STR = 'Duration'#0;
+
+  MSG_GUI_LISTSIZE = 20022 ;
+  MSG_GUI_LISTSIZE_STR = 'Filesize'#0;
 
   MSG_STATUS_IDLE = 30000 ;
   MSG_STATUS_IDLE_STR = 'Idle'#0;
@@ -225,6 +240,9 @@ const
   MSG_PREFS_MAXTITLELEN = 50406 ;
   MSG_PREFS_MAXTITLELEN_STR = 'Maximum Title length'#0;
 
+  MSG_PREFS_ASKDESTINATION = 50407 ;
+  MSG_PREFS_ASKDESTINATION_STR = 'Ask for destination path'#0;
+
 
 procedure CloseCatalog;
 procedure OpenCatalog(Loc: PLocale);
@@ -244,7 +262,7 @@ type
      str: string;
   end;
 
-  TAppStringArray = array[0..70] of TAppString;
+  TAppStringArray = array[0..76] of TAppString;
 
 const
   AppStrings: TAppStringArray = (
@@ -262,6 +280,7 @@ const
     (id: MSG_MENU_ABOUT_AMITUBE ; str: MSG_MENU_ABOUT_AMITUBE_STR ),
     (id: MSG_MENU_ABOUT_MUI ; str: MSG_MENU_ABOUT_MUI_STR ),
     (id: MSG_MENU_CHECK_UPDATES ; str: MSG_MENU_CHECK_UPDATES_STR ),
+    (id: MSG_MENU_SORTBY ; str: MSG_MENU_SORTBY_STR ),
     (id: MSG_GUI_BREAK ; str: MSG_GUI_BREAK_STR ),
     (id: MSG_GUI_DOWNLOAD_AS ; str: MSG_GUI_DOWNLOAD_AS_STR ),
     (id: MSG_GUI_LOAD_ICON ; str: MSG_GUI_LOAD_ICON_STR ),
@@ -281,6 +300,10 @@ const
     (id: MSG_GUI_USEURLPLAYER ; str: MSG_GUI_USEURLPLAYER_STR ),
     (id: MSG_GUI_NOUPDATE ; str: MSG_GUI_NOUPDATE_STR ),
     (id: MSG_GUI_UPDATEAVAIL ; str: MSG_GUI_UPDATEAVAIL_STR ),
+    (id: MSG_GUI_LISTNUMBER ; str: MSG_GUI_LISTNUMBER_STR ),
+    (id: MSG_GUI_LISTNAME ; str: MSG_GUI_LISTNAME_STR ),
+    (id: MSG_GUI_LISTDURATION ; str: MSG_GUI_LISTDURATION_STR ),
+    (id: MSG_GUI_LISTSIZE ; str: MSG_GUI_LISTSIZE_STR ),
     (id: MSG_STATUS_IDLE ; str: MSG_STATUS_IDLE_STR ),
     (id: MSG_STATUS_SHARED ; str: MSG_STATUS_SHARED_STR ),
     (id: MSG_STATUS_PREPSEARCH ; str: MSG_STATUS_PREPSEARCH_STR ),
@@ -318,6 +341,7 @@ const
     (id: MSG_PREFS_ALLFORMATS ; str: MSG_PREFS_ALLFORMATS_STR ),
     (id: MSG_PREFS_AUTOICON ; str: MSG_PREFS_AUTOICON_STR ),
     (id: MSG_PREFS_MAXTITLELEN ; str: MSG_PREFS_MAXTITLELEN_STR ),
+    (id: MSG_PREFS_ASKDESTINATION ; str: MSG_PREFS_ASKDESTINATION_STR ),
     (id: 0 ; str: '' )
     );
 

@@ -22,6 +22,7 @@ type
     MPEGParamEdit, ParamEdit, URLParamEdit, WGetParamEdit: TMUIString;
     ChooseFormat: TMUICycle;
     ChooseAllFormats: TMUICheckmark;
+    ChooseAskDest: TMUICheckmark;
     FOnFormatChanged: TNotifyEvent;
     ChooseAutoStart: TMUICheckmark;
     ChooseAutoIcon: TMUICheckmark;
@@ -42,6 +43,7 @@ type
     procedure CloseWindow(Sender: TObject; var CloseAction: TCloseAction);
     procedure AutoIconChange(Sender: TObject);
     procedure AllFormatChange(Sender: TObject);
+    procedure AskDestChange(Sender: TObject);
 
     function GetPlayerPath: string;
     function GetMPEGPlayerPath: string;
@@ -57,6 +59,7 @@ type
     function GetFormat: Integer;
     function GetAutoStart: Boolean;
     function GetAutoIcon: Boolean;
+    function GetAskDest: Boolean;
     function GetStartup: Integer;
     function GetClip: Boolean;
     function GetAllFormats: Boolean;
@@ -81,6 +84,7 @@ type
     property Format: integer read GetFormat;
     property AutoStart: Boolean read GetAutoStart;
     property AutoIcon: Boolean read GetAutoIcon;
+    property AskDest: Boolean read GetAskDest;
     property Startup: Integer read GetStartup;
     property ObserveClip: Boolean read GetClip;
     property AllFormats: Boolean read GetAllFormats;
@@ -102,6 +106,7 @@ begin
   ChooseFormat.Active := Ini.ReadInteger('General', 'Format', 0);
 end;
 
+{ some values are not updated automatically on change, so we change them on exit }
 procedure TPrefsWindow.SaveSettings;
 begin
   Ini.WriteString('Player', 'Path', PlayerEdit.Contents);
@@ -114,6 +119,7 @@ begin
   Ini.WriteString('Player', 'WGetParameter', WGetParam);
 end;
 
+{ Choose player for CDXL }
 procedure TPrefsWindow.ChoosePlayerClick(Sender: TObject);
 var
   Player: string;
@@ -296,6 +302,11 @@ begin
   Result := ChooseAutoIcon.Selected;
 end;
 
+function TPrefsWindow.GetAskDest: Boolean;
+begin
+  Result := ChooseAskDest.Selected;
+end;
+
 function TPrefsWindow.GetClip: Boolean;
 begin
   Result := ChooseClip.Selected;
@@ -350,6 +361,11 @@ begin
   Ini.WriteBool('General', 'AllFormats', ChooseAllFormats.Selected);
 end;
 
+procedure TPrefsWindow.AskDestChange(Sender: TObject);
+begin
+  Ini.WriteBool('General', 'AskDestination', ChooseAskDest.Selected);
+end;
+
 procedure TPrefsWindow.AutoIconChange(Sender: TObject);
 begin
   Ini.WriteBool('Search', 'AutoIcon', ChooseAutoIcon.Selected);
@@ -366,6 +382,8 @@ var
 begin
   inherited Create;
 
+  HelpNode := 'PrefsWindow';
+
   Title := GetLocString(MSG_PREFS_WINDOW);
 
   OnCloseRequest := @CloseWindow;
@@ -375,6 +393,7 @@ begin
   ID := MAKE_ID('A','T','P', 'r');
   Horizontal := False;
 
+  // ### Startup group
   Grp1 := TMUIGroup.Create;
   with Grp1 do
   begin
@@ -382,7 +401,7 @@ begin
     Horiz := True;
     Parent := Self;
   end;
-
+  // -- Choose bootup
   ChooseBootup := TMUICycle.Create;
   with ChooseBootup do
   begin
@@ -391,7 +410,7 @@ begin
     OnActiveChange := @StartupChanged;
     Parent := Grp1;
   end;
-
+  // ### Format group
   Grp1 := TMUIGroup.Create;
   with Grp1 do
   begin
@@ -405,7 +424,7 @@ begin
     Frame := MUIV_FRAME_NONE;
     Parent := Grp1;
   end;
-
+  // -- choose format
   ChooseFormat := TMUICycle.Create;
   with ChooseFormat do
   begin
@@ -414,7 +433,7 @@ begin
     OnActiveChange := @FormatChanged;
     Parent := Grp1;
   end;
-
+  // -- All formats
   with TMUIText.Create(GetLocString(MSG_PREFS_ALLFORMATS)) do
   begin
     Frame := MUIV_FRAME_NONE;
@@ -429,7 +448,22 @@ begin
     Parent := Grp1;
   end;
 
+  // -- Ask for Destination
+  with TMUIText.Create(GetLocString(MSG_PREFS_ASKDESTINATION){'Ask for destination path'}) do
+  begin
+    Frame := MUIV_FRAME_NONE;
+    Parent := Grp1;
+  end;
 
+  ChooseAskDest := TMUICheckmark.Create;
+  with ChooseAskDest do
+  begin
+    Selected := Ini.ReadBool('General', 'AskDestination', False);
+    OnSelected := @AskDestChange;
+    Parent := Grp1;
+  end;
+
+  // ### Search group
   Grp1 := TMUIGroup.Create;
   with Grp1 do
   begin
@@ -437,7 +471,7 @@ begin
     Columns := 2;
     Parent := Self;
   end;
-
+  // -- Number of search results
   with TMUIText.Create(GetLocString(MSG_PREFS_SEARCHNUM)) do
   begin
     Frame := MUIV_FRAME_NONE;
@@ -453,7 +487,7 @@ begin
     OnAcknowledge := @NumEditACK;
     Parent := Grp1;
   end;
-
+  // -- max title length
   with TMUIText.Create(GetLocString(MSG_PREFS_MAXTITLELEN)) do
   begin
     Frame := MUIV_FRAME_NONE;
@@ -469,7 +503,7 @@ begin
     OnAcknowledge := @MaxLenACK;
     Parent := Grp1;
   end;
-
+  // -- observe Clipboard
   with TMUIText.Create(GetLocString(MSG_PREFS_CLIP)) do
   begin
     Frame := MUIV_FRAME_NONE;
@@ -483,7 +517,7 @@ begin
     OnSelected := @ClipChange;
     Parent := Grp1;
   end;
-
+  // -- Auto load Icon
   with TMUIText.Create(GetLocString(MSG_PREFS_AUTOICON)) do
   begin
     Frame := MUIV_FRAME_NONE;
@@ -498,7 +532,7 @@ begin
     Parent := Grp1;
   end;
 
-
+  // ### Player group
   Grp1 := TMUIGroup.Create;
   with Grp1 do
   begin
@@ -513,7 +547,7 @@ begin
     Horiz := True;
     Parent := Grp1;
   end;
-
+  // -- Auto Start
   with TMUIText.Create(GetLocString(MSG_PREFS_AUTOSTART)) do
   begin
     Frame := MUIV_FRAME_NONE;
@@ -536,8 +570,7 @@ begin
     Parent := Grp1;
   end;
 
-  // CDXL Player
-
+  // ++ CDXL Player
   Grp2 := TMUIGroup.Create;
   with Grp2 do
   begin
@@ -575,7 +608,7 @@ begin
     Parent := Grp2;
   end;
 
-  // MPEG Player
+  //++ MPEG Player
 
   Grp2 := TMUIGroup.Create;
   with Grp2 do
@@ -614,7 +647,7 @@ begin
     Parent := Grp2;
   end;
 
-  // URL Player
+  //++ URL Player
 
   Grp2 := TMUIGroup.Create;
   with Grp2 do
@@ -653,7 +686,7 @@ begin
     Parent := Grp2;
   end;
 
-  // WGet Player
+  //++ WGet Player
 
   Grp2 := TMUIGroup.Create;
   with Grp2 do

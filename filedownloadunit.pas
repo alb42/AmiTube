@@ -5,97 +5,105 @@ unit Filedownloadunit;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, MUIClass.Dialog;
 
 type
   TOnProgress = procedure(Sender: TObject; Percent, Speed: integer; FullSize: Int64) of object;
 
-procedure DonwloadFile(OnProgress: TOnProgress; cURL: string; cFile: string; GetSize: Boolean);
+{ Download a file with progress from URL to File}
+procedure DownloadFile(OnProgress: TOnProgress; AURL: string; AFileName: string);
 
 procedure KillDownload;
 
+// short version kept here because need for download as well, will be set at
+// start to the actual Version number
 var
   ShortVer: string = 'AmiTube';
+  SearchURL, SearchURLID, ConvertURL, ShareURL,
+  SharedURL, IconURL, DownloadURL: string;
 
 implementation
 
 uses
   fphttpclient;
-var
-  vHTTP: TFPHTTPClient = nil;
 
+// must kept global for the kill function, means only one allows to run at a time
+var
+  DownClient: TFPHTTPClient = nil;
+
+{ try to kill the download, not sure when it will be killed}
 procedure KillDownload;
 begin
-  if Assigned(vHTTP) then
-    vHTTP.Terminate;
+  if Assigned(DownClient) then
+    DownClient.Terminate;
 end;
 
 { TStreamAdapter }
 type
   TStreamAdapter = class(TStream)
   strict private
-    fOnProgress: TOnProgress;
-    fPercent: integer;
-    fStream: TStream;
+    // event
+    FOnProgress: TOnProgress;
+    // filestream
+    FStream: TStream;
+    // Full size of the resulting file
     FSize: LongInt;
+    // position in the filestream -> number of bytes recieved
     FPos: LongInt;
+    // Buffer for faster writing on classic Amiga
     FBuffer: Pointer;
+    // position in the Buffer
     FBufPos: PByte;
+    // bytes in the Buffer still to write
     FBytes: LongInt;
+    // time we started to calculate the speed
     StartTime: LongWord;
+    // Buffersize
     BuffSize: LongInt;
+    // last time the OnProgress was started
+    LastCall: LongWord;
   public
-    constructor Create(AStream: TStream; ASize: int64);
+    constructor Create(AStream: TStream);
     destructor Destroy; override;
-    function Read(var Buffer; Count: longint): longint; override;
-    function Write(const Buffer; Count: longint): longint; override;
-    function Seek(Offset: longint; Origin: word): longint; override;
-    procedure DoProgress(Writing: boolean); virtual;
+    function Read(var Buffer; Count: LongInt): LongInt; override;
+    function Write(const Buffer; Count: LongInt): LongInt; override;
+    function Seek(Offset: LongInt; Origin: Word): LongInt; override;
+    procedure DoProgress(Writing: Boolean); virtual;
     procedure HeaderEvent(Sender: TObject);
   published
     property OnProgress: TOnProgress read FOnProgress write FOnProgress;
   end;
 
-procedure DonwloadFile(OnProgress: TOnProgress; cURL: string; cFile: string; GetSize: Boolean);
+procedure DownloadFile(OnProgress: TOnProgress; AURL: string; AFileName: string);
 var
-  vStream: TStreamAdapter;
-  VSize: int64 = 0;
-  //I: integer;
-  //S: string;
+  ProgStream: TStreamAdapter;
 begin
-  vStream := nil;
-  vHTTP := nil;
-  vSize := 0;
+  ProgStream := nil;
+  DownClient := nil;
   try
-    vHTTP := TFPHTTPClient.Create(nil);
-    vHTTP.AllowRedirect := True;
-    vHTTP.AddHeader('User-Agent', ShortVer + ' ' + {$INCLUDE %FPCTARGETCPU%} + '-' + {$INCLUDE %FPCTARGETOS%});
-    //
-    {if GetSize then
-    begin
-      vSize := 1000000;
-      vHTTP.HTTPMethod('HEAD', cUrl, nil, [200]);
-      for I := 0 to pred(vHTTP.ResponseHeaders.Count) do
+    try
+      DownClient := TFPHTTPClient.Create(nil);
+      DownClient.AllowRedirect := True;
+      DownClient.AddHeader('User-Agent', ShortVer + ' ' + {$INCLUDE %FPCTARGETCPU%} + '-' + {$INCLUDE %FPCTARGETOS%});
+      //
+      ProgStream := TStreamAdapter.Create(TFileStream.Create(AFileName, fmCreate));
+      ProgStream.OnProgress := OnProgress;
+      //
+      DownClient.OnHeaders := @(ProgStream.HeaderEvent);
+      DownClient.HTTPMethod('GET', AURL, ProgStream, [200]);
+    except
+      on E: Exception do
       begin
-        S := UpperCase(vHTTP.ResponseHeaders[I]);
-        if Pos('CONTENT-LENGTH:', S) > 0 then
-        begin
-          VSize := StrToIntDef(Copy(S, Pos(':', S) + 1, Length(S)), 0);
-          Break;
-        end;
+        writeln('Error downloading file: ' + E.Message);
+        FreeAndNil(ProgStream);
+        DeleteFile(AFileName);
       end;
-    end;}
-    //
-    vStream := TStreamAdapter.Create(TFileStream.Create(cFile, fmCreate), VSize);
-    vStream.OnProgress := OnProgress;
-    //
-    vHttp.OnHeaders := @(vStream.HeaderEvent);
-    vHTTP.HTTPMethod('GET', cUrl, vStream, [200]);
-    // vHTTP.Get(cUrl, vStream);
+    end;
+    // DownClient.Get(AURL, ProgStream);
   finally
-    vHTTP.Free;
-    vHTTP := nil;
-    vStream.Free;
+    DownClient.Free;
+    DownClient := nil;
+    ProgStream.Free;
   end;
 end;
 
@@ -105,21 +113,22 @@ const
   DefBUFFSIZE = 1024000;
   DefSmallBUFFSIZE = 10240;
 
-constructor TStreamAdapter.Create(AStream: TStream; ASize: int64);
+constructor TStreamAdapter.Create(AStream: TStream);
 begin
   inherited Create;
-  StartTime := GetTickCount;
   FStream := AStream;
-  fStream.Size := ASize;
-  fStream.Position := 0;
-  FSize := ASize;
+  FStream.Size := 0;
+  FStream.Position := 0;
+  FSize := 0;
   FPos := 0;
+  // Create the Buffer, much faster saving to HD
   BuffSize := DefBUFFSIZE;
   try
     FBuffer := AllocMem(BUFFSIZE);
   except
     FBuffer := nil;
   end;
+  // cannot create the Buffer, try with a much smaller Buffer
   if FBuffer = nil then
   begin
     BuffSize := DefSmallBUFFSIZE;
@@ -127,6 +136,7 @@ begin
   end;
   FBufPos := FBuffer;
   FBytes := 0;
+  StartTime := GetTickCount;
 end;
 
 destructor TStreamAdapter.Destroy;
@@ -138,13 +148,13 @@ begin
   inherited Destroy;
 end;
 
-function TStreamAdapter.Read(var Buffer; Count: longint): longint;
+function TStreamAdapter.Read(var Buffer; Count: LongInt): LongInt;
 begin
   Result := FStream.Read(Buffer, Count);
   DoProgress(False);
 end;
 
-function TStreamAdapter.Write(const Buffer; Count: longint): longint;
+function TStreamAdapter.Write(const Buffer; Count: LongInt): LongInt;
 begin
   if FBytes + Count > BUFFSIZE then
   begin
@@ -158,28 +168,28 @@ begin
   Inc(FBufPos, Count);
   Inc(FBytes, Count);
   //
-  //Result := FStream.Write(Buffer, Count);
   Inc(FPos, Result);
   DoProgress(False);
 end;
 
-function TStreamAdapter.Seek(Offset: longint; Origin: word): longint;
+function TStreamAdapter.Seek(Offset: LongInt; Origin: Word): LongInt;
 begin
   Result := FStream.Seek(Offset, Origin);
 end;
 
+{ Header received, if we have a size in there we can show a progressbar }
 procedure TStreamAdapter.HeaderEvent(Sender: TObject);
 var
-  mhp: TFPHTTPClient;
+  HGet: TFPHTTPClient;
   i: Integer;
   s: String;
 begin
   if Sender is TFPHTTPClient then
   begin
-    mhp := TFPHTTPClient(Sender);
-    for I := 0 to pred(mhp.ResponseHeaders.Count) do
+    HGet := TFPHTTPClient(Sender);
+    for I := 0 to Pred(HGet.ResponseHeaders.Count) do
     begin
-      S := UpperCase(mhp.ResponseHeaders[I]);
+      S := UpperCase(HGet.ResponseHeaders[I]);
       if Pos('CONTENT-LENGTH:', S) > 0 then
       begin
         //writeln('got size: ', StrToIntDef(Copy(S, Pos(':', S) + 1, Length(S)), 0), ' should be: ', FSize);
@@ -187,29 +197,37 @@ begin
         Break;
       end;
     end;
+    StartTime := GetTickCount;
   end;
 end;
 
+{ do progress change }
 procedure TStreamAdapter.DoProgress(Writing: boolean);
 var
   t1: LongWord;
   Speed: Integer;
+  Percent: integer;
 begin
-  //fPercent := Trunc((FStream.Position) / (FStream.Size) * 100);
-  if FSize > 0 then
-  begin
-    fPercent := Trunc((FPos) / (FSize) * 100);
-  end
-  else
-    fPercent := 0;
   //
   t1 := GetTickCount;
-  Speed := 0;
-  t1 := t1 - StartTime;
-  if t1 > 0 then
-    Speed := Round(FPos / (t1 / 1000));
-  if Assigned(OnProgress) then
-    OnProgress(self, FPercent, Speed, FPos);
+  if t1 - LastCall > 400 then  // do not call too often
+  begin
+    // calc size
+    if FSize > 0 then
+      Percent := Trunc(FPos / FSize * 100)
+    else
+      Percent := 0;
+    // Calc Speed
+    Speed := 0;
+    t1 := t1 - StartTime;
+    if t1 > 0 then
+      Speed := Round(FPos / (t1 / 1000));
+    // send to GUI
+    if Assigned(OnProgress) then
+      OnProgress(self, Percent, Speed, FPos);
+    //
+    LastCall := t1;
+  end;
 end;
 
 end.

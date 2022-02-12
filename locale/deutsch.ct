@@ -73,6 +73,10 @@ MSG_MENU_CHECK_UPDATES
 Prüfe auf Aktualisierungen ...
 ; Check for Updates ...
 ;
+MSG_MENU_SORTBY
+Sortiere nach
+; Sort by
+;
 MSG_GUI_BREAK
 Stopp
 ; Break
@@ -148,6 +152,22 @@ Keine Aktualisierung verfügbar.
 MSG_GUI_UPDATEAVAIL
 Aktualisierung verfügbar.\n\n Deine Version: %o \n Online Version: %n \n\n Neuste Version herunterladen?
 ; There is an Update available.\n\nYour Version: %o \n Online Version: %n \n\n Download latest Version?
+;
+MSG_GUI_LISTNUMBER
+Nr.
+; Nr.
+;
+MSG_GUI_LISTNAME
+Name
+; Name
+;
+MSG_GUI_LISTDURATION
+Dauer
+; Duration
+;
+MSG_GUI_LISTSIZE
+Filegröße
+; Filesize
 ;
 ; ### Status
 MSG_STATUS_IDLE
@@ -299,4 +319,8 @@ Automatisch Vorschau laden
 MSG_PREFS_MAXTITLELEN
 Maximale Titel Länge
 ; Maximum Title length
+;
+MSG_PREFS_ASKDESTINATION
+Frage nach Zielpfad
+; Ask for destination path
 ;
