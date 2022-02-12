@@ -1710,19 +1710,28 @@ begin
           LoadFromStream(Mem);
           if Count > 0 then
             OnlineVersion := Strings[0];
-          // AROS is the 2nd URL, Amiga is the first URL
+          // Amiga is the first URL, AROS is the 2nd URL
+          {$ifdef Amiga68k}
+          if Count > 1 then
+            Link := Strings[1];
+          {$endif}
           {$ifdef AROS}
           if Count > 2 then
             Link := Strings[2];
-          {$else}
-          if Count > 1 then
-            Link := Strings[1];
+          {$endif}
+          {$ifdef MorphOS}
+          if Count > 3 then
+            Link := Strings[3];
+          {$endif}
+          {$ifdef AmigaOS4}
+          if Count > 4 then
+            Link := Strings[4];
           {$endif}
           Free;
         end;
         //
         //Check for Version
-        if IsNewerVersion(MakeVersionNumber(OnlineVersion)) then
+        if IsNewerVersion(MakeVersionNumber(OnlineVersion)) and (Link <> '') then
         begin
           // ask user if we want to download the Update
           TargetName := '';
