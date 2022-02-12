@@ -115,6 +115,8 @@ constructor THistoryWin.Create;
 begin
   inherited Create;
 
+  HelpNode := 'SearchBar';
+
   Horizontal := True;
   BorderLess := True;
   CloseGadget := False;
