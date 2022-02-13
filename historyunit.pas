@@ -27,6 +27,17 @@ type
     procedure Execute(Edit: TMUIString);
   end;
 
+  { TDummyClass }
+
+  TDummyClass = class
+    procedure CloseHist(Sender: TObject);
+  end;
+
+var
+  HistWin: THistoryWin = nil;
+  Dummy: TDummyClass;
+
+
 procedure AddToHistory(AText: string);
 
 
@@ -83,17 +94,27 @@ begin
   FreeAndNil(History);
 end;
 
+{ TDummyClass }
+
+procedure TDummyClass.CloseHist(Sender: TObject);
+begin
+  ListTime.Enabled := False;
+  if Assigned(HistWin) then
+    HistWin.Close;
+end;
+
 
 { THistoryWin }
 
 procedure THistoryWin.DeactivateEvent(Sender: TObject);
 begin
-  Close;
+  ListTime.Enabled := True;
+  //Close;
 end;
 
 procedure THistoryWin.CloseWindow(Sender: TObject; var CloseAction: TCloseAction);
 begin
-  CloseAction := caFree;
+  CloseAction := caClose;
   ListTime.Enabled := False;
   ListTime.OnTimer := nil;
 end;
@@ -102,8 +123,10 @@ procedure THistoryWin.ListClick(Sender: TObject);
 begin
   ListTime.Enabled := False;
   if Assigned(FEdit) and (List.Row >= 0) then
+  begin
     FEdit.Contents := List.Cells[0, List.Row];
-  Close;
+  end;
+  ListTime.Enabled := True;
 end;
 
 procedure THistoryWin.ListClickAROS(Sender: TObject);
@@ -131,9 +154,12 @@ begin
     Input := True;
     ShowLines := True;
     ShowTitle := False;
-    OnClick := @ListClick;
+
     {$ifdef AROS}
-    OnSelectChange := @ListClickAROS;
+    OnDoubleClick := @ListClick;
+    //OnSelectChange := @ListClickAROS;
+    {$else}
+    OnClick := @ListClick;
     {$endif}
     Parent := Self;
   end;
@@ -142,7 +168,7 @@ begin
     ListTime := TMUITimer.Create;
   ListTime.Interval := 100;
   ListTime.Enabled := False;
-  ListTime.OnTimer := @ListClick;
+  ListTime.OnTimer := @Dummy.CloseHist;
 
   OnDeactivate := @DeactivateEvent;
 end;
@@ -180,8 +206,10 @@ begin
 end;
 
 initialization
+  Dummy := TDummyClass.Create;
   InitHistory;
 finalization
   DeInitHistory;
+  Dummy.Free;
 end.
 

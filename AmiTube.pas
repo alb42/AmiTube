@@ -608,7 +608,6 @@ begin
   SharedMenu.Enabled := False;
   // reset old result
   List.NumRows := 0;
-  List.NumColumns := 0;
   // there is an old result... how can that happen?, ait for it to finish first
   if Assigned(SearchThread) then
   begin
@@ -631,12 +630,9 @@ var
   T: TPoint;
 begin
   // Calculate the window position
-
-  with THistoryWin.Create do
-  begin
-    Execute(SearchField);
-  end;
-
+  HistWin.Free;
+  HistWin := THistoryWin.Create;
+  HistWin.Execute(SearchField);
 end;
 
 //##### End Search Thread
@@ -657,11 +653,14 @@ begin
   begin
     // get lists
     List.Quiet := True;
-    List.NumColumns := 4; // we have a time, -> 4 columns
-    List.Titles[0] := GetLocString(MSG_GUI_LISTNUMBER);
-    List.Titles[1] := GetLocString(MSG_GUI_LISTNAME);
-    List.Titles[2] := GetLocString(MSG_GUI_LISTDURATION);
-    List.Titles[3] := GetLocString(MSG_GUI_LISTSIZE);
+    if List.NumColumns <> 4 then
+    begin
+      List.NumColumns := 4; // we have a time, -> 4 columns
+      List.Titles[0] := GetLocString(MSG_GUI_LISTNUMBER);
+      List.Titles[1] := GetLocString(MSG_GUI_LISTNAME);
+      List.Titles[2] := GetLocString(MSG_GUI_LISTDURATION);
+      List.Titles[3] := GetLocString(MSG_GUI_LISTSIZE);
+    end;
     List.NumRows := SearchThread.SearchRes.Count;
     // copy the results from thread
     ResultEntries.Clear;
@@ -1103,10 +1102,13 @@ begin
   if Length(MyRes) > 0 then
   begin
     List.Quiet := True;
-    List.NumColumns := 3;
-    List.Titles[0] := GetLocString(MSG_GUI_LISTNUMBER);
-    List.Titles[1] := GetLocString(MSG_GUI_LISTNAME);
-    List.Titles[2] := GetLocString(MSG_GUI_LISTSIZE);
+    if List.NumColumns <> 3 then
+    begin
+      List.NumColumns := 3;
+      List.Titles[0] := GetLocString(MSG_GUI_LISTNUMBER);
+      List.Titles[1] := GetLocString(MSG_GUI_LISTNAME);
+      List.Titles[2] := GetLocString(MSG_GUI_LISTSIZE);
+    end;
     List.NumRows := Length(MyRes);
     // get results from list
     for i := 0 to List.NumRows - 1 do
@@ -1244,7 +1246,6 @@ begin
   SearchField.Disabled := True;
   SharedMenu.Enabled := False;
   List.NumRows := 0;
-  List.NumColumns := 0;
   if Assigned(SearchThread) then
   begin
     SearchThread.Terminate;
@@ -2210,6 +2211,11 @@ begin
     {$endif}
     Parent := Grp1;
   end;
+  List.NumColumns := 4; // we have a time, -> 4 columns
+  List.Titles[0] := GetLocString(MSG_GUI_LISTNUMBER);
+  List.Titles[1] := GetLocString(MSG_GUI_LISTNAME);
+  List.Titles[2] := GetLocString(MSG_GUI_LISTDURATION);
+  List.Titles[3] := GetLocString(MSG_GUI_LISTSIZE);
 
   // Splitter
   with TMUIBalance.Create do
