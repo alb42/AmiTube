@@ -1000,7 +1000,7 @@ end;
 procedure TMainWindow.DeleteClick(Sender: TObject);
 var
   MyID: string;
-  MovieName, ReadMeName, MPEGName: string;
+  MovieName, ReadMeName, MPEGName, ImageName: string;
 begin
   // something selected?
   if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
@@ -1009,6 +1009,7 @@ begin
     MovieName := IncludeTrailingPathDelimiter(Movies) + MyID + '.cdxl';
     MPEGName := IncludeTrailingPathDelimiter(Movies) + MyID + '.mpeg';
     ReadmeName := IncludeTrailingPathDelimiter(Movies) + MyID + '.txt';
+    ImageName := IncludeTrailingPathDelimiter(Movies) + MyID + '.jpg';
     // ask use if it is ok?
     if MessageBox(GetLocString(MSG_GUI_DELETE), GetLocString(MSG_GUI_DELETE)+ #10' "' + List.Cells[1, List.Row] + '"?' , [GetLocString(MSG_GUI_YES), GetLocString(MSG_GUI_NO)]) = 1 then
     begin
@@ -1021,6 +1022,9 @@ begin
       // and the movie
       if FileExists(ReadMeName) then
         DeleteFile(ReadMeName);
+      // and the Image, if exists
+      if FileExists(ImageName) then
+        DeleteFile(ImageName);
       // remove the size, if no duration, not valid anymore and no way to get it
       if ResultEntries[List.Row].Duration = 0 then
         List.Cells[2, List.Row] := '-';
