@@ -1,2 +1,4 @@
 lha -r a AmiTube.lha AmiTube AmiTube.info
 lha -r a AmiTubeAROS.lha AmiTubeAROS AmiTubeAROS.info
+lha -r a AmiTubeMorphOS.lha AmiTubeMorphOS AmiTubeMorphOS.info
+lha -r a AmiTubeOS4.lha AmiTubeOS4 AmiTubeOS4.info

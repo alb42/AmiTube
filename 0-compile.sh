@@ -8,11 +8,18 @@ flexcat locale/AmiTube.cd locale/deutsch.ct CATALOG Catalogs/deutsch/AmiTube.cat
 # copy locales to package
 cp locale/AmiTube.cd pack/AmiTube/Catalogs
 cp -r Catalogs/* pack/AmiTube/Catalogs/
-
-# copy locales to package
+# 
 cp locale/AmiTube.cd pack/AmiTubeAROS/Catalogs
 cp -r Catalogs/* pack/AmiTubeAROS/Catalogs/
+#
+cp locale/AmiTube.cd pack/AmiTubeMorphOS/Catalogs
+cp -r Catalogs/* pack/AmiTubeMorphOS/Catalogs/
+#
+cp locale/AmiTube.cd pack/AmiTubeOS4/Catalogs
+cp -r Catalogs/* pack/AmiTubeOS4/Catalogs/
 
+#
+mkdir -p lib/m68k-amiga
 rm -f ./lib/m68k-amiga/*
 fpc4amiga000.sh -B -O2 -FU./lib/m68k-amiga -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTube/AmiTube.000
 
@@ -30,6 +37,14 @@ fpc4arosarm.sh -B -O2 -FU./lib/arm-aros -Fu../MUIClass/src AmiTube.pas -o./pack/
 mkdir -p lib/x86_64-aros
 rm -f ./lib/x86_64-aros/*
 fpc4aros64.sh -B -O2 -FU./lib/x86_64-aros -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTubeAROS/AmiTube.x64
+
+mkdir -p lib/powerpc-morphos
+rm -f ./lib/powerpc-morphos/*
+fpc4mos.sh -B -O2 -FU./lib/powerpc-morphos -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTubeMorphOS/AmiTube
+
+mkdir -p lib/powerpc-amiga
+rm -f ./lib/powerpc-amiga/*
+fpc4os4.sh -B -O2 -FU./lib/powerpc-amiga -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTubeOS4/AmiTube
 
 cd pack
 ./packme.sh
