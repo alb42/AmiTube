@@ -1045,6 +1045,11 @@ begin
   end;
 end;
 
+{$ifdef AmigaOS4}
+type
+  TAnchorPath = TAnchorPathOld;
+{$endif}
+
 { make a list of all the files in movies dir}
 procedure TMainWindow.LoadLocalFiles(Sender: TObject);
 var
