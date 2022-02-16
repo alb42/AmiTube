@@ -961,11 +961,13 @@ var
   MyID: string;
   MovieName: string;
   Param: string;
+  Me: PTask;
 begin
   // do not start directly after last movie ended
   // dirty hack for agablaster seems to resent the button press
   if GetTickCount - LastStart < 200 then
     Exit;
+  Me := FindTask(nil);
   // something selected?
   if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
   begin
@@ -978,7 +980,11 @@ begin
       begin
         Param := Prefs.MPEGPlayerParam;
         Param := StringReplace(Param, '%f', '"' + MovieName + '"', [rfReplaceAll]);
-        ExecuteProcess(Prefs.MPEGPlayerPath, Param, []);
+        MySystem(Prefs.MPEGPlayerPath + ' ' + Param,
+          [NP_StackSize, Abs(PtrInt(Me^.tc_SPUpper) - PtrInt(Me^.tc_SPLower)), // stack size same as myself]
+          TAG_END]
+        );
+        //ExecuteProcess(Prefs.MPEGPlayerPath, Param, []);
         LastStart := GetTickCount;
       end;
     end
@@ -989,7 +995,10 @@ begin
       begin
         Param := Prefs.PlayerParam;
         Param := StringReplace(Param, '%f', '"' + MovieName + '"', [rfReplaceAll]);
-        ExecuteProcess(Prefs.PlayerPath, Param, []);
+        MySystem(Prefs.PlayerPath + ' ' + Param,
+          [NP_StackSize, Abs(PtrInt(Me^.tc_SPUpper) - PtrInt(Me^.tc_SPLower)), // stack size same as myself]
+          TAG_END]
+        );
         LastStart := GetTickCount;
       end;
     end;
@@ -1054,10 +1063,11 @@ type
   TAnchorPath = TAnchorPathOld;
 {$endif}
 
+{$ALIGN 8}
+
 { make a list of all the files in movies dir}
 procedure TMainWindow.LoadLocalFiles(Sender: TObject);
 var
-  Info: TAnchorPath;
   FileName, TXTFilename: string;
   SL: TStringList;
   // we use a intermediate list before we copy all the the final result entries
@@ -1071,41 +1081,41 @@ var
   Idx,i : Integer;
   st: string;
   SRes: TResultEntry;
+  FI: TFileInfoBlock;
 begin
   // make a list of files availabe, we use the TXT and Video file file
   MyRes := [];
   SL := TStringList.Create;
-  FillChar(Info, SizeOf(Info), #0);
-  if MatchFirst(PChar(IncludeTrailingPathDelimiter(Movies) + '#?'), @Info) = 0 then
+
+
+  FillChar(FI, SizeOf(TFileInfoBlock), #0);
+  if Boolean(Examine(MovieLock, @FI)) then
   begin
     repeat
-      if Trim(Info.ap_Info.fib_FileName) = '' then
-        Break;
-      if not ((ExtractFileExt(Info.ap_Info.fib_FileName) = '.mpeg') or (ExtractFileExt(Info.ap_Info.fib_FileName) = '.cdxl')) then
+      if not ((ExtractFileExt(FI.fib_FileName) = '.mpeg') or (ExtractFileExt(FI.fib_FileName) = '.cdxl')) then
         Continue;
       //
-      Filename := IncludeTrailingPathDelimiter(Movies) + Info.ap_Info.fib_FileName;
+      Filename := IncludeTrailingPathDelimiter(Movies) + FI.fib_FileName;
       TxtFilename := ChangeFileExt(FileName, '.txt');
       if FileExists(TXTFilename) then
       begin
         Idx := Length(MyRes);
         SetLength(MyRes, Idx + 1);
         MyRes[Idx].Id := ExtractFilename(ChangeFileExt(TXTFilename, ''));
-        MyRes[Idx].FileSize := Info.ap_Info.fib_Size;
-        if (Info.ap_Info.fib_Size / 1024) > 1024 then
-          MyRes[Idx].Size := FloatToStrF(Info.ap_Info.fib_Size / 1024 / 1024, ffFixed, 8, 1) + ' MByte'
+        MyRes[Idx].FileSize := FI.fib_Size;
+        if (FI.fib_Size / 1024) > 1024 then
+          MyRes[Idx].Size := FloatToStrF(FI.fib_Size / 1024 / 1024, ffFixed, 8, 1) + ' MByte'
         else
-          MyRes[Idx].Size := IntToStr(Round(Info.ap_Info.fib_Size / 1024)) + ' kByte';
+          MyRes[Idx].Size := IntToStr(Round(FI.fib_Size / 1024)) + ' kByte';
         SL.Clear;
         SL.LoadFromFile(TxtFileName);
         if SL.Count > 0 then
           MyRes[Idx].Name := SL[0];
         MyRes[Idx].Desc := SL.Text;
       end;
-    Until MatchNext(@info) <> 0;
-    MatchEnd(@Info);
+    until not Boolean(ExNext(Movielock ,@FI));
   end;
-  List.NumRows := 0;
+  List.NumRows := Length(MyRes);
   ResultEntries.Clear;
   // check if we have some results
   if Length(MyRes) > 0 then
@@ -1118,7 +1128,7 @@ begin
       List.Titles[1] := GetLocString(MSG_GUI_LISTNAME);
       List.Titles[2] := GetLocString(MSG_GUI_LISTSIZE);
     end;
-    List.NumRows := Length(MyRes);
+
     // get results from list
     for i := 0 to List.NumRows - 1 do
     begin
