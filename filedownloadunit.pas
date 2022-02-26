@@ -8,6 +8,9 @@ uses
   Classes, SysUtils, MUIClass.Dialog;
 
 type
+    // event type for pregress informations, mainly for download files
+  TProgressEvent = procedure(Sender: TObject; Percent: Integer; Text: string) of object;
+
   TOnProgress = procedure(Sender: TObject; Percent, Speed: integer; FullSize: Int64) of object;
 
 { Download a file with progress from URL to File}
