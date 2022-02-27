@@ -9,7 +9,7 @@ uses
   MUIClass.Base, MUIClass.Window, MUIClass.Group, MUIClass.Area, MUIClass.Gadget,
   MUIClass.Menu, MUIClass.DrawPanel, MUIClass.Image,
   MUIClass.StringGrid, MUIClass.Dialog, MUIClass.List, filedownloadunit, prefsunit,
-  XMLRead, DOM, AmiTubelocale, resolutionselunit, historyunit, convertthreadunit, searchthreadunit;
+  XMLRead, DOM, AmiTubelocale, resolutionselunit, historyunit, convertthreadunit, searchthreadunit, downloadlistunit;
 
 const
   // base URL on my server
@@ -30,7 +30,7 @@ const
 
 const
   // Version info for Amiga
-  VERSION = '$VER: AmiTube 1.0 beta1 (05.02.2022)';
+  VERSION = '$VER: AmiTube 1.0 beta1 (27.02.2022)';
 
   // format settings, atm we have:
   NumFormats = 4;
@@ -91,6 +91,7 @@ type
     procedure PrefsStart(Sender: TObject);
     procedure MenuSortByColumn(Sender: TObject);
     procedure FormatChangeEvent(Sender: TObject);
+    procedure ShowDList(Sender: TObject);
 
     procedure AboutMUI(Sender: TObject);
     procedure AboutAmiTube(Sender: TObject);
@@ -123,6 +124,7 @@ type
     ResultEntries: TResultEntries;
     SearchThread: TSearchThread;
     ConvertThread: TStartConvertThread;
+    OldCThread: TStartConvertThread;
     ImgSize: TPoint;
     BaseServer: string;
     procedure SetStatusText(AText: string; APos: LongInt = -1);
@@ -135,6 +137,7 @@ type
     procedure StartDownloadURL(URL, AFilename: string);
     procedure RecreateSortedList;
     procedure SortByColumm(ColClick: Integer);
+    procedure TryCThread(Sender: TObject);
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -208,8 +211,6 @@ begin
 end;
 
 procedure TMainWindow.ClickHistory(Sender: TObject);
-var
-  T: TPoint;
 begin
   // Calculate the window position
   HistWin.Free;
@@ -313,6 +314,15 @@ begin
     DoAutoStart := False;
   end;
   ClipChanged(nil);
+  // Start Next
+  if Assigned(ConvertThread) then
+  begin
+    if Assigned(ConvertThread.DL) then
+      ConvertThread.DL.Status := dsFinished;
+    OldCThread := ConvertThread;
+  end;
+  ConvertThread := nil;
+  DownloadListWin.StartNextFree;
   // auto start?
   if Prefs.AutoStart and (not PlayBtn.Disabled) and (ConvertThread.FormatID = '') and DoAutoStart then
     PlayClick(PlayBtn);
@@ -427,6 +437,44 @@ begin
   end;
 end;
 
+procedure TMainWindow.TryCThread(Sender: TObject);
+var
+  DT: TDownloadEntry;
+  CT: TStartConvertThread;
+begin
+  // a
+  if Assigned(ConvertThread) and (not ConvertThread.Terminated) then
+    Exit;
+  if Sender is TDownloadEntry then
+  begin
+    DT := TDownloadEntry(Sender);
+    DT.Status := dsRunning;
+    if Assigned(ConvertThread) then
+      OldCThread := ConvertThread;
+    ConvertThread := nil;
+    CT := TStartConvertThread.Create(True);
+    CT.OnProgress := @ProgressEvent;
+    CT.OnEnd := @EndCThread;
+    //
+    CT.DL := DT;
+    //
+    if DT.FormatID = '' then
+      SetStatusText(GetLocString(MSG_STATUS_DOWNLOADING) + '...', 0)
+    else
+      SetStatusText(GetLocString(MSG_STATUS_CONVERT) + '...', 0);
+    //
+    CT.Desc := DT.Desc;
+    CT.Format := DT.Format;
+    CT.FormatID := DT.FormatID;
+    CT.Movies := Movies;
+    CT.Id :=  DT.Id;
+    CT.Filename := DT.filename;
+    CT.Start;
+
+    ConvertThread := CT;
+  end;
+end;
+
 {Try to make a filename from the title, remove strange chars and so on}
 function MakeFilename(AName, AltName: string):string;
 var
@@ -460,19 +508,8 @@ var
   FileSize: Int64;
   Ext: string;
   NewName: string;
+  ShowList: Boolean;
 begin
-  // if old Thread is running, kill it make a new
-  if Assigned(ConvertThread) then
-  begin
-    // hm not terminated, means it will run wa while, just deny
-    if not ConvertThread.Terminated then
-    begin
-      ShowMessage(GetLocString(MSG_ERROR_ALREADYRUN));
-      Exit;
-    end;
-    ConvertThread.WaitFor;
-    ConvertThread.Free;
-  end;
   // if something selected
   if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
   begin
@@ -520,17 +557,10 @@ begin
       end;
     end;
     // actual starting the thread
-    CT := TStartConvertThread.Create(True);
-    CT.Desc := ResultEntries[List.Row].Desc;
-    CT.Format := Format;
-    CT.OnProgress := @ProgressEvent;
-    CT.Movies := Movies;
-    CT.OnEnd := @EndCThread;
-    CT.Id :=  ResultEntries[List.Row].ID;
-    CT.Filename := NewName;
-    CT.Start;
-    //
-    ConvertThread := CT;
+    ShowList := Assigned(ConvertThread) and not (ConvertThread.Terminated);
+    DownloadListWin.AddToList(ResultEntries[List.Row].Name, ResultEntries[List.Row].ID, '', NewName, ResultEntries[List.Row].Desc, Format);
+    if ShowList then
+      DownloadListWin.Show;
   end;
 end;
 
@@ -668,7 +698,7 @@ begin
   // make a list of files availabe, we use the TXT and Video file file
   MyRes := [];
   SL := TStringList.Create;
-
+  FI.fib_DirEntryType := 0;
 
   FillChar(FI, SizeOf(TFileInfoBlock), #0);
   if Boolean(Examine(MovieLock, @FI)) then
@@ -802,6 +832,11 @@ begin
         List.Cells[3, i] := IntToStr(t) + ' kB'
     end;
   end;
+end;
+
+procedure TMainWindow.ShowDList(Sender: TObject);
+begin
+  DownloadListWin.Show;
 end;
 
 { Share movie with other people}
@@ -972,6 +1007,8 @@ begin
   try
     // some checks
     UpdateFreeMem;
+    if Assigned(OldCThread) then
+      FreeAndNil(OldCThread);
     CheckStatusForChange;
     // if search not checking for clipboard
     if Assigned(SearchThread) and (not SearchThread.Terminated) or SearchField.Disabled then
@@ -1523,27 +1560,7 @@ end;
 { Start downloading triggered by resolution window }
 procedure TMainWindow.StartDownload(AID, AFormatID, AFilename: string);
 begin
-  // already running and not killed, then deny it
-  if Assigned(ConvertThread) then
-  begin
-    if not ConvertThread.Terminated then
-    begin
-      ShowMessage(GetLocString(MSG_ERROR_ALREADYRUN));
-      Exit;
-    end;
-    ConvertThread.WaitFor;
-    ConvertThread.Free;
-  end;
-  // actual start
-  SetStatusText(GetLocString(MSG_STATUS_DOWNLOADING) + '...', 50);
-  ConvertThread := TStartConvertThread.Create(True);
-  ConvertThread.Id := Aid;
-  ConvertThread.FormatID := AFormatID;
-  ConvertThread.filename := AFilename;
-  ConvertThread.OnProgress := @ProgressEvent;
-  ConvertThread.OnEnd := @EndCThread;
-  ConvertThread.Start;
-  //Timer.Enabled := True; // not neeed anymore, timer runs all the time
+  DownloadListWin.AddToList(ExtractFileName(AFilename), AId, AFormatID, AFileName, '', -1);
   ResWin.Close;
   StopButton.Disabled := False;
   Self.Sleep := False; // make sure main window is active again
@@ -1552,26 +1569,9 @@ end;
 { Download the URL to File using the Convert thread, used for UpdateDownload }
 procedure TMainWindow.StartDownloadURL(URL, AFilename: string);
 begin
-  // already running and not terminated -> deny
-  if Assigned(ConvertThread) then
-  begin
-    if not ConvertThread.Terminated then
-    begin
-      ShowMessage(GetLocString(MSG_ERROR_ALREADYRUN));
-      Exit;
-    end;
-    ConvertThread.WaitFor;
-    ConvertThread.Free;
-  end;
-  SetStatusText(GetLocString(MSG_STATUS_DOWNLOADING) + '...', 50);
-  // actual Start
-  ConvertThread := TStartConvertThread.Create(True);
-  ConvertThread.FormatID := Url;
-  ConvertThread.filename := AFilename;
-  ConvertThread.OnProgress := @ProgressEvent;
-  ConvertThread.OnEnd := @EndCThread;
-  ConvertThread.start;
-  //Timer.Enabled := True;
+  //
+  DownloadListWin.AddToList(ExtractFileName(AFilename), '', Url, AFileName, '', -1);
+  //
   ResWin.Close;
   self.Sleep := False;
 end;
@@ -1662,6 +1662,7 @@ begin
   ID := Make_ID('A','M','T','U');
   //
   ConvertThread := nil;
+  OldCThread := nil;
   SearchThread := nil;
   DTObj := nil;
   //
@@ -1975,6 +1976,15 @@ begin
   MI.Parent := Menu;
 
   MI := TMUIMenuItem.Create;
+  MI.Title := GetLocString(MSG_MENU_DOWNLOADLIST);  // Download list
+  MI.OnTrigger := @ShowDList;
+  MI.Parent := Menu;
+
+  MI := TMUIMenuItem.Create;
+  MI.Title := '-';
+  MI.Parent := Menu;
+
+  MI := TMUIMenuItem.Create;
   MI.Title := GetLocString(MSG_MENU_MAIN_QUIT); //'Quit';
   MI.ShortCut := GetLocString(MSG_MENU_MAIN_QUIT_KEY); //'q';
   MI.OnTrigger := @QuitEvent;
@@ -2083,6 +2093,9 @@ begin
   DestroyDTObj;
   ResultEntries.Free;
   ValLock.Free;
+  HPsLock.Free;
+  HPs.Free;
+  FreeAndNil(OldCThread);
   inherited Destroy;
 end;
 
@@ -2115,8 +2128,10 @@ begin
   Main := TMainWindow.Create;
   Prefs := TPrefsWindow.Create;
   ResWin := TResWindow.Create;
+  DownloadListWin := TDownloadListWin.Create;
   Prefs.OnFormatChanged := @Main.FormatChangeEvent;
   Prefs.OnFormatChanged(nil);
+  DownloadListWin.OnDownloadStart := @Main.TryCThread;
   MUIApp.Title := ShortVer;
   MUIApp.Version := VERSION;
   MUIApp.Author := 'Marcus "ALB42" Sackrow';

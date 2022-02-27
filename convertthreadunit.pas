@@ -5,7 +5,7 @@ unit convertthreadunit;
 interface
 
 uses
-  Classes, SysUtils, amitubelocale, filedownloadunit;
+  Classes, SysUtils, amitubelocale, filedownloadunit, downloadlistunit;
 
 type
 { TStartConvertThread }
@@ -24,6 +24,7 @@ type
   public
     property Terminated;
   public
+    DL: TDownloadEntry;
     //
     FormatID: string; // for direct download FormatID to use as direct download from the JSON list (usually it's a number), if set its a direct download via ytdownload.php
     Filename: string; // filename to save it at, with path

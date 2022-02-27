@@ -45,6 +45,10 @@ MSG_MENU_MAIN_QUIT_KEY
 B
 ; Q
 ;
+MSG_MENU_DOWNLOADLIST
+Downloadliste
+; Download list
+;
 MSG_MENU_SETTINGS
 Einstellungen
 ; Settings
@@ -169,6 +173,22 @@ MSG_GUI_LISTSIZE
 Filegröße
 ; Filesize
 ;
+MSG_GUI_DOWNLOADLIST
+Downloadliste
+; Download List
+;
+MSG_GUI_CLEAR_FINISHED
+Enferne Abschlossene
+; Clear finished
+;
+MSG_GUI_REMOVE
+Entferne
+; Remove
+;
+MSG_GUI_LISTSTATUS
+Status
+; Status
+;
 ; ### Status
 MSG_STATUS_IDLE
 Wartet
@@ -201,6 +221,10 @@ Konvertiere Film
 MSG_STATUS_DOWNLOADING
 Herunterladen
 ; Downloading
+;
+MSG_STATUS_DONE
+Beendet
+; Finished
 ;
 MSG_ERROR_LOCAL
 Keine lokal gespeicherten Filme gefunden
@@ -237,6 +261,14 @@ Fehler beim Prüfen auf Aktualisierungen.
 MSG_ERROR_ALREADYRUN
 Es wird schon heruntergeladen. Bitte erst auf Beendigung warten.
 ; Another downloading job is running, wait for finish before starting a new one
+;
+MSG_ERROR_ALREADYINLIST
+Diese Datei ist schon in der Downloadliste, wird ignoriert.
+; This file is already in the download list, ignored.
+;
+MSG_ERROR_CANNOTREMOVE
+Laufende Downloads können nicht entfernt werden.
+; Cannot remove running downloads.
 ;
 ;--- PREFS
 ;

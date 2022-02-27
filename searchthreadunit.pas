@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, filedownloadunit, resolutionselunit, XMLRead, DOM,
-  amitubelocale, prefsunit, fphttpclient;
+  amitubelocale, prefsunit, fphttpclient, SyncObjs;
 
 type
     { TSearchThread }
@@ -39,14 +39,11 @@ function GetFile(address: string; AStream: TStream): Boolean;
   {XML Helper, read a string attribute if exist, else the default is returned}
 function GetStringAttribute(ANode: TDOMNode; AttributeName: string; default: string = ''): string; inline;
 
-implementation
-
-uses
-  SyncObjs;
-
 var
   HPsLock: TCriticalSection;
   HPs: TList;
+
+implementation
 
 
 {Kill all search threads}
@@ -328,7 +325,5 @@ initialization
   HPsLock := TCriticalSection.Create;
   HPs := TList.Create;
 finalization
-  HPsLock.Free;
-  HPs.Free;
 end.
 

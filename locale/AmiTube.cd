@@ -34,6 +34,9 @@ Quit
 MSG_MENU_MAIN_QUIT_KEY (10006/1/1)
 Q
 ;
+MSG_MENU_DOWNLOADLIST (10007//)
+Download list
+;
 MSG_MENU_SETTINGS (11000//)
 Settings
 ;
@@ -127,6 +130,18 @@ Duration
 MSG_GUI_LISTSIZE (20022//)
 Filesize
 ;
+MSG_GUI_DOWNLOADLIST (20023//)
+Download List
+;
+MSG_GUI_CLEAR_FINISHED (20024//)
+Clear finished
+;
+MSG_GUI_REMOVE (20025//)
+Remove
+;
+MSG_GUI_LISTSTATUS (20026//)
+Status
+;
 ; ### Status
 MSG_STATUS_IDLE (30000//)
 Idle
@@ -151,6 +166,9 @@ Converting movie
 ;
 MSG_STATUS_DOWNLOADING (30007//)
 Downloading
+;
+MSG_STATUS_DONE (30008//)
+Finished
 ;
 MSG_ERROR_LOCAL (40000//)
 No locally saved movie files found
@@ -178,6 +196,12 @@ Error checking for Update.
 ;
 MSG_ERROR_ALREADYRUN (40008//)
 Another downloading job is running, wait for finish before starting a new one
+;
+MSG_ERROR_ALREADYINLIST (40009//)
+This file is already in the download list, ignored.
+;
+MSG_ERROR_CANNOTREMOVE (40010//)
+Cannot remove running downloads.
 ;
 ;--- PREFS
 ;
