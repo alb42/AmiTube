@@ -26,11 +26,10 @@ type
   public
     DL: TDownloadEntry;
     //
-    FormatID: string; // for direct download FormatID to use as direct download from the JSON list (usually it's a number), if set its a direct download via ytdownload.php
+    //FormatID: string; // for direct download FormatID to use as direct download from the JSON list (usually it's a number), if set its a direct download via ytdownload.php
     Filename: string; // filename to save it at, with path
     //
     ID: string;        // id of the video to download
-    Movies: string;    // movie directory path
     Desc: string;      // description of the video to save along in the *.txt file
     Format: Integer;   // format description (0=cdxl OCS, 1 CDXL AGA .... see list)
     OnEnd: TNotifyEvent;         // event when threadf ended, must be connected!
@@ -78,7 +77,7 @@ begin
     // conversation thread main routine, only runs once, then the thread ends
     // if Format ID is given -> its a direct download job via ytdownload.php
     // if FormatID is empty, normal conversation
-    if FormatID = '' then
+    if DL.FormatID = '' then
     begin
       DoProgress(0, GetLocString(MSG_STATUS_CONVERT));
       Url := ConvertURL + ID + '&format=' + IntToStr(Format);
@@ -113,10 +112,10 @@ begin
     begin
       // starts with http -> download directly (like the Updated AmiTube :-D)
       // if not then it's a FormatID
-      if Pos('http', FormatID) = 1 then
-        Url := FormatID
+      if Pos('http', DL.FormatID) = 1 then
+        Url := DL.FormatID
       else
-        Url := DownloadURL + ID + '&format=' + FormatID;
+        Url := DownloadURL + ID + '&format=' + DL.FormatID;
       // the actual download with progress see in FileDownloadUnit
       DownloadFile(@ProgressUpdate, Url, Filename);
     end;

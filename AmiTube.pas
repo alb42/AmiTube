@@ -138,6 +138,7 @@ type
     procedure RecreateSortedList;
     procedure SortByColumm(ColClick: Integer);
     procedure TryCThread(Sender: TObject);
+    procedure PlayStart(Filename: string);
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -280,52 +281,33 @@ end;
 {###### end conversation thread}
 procedure TMainWindow.EndCThread(Sender: TObject);
 var
-  i: Integer;
-  SRes: TResultEntry;
-  DoAutoStart: Boolean;
+  Filename: String;
 begin
   ProgressEvent(Self, 0, GetLocString(MSG_STATUS_IDLE));
-  DoAutoStart := False;
-  // look if in the list, the video it's still there ;) then activate it
-  for i := 0 to ResultEntries.Count do
-  begin
-    SRes := ResultEntries[i];
-    if ConvertThread.Id = SRes.Id then
-    begin
-      List.Row := i;
-      DoAutoStart := True; // only start it if the current video we downloaded ;)
-      Break;
-    end;
-  end;
-  // start it if needed
+  // look if in the list, the video it's still there ;) change button status
   if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
   begin
-    PlayFormat := 0;
-    if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[List.Row].ID + '.mpeg') then
-      PlayFormat := 2
-    else
-      if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[List.Row].ID + '.cdxl') then
-        PlayFormat := 1;
-    EnableDownloads(PlayFormat = 0, PlayFormat > 0);
-  end
-  else
-  begin
-    EnableDownloads(False, False); // not available
-    DoAutoStart := False;
+    if ResultEntries[List.Row].ID = ConvertThread.ID then
+    begin
+      PlayFormat := ConvertThread.Format;
+      EnableDownloads(False, True);
+    end;
   end;
   ClipChanged(nil);
+  //
+  Filename := '';
+  if ConvertThread.DL.FormatID = '' then
+    Filename := ConvertThread.Filename;
+  // auto start?
+  if Prefs.AutoStart and (Filename <> '') then
+    PlayStart(Filename);
   // Start Next
-  if Assigned(ConvertThread) then
-  begin
-    if Assigned(ConvertThread.DL) then
-      ConvertThread.DL.Status := dsFinished;
-    OldCThread := ConvertThread;
-  end;
+  if Assigned(ConvertThread.DL) then
+    ConvertThread.DL.Status := dsFinished;
+  OldCThread := ConvertThread;
   ConvertThread := nil;
   DownloadListWin.StartNextFree;
-  // auto start?
-  if Prefs.AutoStart and (not PlayBtn.Disabled) and (ConvertThread.FormatID = '') and DoAutoStart then
-    PlayClick(PlayBtn);
+  //
 end;
 
 {####### event for clicking the list}
@@ -465,8 +447,6 @@ begin
     //
     CT.Desc := DT.Desc;
     CT.Format := DT.Format;
-    CT.FormatID := DT.FormatID;
-    CT.Movies := Movies;
     CT.Id :=  DT.Id;
     CT.Filename := DT.filename;
     CT.Start;
@@ -566,6 +546,40 @@ end;
 
 var
   LastStart: Cardinal = 0;
+
+procedure TMainWindow.PlayStart(Filename: string);
+var
+  Param, Ext: String;
+  Me: PTask;
+begin
+  if not FileExists(Filename) then
+    Exit;
+  Ext := LowerCase(ExtractFileExt(Filename));
+  Me := FindTask(nil);
+  if Ext = '.cdxl' then
+  begin
+    Param := Prefs.PlayerParam;
+    Param := StringReplace(Param, '%f', '"' + Filename + '"', [rfReplaceAll]);
+    MySystem(Prefs.PlayerPath + ' ' + Param,
+      [NP_StackSize, Abs(PtrInt(Me^.tc_SPUpper) - PtrInt(Me^.tc_SPLower)), // stack size same as myself]
+      TAG_END]
+    );
+    LastStart := GetTickCount;
+    Exit;
+  end
+  else
+  begin
+    Param := Prefs.MPEGPlayerParam;
+    Param := StringReplace(Param, '%f', '"' + Filename + '"', [rfReplaceAll]);
+    MySystem(Prefs.MPEGPlayerPath + ' ' + Param,
+      [NP_StackSize, Abs(PtrInt(Me^.tc_SPUpper) - PtrInt(Me^.tc_SPLower)), // stack size same as myself]
+      TAG_END]
+    );
+    //ExecuteProcess(Prefs.MPEGPlayerPath, Param, []);
+    LastStart := GetTickCount;
+  end;
+
+end;
 
 { play the currently selected movie}
 procedure TMainWindow.PlayClick(Sender: TObject);

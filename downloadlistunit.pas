@@ -202,7 +202,7 @@ begin
   for i := 0 to DList.Count - 1 do
   begin
     DT := DList[i];
-    if LowerCase(DT.filename) = LowerCase(AFilename) then
+    if (LowerCase(DT.filename) = LowerCase(AFilename)) and (DT.Status <> dsFinished) then
     begin
       ShowMessage(GetLocString(MSG_ERROR_ALREADYINLIST));
       Exit;
