@@ -4,7 +4,7 @@ program AmiTube;
 {$mode objfpc}{$H+}
 uses
   AThreads, clipboard, iffparse, AGraphics, Intuition, AmigaDos, Exec,
-  Datatypes, Utility, workbench, icon, fgl,
+  Datatypes, Utility, workbench, icon, fgl, Math,
   Classes, SysUtils, fphttpclient, mui, muihelper, SyncObjs,
   MUIClass.Base, MUIClass.Window, MUIClass.Group, MUIClass.Area, MUIClass.Gadget,
   MUIClass.Menu, MUIClass.DrawPanel, MUIClass.Image,
@@ -108,6 +108,8 @@ type
 
     procedure LoadIcon(Sender: TObject);
     procedure DrawIcon(Sender: TObject; RP: PRastPort; ARect: TRect);
+    //
+    function RexxEvent(Sender: TObject; Msg: string; out ReturnMessage: string): LongInt;
   private
     PlayFormat: Integer;
     DTObj: PObject_;
@@ -139,6 +141,7 @@ type
     procedure SortByColumm(ColClick: Integer);
     procedure TryCThread(Sender: TObject);
     procedure PlayStart(Filename: string);
+    function RexxConvert(Url: string; FormatID: Integer; AutoPlay: Boolean; out ErrMsg: string): LongInt;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -287,9 +290,9 @@ begin
   // look if in the list, the video it's still there ;) change button status
   if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
   begin
-    if ResultEntries[List.Row].ID = ConvertThread.ID then
+    if ResultEntries[List.Row].ID = ConvertThread.DL.ID then
     begin
-      PlayFormat := ConvertThread.Format;
+      PlayFormat := ConvertThread.DL.Format;
       EnableDownloads(False, True);
     end;
   end;
@@ -297,9 +300,9 @@ begin
   //
   Filename := '';
   if ConvertThread.DL.FormatID = '' then
-    Filename := ConvertThread.Filename;
+    Filename := ConvertThread.DL.Filename;
   // auto start?
-  if Prefs.AutoStart and (Filename <> '') then
+  if ConvertThread.DL.AutoPlay and (Filename <> '') then
     PlayStart(Filename);
   // Start Next
   if Assigned(ConvertThread.DL) then
@@ -445,10 +448,6 @@ begin
     else
       SetStatusText(GetLocString(MSG_STATUS_CONVERT) + '...', 0);
     //
-    CT.Desc := DT.Desc;
-    CT.Format := DT.Format;
-    CT.Id :=  DT.Id;
-    CT.Filename := DT.filename;
     CT.Start;
 
     ConvertThread := CT;
@@ -538,7 +537,7 @@ begin
     end;
     // actual starting the thread
     ShowList := Assigned(ConvertThread) and not (ConvertThread.Terminated);
-    DownloadListWin.AddToList(ResultEntries[List.Row].Name, ResultEntries[List.Row].ID, '', NewName, ResultEntries[List.Row].Desc, Format);
+    DownloadListWin.AddToList(ResultEntries[List.Row].Name, ResultEntries[List.Row].ID, '', NewName, ResultEntries[List.Row].Desc, Format, Prefs.AutoStart);
     if ShowList then
       DownloadListWin.Show;
   end;
@@ -925,6 +924,7 @@ begin
         {$INCLUDE %FPCTARGETCPU%} + '-' + {$INCLUDE %FPCTARGETOS%} + #10#10 +
        'made with Free Pascal for Amiga by ALB42'#10 +
        'special thanks to Michal Bergseth for idea and encouragement.'#10#10 +
+       'Make Amiga programs, not war'#10#10 +
        'Check ' + MUIX_U + 'https://blog.alb42.de' + MUIX_N + ' for updates.'#10);
   if BaseServer <> '' then
     s := s + 'Used Server: ' + BaseServer + #10;
@@ -1197,6 +1197,184 @@ begin
     GfxText(RP, PChar(S), Length(s));
   end;
   //
+end;
+
+function TMainWindow.RexxConvert(Url: string; FormatID: Integer; AutoPlay: Boolean; out ErrMsg: string): LongInt;
+var
+  AId, Filename, EncStr, AName, ADesc, s: string;
+  p: SizeInt;
+  i: Integer;
+  Mem: TMemoryStream;
+  Doc: TXMLDocument;
+  XMLChild: TDOMNode;
+begin
+  ErrMsg := '';
+  Result := 20;
+  //
+  AID := '';
+  if (Pos('https://', LowerCase(Trim(URL))) = 1) then
+  begin
+    if Pos('https://youtu.be/', LowerCase(URL)) = 1 then
+    begin
+      Delete(URL, 1, 17);
+      AId := Url;
+    end
+    else
+    begin
+      p := Pos('v=', URL); // search for "v=" then search for https://
+      if p > 0 then
+      begin
+        AID := Copy(URL, P + 2, Length(URL));
+        p := Pos('&', AID);
+        if p > 1 then
+          Delete(AID, p, Length(AID));
+      end;
+    end;
+  end;
+  if AID = '' then
+  begin
+    ErrMsg := 'Parameter is not a YouTube URL';
+    Exit;
+  end;
+  // check if already on the HD
+  //
+  if FormatID = 2 then
+    FileName := IncludeTrailingPathDelimiter(Movies) + AID + '.mpeg'
+  else
+    FileName := IncludeTrailingPathDelimiter(Movies) + AID + '.cdxl';
+  if FileExists(Filename) then
+  begin
+    // todo: Play
+    if AutoPlay then
+      PlayStart(FileName);
+    ErrMsg := 'File already exists.';
+    Result := 0;
+    Exit;
+  end;
+  // download the infos for it
+  // form url, encoding GET parameter
+  EncStr := '';
+  for i := 1 to Length(AID) do
+    EncStr := EncStr + '%' + IntToHex(Ord(AID[i]),2);
+  // put it URL together
+  Url := SearchURLID + EncStr;
+  // get the ID contents
+  Mem := TMemoryStream.Create;
+  try
+    // actual GET
+    if GetFile(Url, Mem) then
+    begin
+      try
+        Mem.Position := 0;
+        // process the XML
+        ReadXMLFile(Doc, Mem);
+      except
+        on E: Exception do
+        begin  // how that happens
+          ErrMsg := 'Exception in ReadXMLFile ' + E.Message;
+          Mem.Position := 0;
+          // how, why
+          With TStringList.Create do
+          begin
+            LoadFromStream(Mem);
+            SaveToFile('PROGDIR:ErrorLog.log');
+            //Writeln(Text);
+            Exit;
+            Free;
+          end;
+        end;
+      end;
+      XMLChild := Doc.DocumentElement.FirstChild;
+      i := 0;
+      if Assigned(XMLChild) then
+      begin
+        AName := GetStringAttribute(XMLChild, 'fulltitle');
+        AId := GetStringAttribute(XMLChild, 'id');
+        ADesc := AName + #10#10;
+        s := GetStringAttribute(XMLChild, 'uploader');
+        if s <> '' then
+          ADesc := ADesc + 'Uploader: ' + s + #10;
+        s := GetStringAttribute(XMLChild, 'like_count');
+        if s <> '' then
+          ADesc := ADesc + 'Likes: ' + s + #10;
+        s := GetStringAttribute(XMLChild, 'view_count');
+        if s <> '' then
+          ADesc := ADesc + 'Views: ' + s + #10;
+        s := GetStringAttribute(XMLChild, 'license');
+        if s <> '' then
+          ADesc := ADesc + 'License: ' + s + #10;
+        // add to download queue
+        DownloadListWin.AddToList(AName, AId, '', Filename, ADesc, FormatID, AutoPlay);
+        Result := 0;
+      end
+      else
+      begin
+        ErrMsg := 'Movie not found';
+      end;
+    end;
+  finally
+    Mem.Free;
+  end;
+end;
+
+function TMainWindow.RexxEvent(Sender: TObject; Msg: string; out ReturnMessage: string): LongInt;
+var
+  SL: TStringList;
+  Cmd: string;
+  NName: string;
+  i: LongInt;
+  FormatN: Integer;
+begin
+  Result := 20;
+  ReturnMessage := 'unknown message';
+  SL := TStringList.Create;
+  try
+    ExtractStrings([' '], [], PChar(Msg), SL);
+    if SL.Count = 0 then
+      Exit;
+    Cmd := SL[0];
+    SL.Delete(0);
+    case UpperCase(Cmd) of
+      'SEARCH': begin
+        if SL.Count = 0 then
+        begin
+          ReturnMessage := 'search argument missing: SEARCH <search words>';
+          Exit;
+        end;
+        NName := SL[0];
+        for i := 1 to SL.Count - 1 do
+          NName := NName + ' ' + SL[i];
+        if Assigned(SearchThread) and (not SearchThread.Terminated) or SearchField.Disabled then
+        begin
+          ReturnMessage := 'Search running already';
+          Exit;
+        end;
+        // the user want that?
+        SearchField.Contents := NName; // just put to search bar and press "enter"
+        SearchEntry(SearchField);
+        ReturnMessage := '';
+        Result := 0;
+      end;
+      'CONVERT', 'PLAY': begin
+        if SL.Count = 0 then
+        begin
+          ReturnMessage := 'argument missing: ' + cmd + ' <Youtube URL> <Format number>';
+          Exit;
+        end;
+        NName := SL[0];
+        FormatN := Prefs.Format;
+        if SL.Count > 1 then
+        begin
+          FormatN := StrToIntDef(SL[1], FormatN);
+          if not InRange(FormatN, 0, 3) then
+            FormatN := Prefs.Format;
+        end;
+        Result := RexxConvert(NName, FormatN, cmd = 'PLAY', ReturnMessage);
+      end;
+    end;
+  finally
+    SL.Free;
+  end;
 end;
 
 { download directly from YouTube, open the resolution window for that}
@@ -1574,7 +1752,7 @@ end;
 { Start downloading triggered by resolution window }
 procedure TMainWindow.StartDownload(AID, AFormatID, AFilename: string);
 begin
-  DownloadListWin.AddToList(ExtractFileName(AFilename), AId, AFormatID, AFileName, '', -1);
+  DownloadListWin.AddToList(ExtractFileName(AFilename), AId, AFormatID, AFileName, '', -1, False);
   ResWin.Close;
   StopButton.Disabled := False;
   Self.Sleep := False; // make sure main window is active again
@@ -1584,7 +1762,7 @@ end;
 procedure TMainWindow.StartDownloadURL(URL, AFilename: string);
 begin
   //
-  DownloadListWin.AddToList(ExtractFileName(AFilename), '', Url, AFileName, '', -1);
+  DownloadListWin.AddToList(ExtractFileName(AFilename), '', Url, AFileName, '', -1, False);
   //
   ResWin.Close;
   self.Sleep := False;
@@ -1664,6 +1842,8 @@ var
   SB: TMUIScrollGroup;
 begin
   inherited Create;
+  //
+  MUIApp.OnRexxMsg := @RexxEvent;
   //
   HelpNode := 'MainWindow';
   //

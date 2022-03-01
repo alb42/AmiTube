@@ -19,6 +19,7 @@ type
     FStatus: TDownStatus;
     procedure SetStatus(AValue: TDownStatus);
   public
+    AutoPlay: Boolean;
     Name: string;
     Id: string;
     FormatID: string;
@@ -42,7 +43,7 @@ type
     constructor Create; override;
     destructor Destroy; override;
 
-    procedure AddToList(AName, AId, AFormatID, AFilename, ADesc: string; AFormat: Integer);
+    procedure AddToList(AName, AId, AFormatID, AFilename, ADesc: string; AFormat: Integer; APlay: Boolean);
     procedure StartNextFree;
 
     procedure UpdateList;
@@ -194,7 +195,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TDownloadListWin.AddToList(AName, AId, AFormatID, AFilename, ADesc: string; AFormat: Integer);
+procedure TDownloadListWin.AddToList(AName, AId, AFormatID, AFilename, ADesc: string; AFormat: Integer; APlay: Boolean);
 var
   DT: TDownloadEntry;
   i: Integer;
@@ -210,6 +211,7 @@ begin
   end;
   DT := TDownloadEntry.Create;
   DT.Name := AName;
+  DT.AutoPlay := APlay;
   DT.Id := AId;
   Dt.Format := AFormat;
   DT.FormatID := AFormatID;

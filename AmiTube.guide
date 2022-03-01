@@ -554,8 +554,13 @@ History
 1.0
 - History for search
 - AROS64 ABIv11 bit version
+- MorphOS Version
+- Amiga OS4 Version
 - Download more Amiga-like audio only formats: mp3 and 8svx
 - dual PNG Icons by AmigaSystem
+- Download Queue
+- Improved AutoPlay
+- REXX interface
 
 0.8
 - Faster download speed

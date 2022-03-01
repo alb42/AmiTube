@@ -26,12 +26,6 @@ type
   public
     DL: TDownloadEntry;
     //
-    //FormatID: string; // for direct download FormatID to use as direct download from the JSON list (usually it's a number), if set its a direct download via ytdownload.php
-    Filename: string; // filename to save it at, with path
-    //
-    ID: string;        // id of the video to download
-    Desc: string;      // description of the video to save along in the *.txt file
-    Format: Integer;   // format description (0=cdxl OCS, 1 CDXL AGA .... see list)
     OnEnd: TNotifyEvent;         // event when threadf ended, must be connected!
     OnProgress: TProgressEvent;  // progress reports to main gui
   end;
@@ -80,23 +74,23 @@ begin
     if DL.FormatID = '' then
     begin
       DoProgress(0, GetLocString(MSG_STATUS_CONVERT));
-      Url := ConvertURL + ID + '&format=' + IntToStr(Format);
+      Url := ConvertURL + DL.ID + '&format=' + IntToStr(DL.Format);
       try
         // the actual download in FileDownloadUnit, with progressbar, see there
-        DownloadFile(@ProgressUpdate, URL, Filename);
+        DownloadFile(@ProgressUpdate, URL, DL.Filename);
         //
-        if FileExists(Filename) then // successfull if file exists (it will delete it when error)
+        if FileExists(DL.Filename) then // successfull if file exists (it will delete it when error)
         begin
           if Terminated then // we got terminated, then delete the file, it's not complete and exit
           begin
-            DeleteFile(Filename);
+            DeleteFile(DL.Filename);
             Exit;
           end;
           // write the description next to the filename
           with TStringList.Create do
           begin
-            Text := Desc;
-            SaveToFile(ChangeFileExt(Filename, '.txt'));
+            Text := DL.Desc;
+            SaveToFile(ChangeFileExt(DL.Filename, '.txt'));
             Free;
           end;
         end;
@@ -115,9 +109,9 @@ begin
       if Pos('http', DL.FormatID) = 1 then
         Url := DL.FormatID
       else
-        Url := DownloadURL + ID + '&format=' + DL.FormatID;
+        Url := DownloadURL + DL.ID + '&format=' + DL.FormatID;
       // the actual download with progress see in FileDownloadUnit
-      DownloadFile(@ProgressUpdate, Url, Filename);
+      DownloadFile(@ProgressUpdate, Url, DL.Filename);
     end;
   finally
     Terminate;
