@@ -98,6 +98,7 @@ end;
 
 procedure TDummyClass.CloseHist(Sender: TObject);
 begin
+  Unused(Sender);
   ListTime.Enabled := False;
   if Assigned(HistWin) then
     HistWin.Close;
@@ -108,12 +109,14 @@ end;
 
 procedure THistoryWin.DeactivateEvent(Sender: TObject);
 begin
+  Unused(Sender);
   ListTime.Enabled := True;
   //Close;
 end;
 
 procedure THistoryWin.CloseWindow(Sender: TObject; var CloseAction: TCloseAction);
 begin
+  Unused(Sender);
   CloseAction := caClose;
   ListTime.Enabled := False;
   ListTime.OnTimer := nil;
@@ -121,6 +124,7 @@ end;
 
 procedure THistoryWin.ListClick(Sender: TObject);
 begin
+  Unused(Sender);
   ListTime.Enabled := False;
   if Assigned(FEdit) and (List.Row >= 0) then
   begin
@@ -131,6 +135,7 @@ end;
 
 procedure THistoryWin.ListClickAROS(Sender: TObject);
 begin
+  Unused(Sender);
   ListTime.Enabled := True;
 end;
 

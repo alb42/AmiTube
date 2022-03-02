@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, Sysutils, fgl, Exec, AmigaDos, Utility,
-  MUIClass.Dialog,
+  MUIClass.Base, MUIClass.Dialog,
   MUIClass.StringGrid, MUIClass.Window, MUIClass.Group, MUIClass.Area;
 
 type
@@ -74,6 +74,7 @@ var
   Param, url: string;
   Me: PTask;
 begin
+  Unused(Sender);
   // must check if the player exists
   if FileExists(Prefs.UrlPlayerPath) then
   begin
@@ -104,13 +105,14 @@ begin
 end;
 
 { use WGET to download the YouTube URL}
-procedure TResWindow.Urltowget(Sender: Tobject);
+procedure TResWindow.Urltowget(Sender: TObject);
 var
   OutP: BPTR;
   Param: string;
   TargetName, url: string;
   Me: pTask;
 begin
+  Unused(Sender);
   // check if wget is there
   if FileExists(Prefs.WgetPath) then
   begin
@@ -167,10 +169,11 @@ end;
 
 { proxy the YouTube download throug hthe download server, no SSL support included, so thats easier
   maybe later alsao include AmiSSL? then could spare the wget option}
-procedure TResWindow.GetUrlbyServer(Sender: Tobject);
+procedure TResWindow.GetUrlbyServer(Sender: TObject);
 var
   TargetName: string;
 begin
+  Unused(Sender);
   if Assigned(FOnStartDownLoad) then
   begin
     // ask for filename

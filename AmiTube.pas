@@ -30,7 +30,7 @@ const
 
 const
   // Version info for Amiga
-  VERSION = '$VER: AmiTube 1.0 beta1 (27.02.2022)';
+  VERSION = '$VER: AmiTube 1.0 beta1 (02.03.2022)';
 
   // format settings, atm we have:
   NumFormats = 4;
@@ -193,6 +193,7 @@ end;
 {Event for search by the contents of the search edit}
 procedure TMainWindow.SearchEntry(Sender: TObject);
 begin
+  Unused(Sender);
   SearchField.Disabled := True;
   SharedMenu.Enabled := False;
   // reset old result
@@ -216,6 +217,7 @@ end;
 
 procedure TMainWindow.ClickHistory(Sender: TObject);
 begin
+  Unused(Sender);
   // Calculate the window position
   HistWin.Free;
   HistWin := THistoryWin.Create;
@@ -231,6 +233,7 @@ var
   st: string;
   SRes: TResultEntry;
 begin
+  Unused(Sender);
   ProgressEvent(Self, 0, GetLocString(MSG_STATUS_IDLE));
   if SearchThread.IsError then
   begin
@@ -286,6 +289,7 @@ procedure TMainWindow.EndCThread(Sender: TObject);
 var
   Filename: String;
 begin
+  Unused(Sender);
   ProgressEvent(Self, 0, GetLocString(MSG_STATUS_IDLE));
   // look if in the list, the video it's still there ;) change button status
   if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
@@ -316,6 +320,7 @@ end;
 {####### event for clicking the list}
 procedure TMainWindow.ListClick(Sender: TObject);
 begin
+  Unused(Sender);
   ListClickTimer.Enabled := False;
   Destroydtobj; // destroy loaded preview image, if any
   // check for new clicked entry
@@ -343,6 +348,7 @@ end;
 
 procedure TMainWindow.ListSelAROS(Sender: TObject);
 begin
+  Unused(Sender);
   ListClickTimer.Enabled := True;
 end;
 
@@ -375,6 +381,7 @@ end;
 {double click on an entry sorts by that column}
 procedure TMainWindow.ListDblClick(Sender: TObject);
 begin
+  Unused(Sender);
   SortByColumm(List.ClickColumn);
 end;
 
@@ -482,13 +489,13 @@ end;
   It starts he convert thread}
 procedure TMainWindow.DownloadClick(Sender: TObject);
 var
-  CT: TStartConvertThread;
   Format, i: Integer;
   FileSize: Int64;
   Ext: string;
   NewName: string;
   ShowList: Boolean;
 begin
+  Unused(Sender);
   // if something selected
   if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
   begin
@@ -588,6 +595,7 @@ var
   Param: string;
   Me: PTask;
 begin
+  Unused(Sender);
   // do not start directly after last movie ended
   // dirty hack for agablaster seems to resent the button press
   if GetTickCount - LastStart < 200 then
@@ -636,6 +644,7 @@ var
   MyID: string;
   MovieName, ReadMeName, MPEGName, ImageName: string;
 begin
+  Unused(Sender);
   // something selected?
   if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
   begin
@@ -672,6 +681,7 @@ end;
 it basically just copies the Values on transfer variables, which will be read by CheckStatusForChange }
 procedure TMainWindow.ProgressEvent(Sender: TObject; Percent: Integer; Text: string);
 begin
+  Unused(Sender);
   // lock variables first
   ValLock.Enter;
   try
@@ -682,11 +692,6 @@ begin
     ValLock.Leave;
   end;
 end;
-
-{$ifdef AmigaOS4}
-type
-  TAnchorPath = TAnchorPathOld;
-{$endif}
 
 {$ALIGN 8}
 
@@ -708,6 +713,7 @@ var
   SRes: TResultEntry;
   FI: TFileInfoBlock;
 begin
+  Unused(Sender);
   // make a list of files availabe, we use the TXT and Video file file
   MyRes := [];
   SL := TStringList.Create;
@@ -784,12 +790,14 @@ end;
 { menu close}
 procedure TMainWindow.QuitEvent(Sender: TObject);
 begin
+  Unused(Sender);
   Close;
 end;
 
 { start prefs }
 procedure TMainWindow.PrefsStart(Sender: TObject);
 begin
+  Unused(Sender);
   Prefs.UpdateSettings;
   Prefs.Open := True;
 end;
@@ -797,6 +805,7 @@ end;
 { TRy to stop all current tasks}
 procedure TMainWindow.StopAll(Sender: TObject);
 begin
+  Unused(Sender);
   if Assigned(SearchThread) then
     SearchThread.Terminate;
   if Assigned(ConvertThread) then
@@ -833,6 +842,7 @@ procedure TMainWindow.FormatChangeEvent(Sender: TObject);
 var
   t,i : Integer;
 begin
+  Unused(Sender);
   if List.NumColumns > 3 then
   begin
     for i := 0 to ResultEntries.Count - 1 do
@@ -849,6 +859,7 @@ end;
 
 procedure TMainWindow.ShowDList(Sender: TObject);
 begin
+  Unused(Sender);
   DownloadListWin.Show;
 end;
 
@@ -859,6 +870,7 @@ var
   hp: TFPHTTPClient;
   i: Integer;
 begin
+  Unused(Sender);
   //
   ShareBtn.Disabled := True;
   hp := nil;
@@ -892,6 +904,7 @@ end;
 { load the shared list from the web}
 procedure TMainWindow.LoadSharedList(Sender: TObject);
 begin
+  Unused(Sender);
   SearchField.Disabled := True;
   SharedMenu.Enabled := False;
   List.NumRows := 0;
@@ -912,6 +925,7 @@ end;
 { menu about MUI }
 procedure TMainWindow.AboutMUI(Sender: TObject);
 begin
+  Unused(Sender);
   MUIApp.AboutMUI;
 end;
 
@@ -920,6 +934,7 @@ procedure TMainWindow.AboutAmiTube(Sender: TObject);
 var
   s: string;
 begin
+  Unused(Sender);
   s := (MUIX_C + #10 + MUIX_B + '---   ' + ShortVer + '   ---' + MUIX_N+ #10 +
         {$INCLUDE %FPCTARGETCPU%} + '-' + {$INCLUDE %FPCTARGETOS%} + #10#10 +
        'made with Free Pascal for Amiga by ALB42'#10 +
@@ -934,12 +949,14 @@ end;
 { menu mui settings }
 procedure TMainWindow.MUISettingsStart(Sender: TObject);
 begin
+  Unused(Sender);
   MUIApp.OpenConfigWindow;
 end;
 
 { form show }
 procedure TMainWindow.FormShow(Sender: TObject);
 begin
+  Unused(Sender);
   // what we load on startup
   case Prefs.Startup of
     1: LoadLocalFiles(nil);
@@ -1017,6 +1034,7 @@ procedure TMainWindow.MainTimerEvent(Sender: TObject);
 var
   s: string;
 begin
+  Unused(Sender);
   MainTimer.Enabled := False;
   try
     // some checks
@@ -1057,12 +1075,15 @@ end;
 { clip setting changed }
 procedure TMainWindow.ClipChanged(Sender: TObject);
 begin
+  Unused(Sender);
   MainTimer.Enabled := True;
 end;
 
 { event when close main window -> save settings }
 procedure TMainWindow.CloseWindow(Sender: TObject; var CloseAction: TCloseAction);
 begin
+  Unused(Sender);
+  Unused(CloseAction);
   Prefs.SaveSettings;
 end;
 
@@ -1075,6 +1096,7 @@ var
   bm: PBitMap;
   Filename: string;
 begin
+  Unused(Sender);
   // destroy old icon if any
   Destroydtobj;
   // something selected
@@ -1183,6 +1205,7 @@ procedure TMainWindow.DrawIcon(Sender: TObject; RP: PRastPort; ARect: TRect);
 var
   s: string;
 begin
+  Unused(Sender);
   // just let the Datatype draw it
   if Assigned(DTObj) then
     DrawDTObjectA(RP, DTObj, ARect.Left, ARect.Top, ImgSize.x, ImgSize.y, 0, 0, nil)
@@ -1233,7 +1256,7 @@ begin
   end;
   if AID = '' then
   begin
-    ErrMsg := 'Parameter is not a YouTube URL';
+    ErrMsg := 'Parameter is not a valid YouTube URL';
     Exit;
   end;
   // check if already on the HD
@@ -1311,6 +1334,10 @@ begin
       begin
         ErrMsg := 'Movie not found';
       end;
+    end
+    else
+    begin
+      ErrMsg := 'Movie ID not found';
     end;
   finally
     Mem.Free;
@@ -1325,6 +1352,7 @@ var
   i: LongInt;
   FormatN: Integer;
 begin
+  Unused(Sender);
   Result := 20;
   ReturnMessage := 'unknown message';
   SL := TStringList.Create;
@@ -1389,6 +1417,7 @@ var
   Child, Node, FNode: TDOMNode;
   s: string;
 begin
+  Unused(Sender);
   if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
   begin
     Self.Sleep := True; // disable main window
@@ -1498,6 +1527,8 @@ end;
 { event for resolution window, enable main window again }
 procedure TMainWindow.CloseRes(Sender: TObject; var CloseAction: TCloseAction);
 begin
+  Unused(Sender);
+  Unused(CloseAction);
   //
   Self.Sleep := False;
 end;
@@ -1527,6 +1558,7 @@ var
   Mem: TMemoryStream;
   OnlineVersion, Link, s, TargetName: string;
 begin
+  Unused(Sender);
   Mem := TMemoryStream.Create;
   try
     try
