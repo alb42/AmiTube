@@ -422,6 +422,29 @@ Player programs for CDXL, MPEG, Play URL, Download URL
 
 @ENDNODE
 
+@NODE DownloadList "Download List Window"
+
+Download List Window
+--------------------
+
+This windows shows the download queue, it will automatically open if
+more than one Download job is started.
+It contains two buttons and a list of download/conversation jobs.
+
+Clear Finished
+  Remove all finished entries from the list
+
+Remove
+  Remove the selected entry from list, Entries which are currently
+  running cannot be removed.
+
+List
+  The List have three columns a number short name of the movie and
+  the status. Status can be Waiting, Running and Finished.
+
+
+@ENDNODE
+
 @NODE AmiTubeServer "AmiTube Conversation Server"
 
 Custom AmiTube Conversation Server
@@ -460,6 +483,9 @@ Local Files
 
 Remote Shared
   Load the online shared list of videos.
+
+Download List
+  Show the @{"download list" LINK DownloadList}
 
 Quit
   End the program

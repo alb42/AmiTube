@@ -157,6 +157,7 @@ begin
   inherited Create;
   Title := GetLocString(MSG_GUI_DOWNLOADLIST); // 'Download List';
   ID := MAKE_ID('D','w','n','L');
+  HelpNode := 'DownloadList';
   Horizontal := False;
   DList := TDownloadEntries.Create(True);
 
