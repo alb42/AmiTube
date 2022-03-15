@@ -1970,7 +1970,7 @@ begin
     InputMode := MUIV_InputMode_RelVerify;
     Frame := MUIV_FRAME_BUTTON;
     OnClick := @ClickHistory;
-    Spec.Spec := MUII_ArrowDown;
+    Spec.Spec := MUII_PopUp;//MUII_ArrowDown;
     Parent := Grp2;
   end;
 

@@ -1,6 +1,7 @@
 @DATABASE
 @TOC MAIN
 @NODE MAIN "AmiTube"
+@$VER AmiTube.guide 1.0 (06.03.2022)
 
 AmiTube
 =======
@@ -24,6 +25,7 @@ GUI
 @{" Resolution Window " LINK ResWindow}
 
 @{" AmiTube Conversation Server " LINK AmiTubeServer}
+@{" AREXX Port " LINK AREXX}
 
 For more information, checkout the AmiTube website
 http://blog.alb42.de/amitube
@@ -557,6 +559,7 @@ For the translations:
   Michal Bergseth (norwegian)
   Samir Hawamdeh (italian)
   Lukas 'Ponki' Paczko (Polish, ISO 8859-2)
+  Ramond de Vrede (dutch)
 
 For the Icons in Icons directory:
   Lukas 'Ponki' Paczko
@@ -572,6 +575,39 @@ For Free Pascal on Amiga-Systems
 
 @ENDNODE
 
+@NODE AREXX "AREXX interface"
+
+AREXX Interface
+---------------
+
+Since Version 1.0 AmiTube has a AREXX Interface with the following
+commands:
+
+@{b}HIDE@{ub}
+  Iconify AmiTube
+
+@{b}SHOW@{ub}
+  Restore iconified AmiTube
+
+@{b}CONVERT@{ub} <YouTube URL> <FormatID>
+  Download the video identified by the URL there are two url types
+  supported: https://youtu.be/ID or https://www.youtube.com/watch?v=ID
+  The FormatID can be omitted then the default format is used.
+  Available Formats:
+  0 - CDXL OCS
+  1 - CDXL AGA
+  2 - MPEG1 VCD
+  3 - CDXL AGA +
+
+@{b}PLAY@{ub} <YouTube URL> <FormatID>
+  does the same as CONVERT but automatically plays the video with the
+  default player after successfull download. If the video file already
+  exists it will play directly.
+
+
+@ENDNODE
+
+
 @NODE History "History"
 
 History
@@ -586,7 +622,8 @@ History
 - dual PNG Icons by AmigaSystem
 - Download Queue
 - Improved AutoPlay
-- REXX interface
+- AREXX interface
+- dutch Translation
 
 0.8
 - Faster download speed
