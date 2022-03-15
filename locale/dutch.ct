@@ -1,0 +1,358 @@
+## version $VER: AmiTube.catalog 1.0 (14.03.2022)
+## language dutch
+## codeset 0
+;
+;   Comments are allowed, of course! Each line beginning with a
+;   semicolon is assumed to be a comment
+;
+;   The language of the builtin strings:
+;#language english
+;
+;   The catalog version, used for a call to Locale/OpenCatalog().
+;   This is different to Exec/OpenLibrary(): 0 means any catalog
+;   version, other numbers must match exactly!
+;#version 0
+;
+;   This defines a string and the ID which allows to use it.
+;   The number 4 says, that this string must not be shorter than
+;   4 characters.
+; --- MainMenu
+MSG_MENU_PROJECT
+Project
+; Project
+;
+MSG_MENU_LOCAL_FILES
+Lokale bestanden
+; Local Files
+;
+MSG_MENU_LOCAL_FILES_KEY
+F
+; F
+;
+MSG_MENU_SHARED
+Op afstand gedeeld
+; Remote Shared
+;
+MSG_MENU_SHARED_KEY
+O
+; R
+;
+MSG_MENU_MAIN_QUIT
+Afsluiten
+; Quit
+;
+MSG_MENU_MAIN_QUIT_KEY
+A
+; Q
+;
+MSG_MENU_DOWNLOADLIST
+Download lijst
+; Download list
+;
+MSG_MENU_SETTINGS
+Instellingen
+; Settings
+;
+MSG_MENU_PREFS
+Voorkeuren ...
+; Prefs ...
+;
+MSG_MENU_PREFS_KEY
+V
+; P
+;
+MSG_MENU_ABOUT
+Over
+; About
+;
+MSG_MENU_ABOUT_AMITUBE
+Over AmiTube ...
+; About AmiTube ...
+;
+MSG_MENU_ABOUT_MUI
+Over MUI ...
+; About MUI ...
+;
+MSG_MENU_CHECK_UPDATES
+Controleren Updates ...
+; Check for Updates ...
+;
+MSG_MENU_SORTBY
+Sorteren op
+; Sort by
+;
+MSG_GUI_BREAK
+Stop
+; Break
+;
+MSG_GUI_DOWNLOAD_AS
+Download als
+; Get as
+;
+MSG_GUI_LOAD_ICON
+Laad Voorbeeld
+; Load Preview
+;
+MSG_GUI_DELETE
+Verwijder Videos
+; Delete Movies
+;
+MSG_GUI_SHARE
+Delen
+; Share
+;
+MSG_GUI_PLAY
+Speel video
+; Play Movie
+;
+MSG_GUI_GOTURL
+Gevonden URL
+; Got URL
+;
+MSG_GUI_GOTURLTEXT
+YouTube URL "%s" gevonden in klembord, zoeken voor deze video?
+; Found YouTube URL "%s" in clipboard, search for that video?
+;
+MSG_GUI_YES
+Ja
+; Yes
+;
+MSG_GUI_NO
+Nee
+; No
+;
+MSG_GUI_DISK_FULL
+Disk vol
+; Disk full
+;
+MSG_GUI_FREE
+vrij
+; free
+;
+MSG_GUI_SELECTFILE
+Kies naam/pad voor bestand.
+; Select name/path for file.
+;
+MSG_GUI_GETORIGINAL
+Download origineel
+; Get Original
+;
+MSG_GUI_DOWNLOADHD
+Download naar HD
+; Download to HD
+;
+MSG_GUI_DOWNLOADTOOL
+Gebruik Download Tool
+; Use Download Tool
+;
+MSG_GUI_USEURLPLAYER
+Gebruik URL Speler
+; Use URL Player
+;
+MSG_GUI_NOUPDATE
+Geen Update beschikbaar
+; No Update available
+;
+MSG_GUI_UPDATEAVAIL
+Er is een Upate beschikbaar.\n\nJouw Versien: %o \n Online Versie: %n \n\n Download laatste versie?
+; There is an Update available.\n\nYour Version: %o \n Online Version: %n \n\n Download latest Version?
+;
+MSG_GUI_LISTNUMBER
+Nr.
+; Nr.
+;
+MSG_GUI_LISTNAME
+Naam
+; Name
+;
+MSG_GUI_LISTDURATION
+Duur
+; Duration
+;
+MSG_GUI_LISTSIZE
+Grootte
+; Filesize
+;
+MSG_GUI_DOWNLOADLIST
+Download lijst
+; Download List
+;
+MSG_GUI_CLEAR_FINISHED
+Wissen voltooid
+; Clear finished
+;
+MSG_GUI_REMOVE
+Verwijder
+; Remove
+;
+MSG_GUI_LISTSTATUS
+Status
+; Status
+;
+; ### Status
+MSG_STATUS_IDLE
+Inactief
+; Idle
+;
+MSG_STATUS_SHARED
+Succesvol gedeeld.
+; Successfully shared.
+;
+MSG_STATUS_PREPSEARCH
+Zoeken voorbereiden.
+; Prepare Search.
+;
+MSG_STATUS_SEARCH
+Zoeken gestart.
+; Search started.
+;
+MSG_STATUS_PARSESEARCH
+Zoekresultaten analyseren.
+; Parse search result.
+;
+MSG_STATUS_SEARCHDONE
+Zoeken voltooid.
+; Search done.
+;
+MSG_STATUS_CONVERT
+Converteren video
+; Converting movie
+;
+MSG_STATUS_DOWNLOADING
+Downloaden
+; Downloading
+;
+MSG_STATUS_DONE
+Voltooid
+; Finished
+;
+MSG_ERROR_LOCAL
+Geen lokaal bewaarde video bestanden gevonden
+; No locally saved movie files found
+;
+MSG_ERROR_SHARE
+Foutmelding delen:
+; Error sharing:
+;
+MSG_ERROR_GETURL
+Foutmelding ophalen URL
+; Error get URL
+;
+MSG_ERROR_CONVERT
+Foutmelding converteren:
+; Error converting:
+;
+MSG_ERROR_LOAD_ICON
+Foutmelding laden Icoon.
+; Error load Icon.
+;
+MSG_ERROR_PLAYER
+Fout: "%s" niet gevonden.
+; Error: "%s" not found.
+;
+MSG_ERROR_NO_SPACE
+Niet genoeg ruimte om deze video te downloaden. Toch doorgaan?
+; Not enough space to download this movie. Continue anyway?
+;
+MSG_ERROR_UPDATE
+Fout tijdens controleren Update.
+; Error checking for Update.
+;
+MSG_ERROR_ALREADYRUN
+Een andere download taak is bezig, wacht totdat deze klaar is voordat je een nieuwe start
+; Another downloading job is running, wait for finish before starting a new one
+;
+MSG_ERROR_ALREADYINLIST
+Dit bestand is al in de download lijst, genegeerd.
+; This file is already in the download list, ignored.
+;
+MSG_ERROR_CANNOTREMOVE
+Kan actieve downloads niet verwijderen.
+; Cannot remove running downloads.
+;
+;--- PREFS
+;
+MSG_PREFS_WINDOW
+Instellingen
+; Settings
+;
+MSG_PREFS_STARTUP
+Opstart lijst inhoud
+; Start up list contents
+;
+MSG_PREFS_STARTUP1
+Leeg
+; Empty
+;
+MSG_PREFS_STARTUP2
+Lokale bestanden
+; Local Files
+;
+MSG_PREFS_STARTUP3
+Op afstand gedeeld
+; Remote Shared
+;
+MSG_PREFS_FORMAT
+Bestandsformaat
+; File Format
+;
+MSG_PREFS_FORMAT1
+CDXL 32 Kleuren OCS
+; CDXL 32 Colors OCS
+;
+MSG_PREFS_FORMAT2
+CDXSL 256 Kleuren AGA
+; CDXL 256 Colors AGA
+;
+MSG_PREFS_FORMAT3
+MPEG1
+; MPEG1
+;
+MSG_PREFS_FORMAT4
+CDXL 256 Kleuren Groter
+; CDXL 256 Colors Larger
+;
+MSG_PREFS_SEARCH
+Zoek resultaten
+; Search Results
+;
+MSG_PREFS_SEARCHNUM
+Maximale aantal
+; Maximum Number
+;
+MSG_PREFS_CLIP
+Monitor klembord voor URLs
+; Observe clipboard for URLs
+;
+MSG_PREFS_PLAYER
+Speler
+; Player
+;
+MSG_PREFS_AUTOSTART
+Auto start video na download
+; Auto start movie after download
+;
+MSG_PREFS_CHOOSEPLAYER
+Kies
+; Choose
+;
+MSG_PREFS_PLAYERPARAM
+Parameter
+; Parameter
+;
+MSG_PREFS_ALLFORMATS
+Toon alle formaten
+; Show all Formats
+;
+MSG_PREFS_AUTOICON
+Auto load Voorbeeld Icoon
+; Auto load Preview Icon
+;
+MSG_PREFS_MAXTITLELEN
+Maximum Titel lengte
+; Maximum Title length
+;
+MSG_PREFS_ASKDESTINATION
+Vraag om bestemmingspad
+; Ask for destination path
+;
