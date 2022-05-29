@@ -268,3 +268,6 @@ Maximum Title length
 MSG_PREFS_ASKDESTINATION (50407//)
 Ask for destination path
 ;
+MSG_PREFS_FANCYLIST (50408//)
+Fancy list
+;

@@ -5,13 +5,18 @@ unit resolutionselunit;
 interface
 
 uses
-  Classes, Sysutils, fgl, Exec, AmigaDos, Utility,
+  Classes, Sysutils, fgl, Exec, AmigaDos, Utility, DataTypes, Intuition,
+  AGraphics, SyncObjs,
   MUIClass.Base, MUIClass.Dialog,
   MUIClass.StringGrid, MUIClass.Window, MUIClass.Group, MUIClass.Area;
 
 type
   {a result entry}
+
+  { TResultEntry }
+
   TResultEntry = class
+  public
     Num: Integer;      // number in the original list (to restore original sorting)
     Name: string;      // Title of the video
     ID: string;        // youtubes id of the video
@@ -27,11 +32,42 @@ type
       Ext: string;      // extension for the file
       FormatID: string; // format id to download
     end;
+    DrawHandle: Pointer;
+    DTObj: Pointer;
+    ImgSize: TPoint;
+    constructor Create; virtual;
+    destructor Destroy; override;
   end;
   { result list}
   TResultEntries = specialize TFPGObjectList<TResultEntry>;
 
   TOnStartDownload = procedure(ID, FormatID, Filename: string) of object;
+
+
+  { TLoadImgThread }
+
+  TLoadImgThread = class(TThread)
+  protected
+    ID: string;
+
+    procedure ThreadFinished;
+    procedure TerminatedSet; override;
+    procedure Execute; override;
+  public
+    Event: TEvent;
+    ItemLink: TResultEntry;
+    // results
+    DTObj: Pointer;
+    size: TPoint;
+    DrawHandle: Pointer;
+    //
+    Running: Boolean;
+    OnThreadEnd: TNotifyEvent;
+    constructor Create; virtual;
+    destructor Destroy; override;
+
+    function Restart(Item: TResultEntry): Boolean; // call from mainthread
+  end;
 
   { TResWindow }
 
@@ -51,13 +87,14 @@ type
 var
   ResWin: TResWindow;
   LastDir: string = 'Ram:'; // for all file requesters
+  Movies: string;
 
 function MySystem(Name: string; const Tags: array of NativeUInt): LongInt; inline;
 
 implementation
 
 uses
-  prefsunit, AmiTubeLocale, FileDownloadUnit;
+  prefsunit, AmiTubeLocale, FileDownloadUnit, SearchthreadUnit;
 
 { TResWindow }
 
@@ -65,6 +102,182 @@ uses
 function MySystem(Name: string; const Tags: array of NativeUInt): LongInt; inline;
 begin
   Result := AmigaDos.DosSystem(PChar(Name), @Tags[0]);
+end;
+
+{ TLoadImgThread }
+
+procedure TLoadImgThread.ThreadFinished;
+begin
+  if Assigned(OnThreadEnd) then
+    OnThreadEnd(Self);
+end;
+
+procedure TLoadImgThread.TerminatedSet;
+begin
+  inherited DoTerminate;
+  Event.SetEvent;
+end;
+
+procedure TLoadImgThread.Execute;
+var
+  Url: string;
+  IconName, FileName: string;
+  FS: TFileStream;
+  bmhd: PBitMapHeader;
+  bm: PBitMap;
+begin
+  try
+  repeat
+    try
+      Event.WaitFor(INFINITE);
+      if Terminated then
+        Break;
+      DTObj := nil;
+      URL := IconURL + ID;
+      // check if there is already a image file
+      if FileExists(IncludeTrailingPathDelimiter(Movies) + ID + '.jpg') then
+      begin
+        Filename := IncludeTrailingPathDelimiter(Movies) + ID + '.jpg';
+        IconName := '';
+      end
+      else
+      begin
+        // not existing, but video is saved on the HD -> save the jpeg along with it
+        if FileExists(IncludeTrailingPathDelimiter(Movies) + ID + '.txt') then
+        begin
+          Filename := IncludeTrailingPathDelimiter(Movies) + ID + '.jpg';
+          IconName := '';
+        end
+        else
+        begin
+          // just use temporary folder for jpg
+          IconName := 'T:' + ID + '.jpg';
+          FileName := IconName;
+        end;
+        // if already existing, remove it (could happen for T:)
+        if FileExists(Filename) then
+          DeleteFile(Filename);
+        //
+        FS := TFileStream.Create(Filename, fmCreate);
+        try
+          GetFile(URL, FS); // get the actual file
+        except
+          on E:Exception do
+          begin
+            //SetStatusText(GetLocString(MSG_ERROR_LOAD_ICON) + '(' + E.Message + ')');
+            FS.Free;
+            DeleteFile(Filename);
+            //Exit;
+          end;
+        end;
+        // hmm nothing saved...
+        if FS.Size = 0 then
+        begin
+          //SetStatusText(GetLocString(MSG_ERROR_LOAD_ICON) + '(1)');
+          FS.Free;
+          DeleteFile(Filename); // remove that file
+        end
+        else
+          FS.Free;
+      end;
+      // try to open the file  with Datatype
+      DTObj := NewDTObject(PChar(FileName), [
+          DTA_GroupID, GID_PICTURE,
+          PDTA_Remap, AsTag(TRUE),
+          PDTA_DestMode,PMODE_V43,
+          PDTA_Screen, AsTag(IntuitionBase^.ActiveScreen),
+          OBP_Precision, Precision_Image,
+          TAG_END, TAG_END]);
+      // check if the Datatype was created
+      if not Assigned(DTObj) then
+      begin
+        //SetStatusText(GetLocString(MSG_ERROR_LOAD_ICON) + '(2)');
+        if IconName <> '' then
+          DeleteFile(IconName);
+        //Exit;
+      end;
+      if Assigned(DTObj) then
+      begin
+        // process the image
+        DoMethod(DTObj, [DTM_PROCLAYOUT, 0 , 1]);
+        // get the Bitmap
+        GetDTAttrs(DTObj,
+          [
+          PDTA_DestBitMap, AsTag(@bm),
+          PDTA_BitMapHeader,AsTag(@bmhd),
+          TAG_END]);
+        if not Assigned(bm) or not Assigned(bmhd) then
+        begin
+          //SetStatusText(GetLocString(MSG_ERROR_LOAD_ICON) + '(3)');
+          DisposeDTObject(DTObj);
+          DTObj := nil;
+        end;
+        if Assigned(bmhd) then
+        begin
+          // get the size
+          Size.x := bmhd^.bmh_Width;
+          Size.Y := bmhd^.bmh_Height;
+        end;
+        // we want to draw it
+        DrawHandle := ObtainDTDrawInfoA(DTObj, nil);
+        // we are done
+      end;
+    finally
+      //Running := False;
+      Synchronize(@ThreadFinished);
+    end;
+
+  until Terminated;
+
+  finally
+  end;
+end;
+
+constructor TLoadImgThread.Create;
+begin
+  inherited Create(True);
+  Running := False;
+  Event := TEvent.Create(nil, False, False, 'LoadImg');
+  Start;
+end;
+
+destructor TLoadImgThread.Destroy;
+begin
+  Event.Free;
+  inherited Destroy;
+end;
+
+function TLoadImgThread.Restart(Item: TResultEntry): Boolean;
+begin
+  // is killed or still running, ignore me ;)
+  if Terminated or Running then
+    Exit;
+  Running := True;
+  Self.ItemLink := Item;
+  Self.Id := Item.Id;
+  Event.SetEvent;
+  Result := True;
+  Exit;
+end;
+
+{ TResultEntry }
+
+constructor TResultEntry.Create;
+begin
+  DTObj := nil;
+  ImgSize.x := 0;
+end;
+
+destructor TResultEntry.Destroy;
+begin
+  if Assigned(DTObj) then
+  begin
+    ReleaseDTDrawInfo(DTObj, DrawHandle);
+    DisposeDTObject(DTObj);
+    //if IconName <> '' then
+    //  DeleteFile(IconName);
+  end;
+  inherited Destroy;
 end;
 
 { sent YouTube URL to player like mplayer to stream directly}

@@ -267,6 +267,9 @@ const
   MSG_PREFS_ASKDESTINATION = 50407 ;
   MSG_PREFS_ASKDESTINATION_STR = 'Ask for destination path'#0;
 
+  MSG_PREFS_FANCYLIST = 50408 ;
+  MSG_PREFS_FANCYLIST_STR = 'Fancy list'#0;
+
 
 procedure CloseCatalog;
 procedure OpenCatalog(Loc: PLocale);
@@ -286,7 +289,7 @@ type
      str: string;
   end;
 
-  TAppStringArray = array[0..84] of TAppString;
+  TAppStringArray = array[0..85] of TAppString;
 
 const
   AppStrings: TAppStringArray = (
@@ -374,6 +377,7 @@ const
     (id: MSG_PREFS_AUTOICON ; str: MSG_PREFS_AUTOICON_STR ),
     (id: MSG_PREFS_MAXTITLELEN ; str: MSG_PREFS_MAXTITLELEN_STR ),
     (id: MSG_PREFS_ASKDESTINATION ; str: MSG_PREFS_ASKDESTINATION_STR ),
+    (id: MSG_PREFS_FANCYLIST ; str: MSG_PREFS_FANCYLIST_STR ),
     (id: 0 ; str: '' )
     );
 

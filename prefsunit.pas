@@ -15,6 +15,7 @@ type
 
   TPrefsWindow = class(TMUIWindow)
   private
+    FOnFancyListChange: TNotifyEvent;
     Ini: TIniFile;
     NumEdit: TMUIString;
     MaxLenEdit: TMUIString;
@@ -26,6 +27,7 @@ type
     FOnFormatChanged: TNotifyEvent;
     ChooseAutoStart: TMUICheckmark;
     ChooseAutoIcon: TMUICheckmark;
+    ChooseFancyList: TMUICheckmark;
     ChooseBootup: TMUICycle;
     ChooseClip: TMUICheckmark;
     FOnClipChanged: TNotifyEvent;
@@ -34,6 +36,7 @@ type
     procedure ChooseMPEGPlayerClick(Sender: TObject);
     procedure ChooseURLPlayerClick(Sender: TObject);
     procedure ChooseWGetClick(Sender: TObject);
+    function GetFancyList: Boolean;
     procedure NumEditACK(Sender: TObject);
     procedure MaxLenACK(Sender: TObject);
     procedure FormatChanged(Sender: TObject);
@@ -42,6 +45,7 @@ type
     procedure ClipChange(Sender: TObject);
     procedure CloseWindow(Sender: TObject; var CloseAction: TCloseAction);
     procedure AutoIconChange(Sender: TObject);
+    procedure FancyListChange(Sender: TObject);
     procedure AllFormatChange(Sender: TObject);
     procedure AskDestChange(Sender: TObject);
 
@@ -89,9 +93,11 @@ type
     property ObserveClip: Boolean read GetClip;
     property AllFormats: Boolean read GetAllFormats;
     property MaxTitleLen: Integer read GetMaxTitleLen;
+    property FancyList: Boolean read GetFancyList;
     //
     property OnFormatChanged: TNotifyEvent read FOnFormatChanged write FOnFormatChanged;
     property OnClipChanged: TNotifyEvent read FOnClipChanged write FOnClipChanged;
+    property OnFancyListChange: TNotifyEvent read FOnFancyListChange write FOnFancyListChange;
   end;
 
 var
@@ -218,6 +224,11 @@ begin
     end;
     Free;
   end;
+end;
+
+function TPrefsWindow.GetFancyList: Boolean;
+begin
+  Result := ChooseFancyList.Selected;
 end;
 
 function TPrefsWindow.GetPlayerPath: string;
@@ -369,6 +380,13 @@ end;
 procedure TPrefsWindow.AutoIconChange(Sender: TObject);
 begin
   Ini.WriteBool('Search', 'AutoIcon', ChooseAutoIcon.Selected);
+end;
+
+procedure TPrefsWindow.FancyListChange(Sender: TObject);
+begin
+  Ini.WriteBool('Search', 'FancyList', ChooseFancyList.Selected);
+  if Assigned(FOnFancyListChange) then
+    FOnFancyListChange(Self);
 end;
 
 procedure TPrefsWindow.CloseWindow(Sender: TObject; var CloseAction: TCloseAction);
@@ -529,6 +547,21 @@ begin
   begin
     Selected := Ini.ReadBool('Search', 'AutoIcon', False);
     OnSelected := @AutoIconChange;
+    Parent := Grp1;
+  end;
+
+  // -- Fancy List
+  with TMUIText.Create(GetLocString(MSG_PREFS_FANCYLIST)) do
+  begin
+    Frame := MUIV_FRAME_NONE;
+    Parent := Grp1;
+  end;
+
+  ChooseFancyList := TMUICheckmark.Create;
+  with ChooseFancyList do
+  begin
+    Selected := Ini.ReadBool('Search', 'FancyList', False);
+    OnSelected := @FancyListChange;
     Parent := Grp1;
   end;
 

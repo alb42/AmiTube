@@ -9,7 +9,7 @@ uses
   MUIClass.Base, MUIClass.Window, MUIClass.Group, MUIClass.Area, MUIClass.Gadget,
   MUIClass.Menu, MUIClass.DrawPanel, MUIClass.Image,
   MUIClass.StringGrid, MUIClass.Dialog, MUIClass.List, filedownloadunit, prefsunit,
-  XMLRead, DOM, AmiTubelocale, resolutionselunit, historyunit, convertthreadunit, searchthreadunit, downloadlistunit;
+  XMLRead, DOM, AmiTubelocale, resolutionselunit, historyunit, convertthreadunit, searchthreadunit, downloadlistunit, fancylistunit;
 
 const
   // base URL on my server
@@ -30,7 +30,7 @@ const
 
 const
   // Version info for Amiga
-  VERSION = '$VER: AmiTube 1.0 (16.03.2022)';
+  VERSION = '$VER: AmiTube 1.1 (16.03.2022)';
 
   // format settings, atm we have:
   NumFormats = 4;
@@ -67,6 +67,7 @@ type
     BtnGroup: TMUIGroup;
     StatText: TMUIText;
     ListClickTimer: TMUITimer;
+    FancyList: TFancyList;
     procedure SearchEntry(Sender: TObject);
     procedure ClickHistory(Sender: TObject);
     procedure EndThread(Sender: TObject);
@@ -91,6 +92,7 @@ type
     procedure PrefsStart(Sender: TObject);
     procedure MenuSortByColumn(Sender: TObject);
     procedure FormatChangeEvent(Sender: TObject);
+    procedure FancyListChanged(Sender: TObject);
     procedure ShowDList(Sender: TObject);
 
     procedure AboutMUI(Sender: TObject);
@@ -120,7 +122,6 @@ type
     FPerc: Integer;
     FTxt: string;
     MainTimer: TMUITimer;
-    Movies: string;
     MovieLock: BPTR;
     OldFreeAmount: Int64;
     ResultEntries: TResultEntries;
@@ -129,6 +130,8 @@ type
     OldCThread: TStartConvertThread;
     ImgSize: TPoint;
     BaseServer: string;
+    function GetItemIndex: Integer;
+    procedure SetItemIndex(AValue: Integer);
     procedure SetStatusText(AText: string; APos: LongInt = -1);
     procedure DestroyDTObj;
 
@@ -145,6 +148,8 @@ type
   public
     constructor Create; override;
     destructor Destroy; override;
+
+    property ItemIndex: Integer read GetItemIndex write SetItemIndex;
   end;
 
 var
@@ -277,6 +282,7 @@ begin
         List.Cells[3, i] := IntToStr(t) + ' kB '
     end;
     List.Quiet := False;
+    FancyList.UpdateList;
     SearchField.Contents := '';
   end;
   SearchField.Disabled := False;
@@ -292,9 +298,9 @@ begin
   Unused(Sender);
   ProgressEvent(Self, 0, GetLocString(MSG_STATUS_IDLE));
   // look if in the list, the video it's still there ;) change button status
-  if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
+  if (ItemIndex >= 0) and (ItemIndex < ResultEntries.Count) then
   begin
-    if ResultEntries[List.Row].ID = ConvertThread.DL.ID then
+    if ResultEntries[ItemIndex].ID = ConvertThread.DL.ID then
     begin
       PlayFormat := ConvertThread.DL.Format;
       EnableDownloads(False, True);
@@ -320,19 +326,20 @@ end;
 {####### event for clicking the list}
 procedure TMainWindow.ListClick(Sender: TObject);
 begin
+  writeln('listclick ', itemindex);
   Unused(Sender);
   ListClickTimer.Enabled := False;
   Destroydtobj; // destroy loaded preview image, if any
   // check for new clicked entry
-  if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
+  if (ItemIndex >= 0) and (ItemIndex < ResultEntries.Count) then
   begin
-    TextOut.Text := UTF8ToAnsi(ResultEntries[List.Row].Desc); // show desc
+    TextOut.Text := UTF8ToAnsi(ResultEntries[ItemIndex].Desc); // show desc
     // check if movie already exists in movies dir
     PlayFormat := 0;
-    if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[List.Row].ID + '.mpeg') then
+    if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[ItemIndex].ID + '.mpeg') then
       PlayFormat := 2
     else
-      if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[List.Row].ID + '.cdxl') then
+      if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[ItemIndex].ID + '.cdxl') then
         PlayFormat := 1;
     // enable download or play buttons
     EnableDownloads(PlayFormat = 0, PlayFormat > 0);
@@ -398,8 +405,8 @@ var
   i, ClickCol, OldRow: Integer;
 begin
   OldRow := -1;
-  if List.Row >= 0 then
-    OldRow := ResultEntries[List.Row].Num; // remember selected entry, reselect it after sorting
+  if ItemIndex >= 0 then
+    OldRow := ResultEntries[ItemIndex].Num; // remember selected entry, reselect it after sorting
   ClickCol := ColClick;
   // when loaded from HD, duration not exists, here also sort by size
   if (List.NumColumns = 3) and (ClickCol = 2) then
@@ -422,7 +429,7 @@ begin
   begin
     if ResultEntries[i].Num = OldRow then
     begin
-      List.Row := i;
+      ItemIndex := i;
       ListClick(nil);
       Break;
     end;
@@ -497,14 +504,14 @@ var
 begin
   Unused(Sender);
   // if something selected
-  if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
+  if (ItemIndex >= 0) and (ItemIndex < ResultEntries.Count) then
   begin
     Format := 0;
     if Sender is TMUIButton then
       Format := DownFormat[TMUIButton(Sender).Tag];
     for i := 0 to High(DownloadBtn) do
       DownloadBtn[i].Disabled := True;
-    FileSize := Int64(ResultEntries[List.Row].Duration) * DownSizes[Format] * 1024;
+    FileSize := Int64(ResultEntries[ItemIndex].Duration) * DownSizes[Format] * 1024;
     // get extension
     if Format = 2 then
       Ext := '.mpeg'
@@ -519,7 +526,7 @@ begin
         TitleText := GetLocString(MSG_GUI_SELECTFILE);//'Select name/path for file.';
         Pattern := '#?.' +  Ext;
         Directory := LastDir;
-        Filename := MakeFilename(ResultEntries[List.Row].Name, ResultEntries[List.Row].ID) + Ext;
+        Filename := MakeFilename(ResultEntries[ItemIndex].Name, ResultEntries[ItemIndex].ID) + Ext;
         SaveMode := True;
         if Execute then
         begin
@@ -531,7 +538,7 @@ begin
     end;
     // nothing selected in Filedialog, then create Filename and path
     if NewName = '' then
-      NewName := IncludeTrailingPathDelimiter(Movies) + ResultEntries[List.Row].ID + Ext;
+      NewName := IncludeTrailingPathDelimiter(Movies) + ResultEntries[ItemIndex].ID + Ext;
     // check if we have enough memory
     UpdateFreeMem;
     if FileSize > OldFreeAmount then
@@ -544,7 +551,7 @@ begin
     end;
     // actual starting the thread
     ShowList := Assigned(ConvertThread) and not (ConvertThread.Terminated);
-    DownloadListWin.AddToList(ResultEntries[List.Row].Name, ResultEntries[List.Row].ID, '', NewName, ResultEntries[List.Row].Desc, Format, Prefs.AutoStart);
+    DownloadListWin.AddToList(ResultEntries[ItemIndex].Name, ResultEntries[ItemIndex].ID, '', NewName, ResultEntries[ItemIndex].Desc, Format, Prefs.AutoStart);
     if ShowList then
       DownloadListWin.Show;
   end;
@@ -602,9 +609,9 @@ begin
     Exit;
   Me := FindTask(nil);
   // something selected?
-  if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
+  if (ItemIndex >= 0) and (ItemIndex < ResultEntries.Count) then
   begin
-    MyID := ResultEntries[List.Row].ID;
+    MyID := ResultEntries[ItemIndex].ID;
     // special case for mpeg
     if PlayFormat = 2 then
     begin
@@ -646,15 +653,15 @@ var
 begin
   Unused(Sender);
   // something selected?
-  if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
+  if (ItemIndex >= 0) and (ItemIndex < ResultEntries.Count) then
   begin
-    MyID := ResultEntries[List.Row].ID;
+    MyID := ResultEntries[ItemIndex].ID;
     MovieName := IncludeTrailingPathDelimiter(Movies) + MyID + '.cdxl';
     MPEGName := IncludeTrailingPathDelimiter(Movies) + MyID + '.mpeg';
     ReadmeName := IncludeTrailingPathDelimiter(Movies) + MyID + '.txt';
     ImageName := IncludeTrailingPathDelimiter(Movies) + MyID + '.jpg';
     // ask use if it is ok?
-    if MessageBox(GetLocString(MSG_GUI_DELETE), GetLocString(MSG_GUI_DELETE)+ #10' "' + List.Cells[1, List.Row] + '"?' , [GetLocString(MSG_GUI_YES), GetLocString(MSG_GUI_NO)]) = 1 then
+    if MessageBox(GetLocString(MSG_GUI_DELETE), GetLocString(MSG_GUI_DELETE)+ #10' "' + List.Cells[1, ItemIndex] + '"?' , [GetLocString(MSG_GUI_YES), GetLocString(MSG_GUI_NO)]) = 1 then
     begin
       // try to delete the CDXL
       if FileExists(MovieName) then
@@ -669,8 +676,8 @@ begin
       if FileExists(ImageName) then
         DeleteFile(ImageName);
       // remove the size, if no duration, not valid anymore and no way to get it
-      if ResultEntries[List.Row].Duration = 0 then
-        List.Cells[2, List.Row] := '-';
+      if ResultEntries[ItemIndex].Duration = 0 then
+        List.Cells[2, ItemIndex] := '-';
       // enable download buttons
       EnableDownloads(True, False);
     end;
@@ -779,6 +786,7 @@ begin
       List.Cells[2, i] := MyRes[i].Size;
     end;
     List.Quiet := False;
+    FancyList.UpdateList;
     // remove search edit contents
     SearchField.Contents := '';
   end
@@ -857,6 +865,14 @@ begin
   end;
 end;
 
+procedure TMainWindow.FancyListChanged(Sender: TObject);
+begin
+  FancyList.ShowMe := Prefs.FancyList;
+  List.ShowMe := not Prefs.FancyList;
+  List.OnClick := @ListClick;
+  IconGrp.ShowMe := not Prefs.FancyList;
+end;
+
 procedure TMainWindow.ShowDList(Sender: TObject);
 begin
   Unused(Sender);
@@ -875,10 +891,10 @@ begin
   ShareBtn.Disabled := True;
   hp := nil;
   try
-    if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
+    if (ItemIndex >= 0) and (ItemIndex < ResultEntries.Count) then
     begin
       // sanatize id
-      MyID := ResultEntries[List.Row].ID;
+      MyID := ResultEntries[ItemIndex].ID;
       EncStr := '';
       for i := 1 to Length(MyID) do
         EncStr := EncStr + '%' + IntToHex(Ord(MyID[i]),2);
@@ -1100,29 +1116,29 @@ begin
   // destroy old icon if any
   Destroydtobj;
   // something selected
-  if (List.Row>=0) and (List.Row < ResultEntries.Count) then
+  if (ItemIndex >= 0) and (ItemIndex < ResultEntries.Count) then
   begin
     SetStatusText('Load Icon');
     // form url
-    URL := IconURL + ResultEntries[List.Row].ID;
+    URL := IconURL + ResultEntries[ItemIndex].ID;
     // check if there is already a image file
-    if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[List.Row].ID + '.jpg') then
+    if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[ItemIndex].ID + '.jpg') then
     begin
-      Filename := IncludeTrailingPathDelimiter(Movies) + ResultEntries[List.Row].ID + '.jpg';
+      Filename := IncludeTrailingPathDelimiter(Movies) + ResultEntries[ItemIndex].ID + '.jpg';
       IconName := '';
     end
     else
     begin
       // not existing, but video is saved on the HD -> save the jpeg along with it
-      if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[List.Row].ID + '.txt') then
+      if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[ItemIndex].ID + '.txt') then
       begin
-        Filename := IncludeTrailingPathDelimiter(Movies) + ResultEntries[List.Row].ID + '.jpg';
+        Filename := IncludeTrailingPathDelimiter(Movies) + ResultEntries[ItemIndex].ID + '.jpg';
         IconName := '';
       end
       else
       begin
         // just use temporary folder for jpg
-        IconName := 'T:' + ResultEntries[List.Row].ID + '.jpg';
+        IconName := 'T:' + ResultEntries[ItemIndex].ID + '.jpg';
         FileName := IconName;
       end;
       // if already existing, remove it (could happen for T:)
@@ -1418,11 +1434,11 @@ var
   s: string;
 begin
   Unused(Sender);
-  if (List.Row >= 0) and (List.Row < ResultEntries.Count) then
+  if (ItemIndex >= 0) and (ItemIndex < ResultEntries.Count) then
   begin
     Self.Sleep := True; // disable main window
     //
-    SRes := ResultEntries[List.Row];
+    SRes := ResultEntries[ItemIndex];
     // no formats until now, so go and get them
     if Length(SRes.Formats) = 0 then
     begin
@@ -1652,6 +1668,20 @@ begin
     Progress.Current := APos;
 end;
 
+function TMainWindow.GetItemIndex: Integer;
+begin
+  if FancyList.ShowMe then
+    Result := FancyList.ItemIndex
+  else
+    Result := List.Row;
+end;
+
+procedure TMainWindow.SetItemIndex(AValue: Integer);
+begin
+  FancyList.ItemIndex := AValue;
+  List.Row := AValue;
+end;
+
 { Destroy of Datatype loaded Preview image }
 procedure TMainWindow.DestroyDTObj;
 begin
@@ -1699,8 +1729,8 @@ begin
   // update the size on the Convert buttons
   if Enabled then
   begin
-    if (List.Row >= 0) and (List.Row < ResultEntries.Count) and Prefs.AllFormats then
-      Updatedownloadbtns(ResultEntries[List.Row].Duration)
+    if (ItemIndex >= 0) and (ItemIndex < ResultEntries.Count) and Prefs.AllFormats then
+      Updatedownloadbtns(ResultEntries[ItemIndex].Duration)
     else
       Updatedownloadbtns(0);
   end;
@@ -1840,6 +1870,7 @@ begin
     end;
   end;
   List.Quiet := False;
+  FancyList.UpdateList;
 end;
 
 { load a string tooltype from icon, if not found, return the "Default" string}
@@ -2044,6 +2075,14 @@ begin
   List.Titles[1] := GetLocString(MSG_GUI_LISTNAME);
   List.Titles[2] := GetLocString(MSG_GUI_LISTDURATION);
   List.Titles[3] := GetLocString(MSG_GUI_LISTSIZE);
+
+  FancyList := TFancyList.Create;
+  FancyList.List := ResultEntries;
+  with FancyList do
+  begin
+    Parent := Grp1;
+    OnSelectionChange := @ListClick;
+  end;
 
   // Splitter
   with TMUIBalance.Create do
@@ -2357,6 +2396,8 @@ begin
   DownloadListWin := TDownloadListWin.Create;
   Prefs.OnFormatChanged := @Main.FormatChangeEvent;
   Prefs.OnFormatChanged(nil);
+  Prefs.OnFancyListChange := @Main.FancyListChanged;
+  Prefs.OnFancyListChange(nil);
   DownloadListWin.OnDownloadStart := @Main.TryCThread;
   MUIApp.Title := ShortVer;
   MUIApp.Version := VERSION;
