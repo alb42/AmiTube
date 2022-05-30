@@ -326,7 +326,6 @@ end;
 {####### event for clicking the list}
 procedure TMainWindow.ListClick(Sender: TObject);
 begin
-  writeln('listclick ', itemindex);
   Unused(Sender);
   ListClickTimer.Enabled := False;
   Destroydtobj; // destroy loaded preview image, if any

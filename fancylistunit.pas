@@ -5,7 +5,7 @@ unit fancylistunit;
 interface
 
 uses
-  Classes, SysUtils, AGraphics, Utility, intuition, Datatypes,
+  Classes, SysUtils, AGraphics, Utility, intuition, Datatypes, inputevent,
   mui, resolutionselunit, Math,
   MUIClass.Base, MUIClass.Group, MUIClass.DrawPanel, MUIClass.Gadget;
 
@@ -26,6 +26,7 @@ type
     LT: TLoadImgThread;
     FItemIndex: Integer;
     procedure DrawObject(Sender: TObject; Rp: PRastPort; DrawRect: TRect);
+    procedure KeyDownEvent(Sender: TObject; Shift: TMUIShiftState; Code: Word; Key: Char; var EatEvent: Boolean);
     procedure MouseDownEvent(Sender: TObject; MouseBtn: TMUIMouseBtn; X, Y: Integer; var EatEvent: Boolean);
     procedure MouseWheelEvent(Sender: TObject; ScrollUp: Boolean; var EatEvent: Boolean);
     procedure ScrollerMove(Sender: TObject);
@@ -50,6 +51,8 @@ type
 
     procedure UpdateList;
     procedure Redraw;
+
+    procedure MakeItemVisible(Idx: Integer); // Make the Item visible (scroll to view)
 
     property ItemIndex: Integer read FItemIndex write SetItemIndex;
     property OnSelectionChange: TNotifyEvent read FOnSelectionChange write FOnSelectionChange;
@@ -91,6 +94,34 @@ begin
   FNormFont := nil;
 end;
 
+procedure TFancyList.KeyDownEvent(Sender: TObject; Shift: TMUIShiftState; Code: Word; Key: Char; var EatEvent: Boolean);
+begin
+  if not ShowMe or not Assigned(List) then
+    Exit;
+  if Code = CURSORDOWN then
+  begin
+    if mssCtrl in Shift then
+      FScroller.First := FScroller.First + FItemHeight div 2
+    else
+    begin
+      ItemIndex := Min(ItemIndex + 1, List.Count - 1);
+      MakeItemVisible(ItemIndex);
+    end;
+    EatEvent := True;
+  end;
+  if Code = CURSORUP then
+  begin
+    if mssCtrl in Shift then
+      FScroller.First := FScroller.First - FItemHeight div 2
+    else
+    begin
+      ItemIndex := Max(0, ItemIndex - 1);
+      MakeItemVisible(ItemIndex);
+    end;
+    EatEvent := True;
+  end;
+end;
+
 procedure TFancyList.MouseDownEvent(Sender: TObject; MouseBtn: TMUIMouseBtn; X, Y: Integer; var EatEvent: Boolean);
 var
   Num: Integer;
@@ -128,7 +159,10 @@ var
   s: string;
   TE: tTextExtent;
   SL: TStringList;
+  TextEnd: LongInt;
+  DrawRect: TRect;
 begin
+  DrawRect := ARect;
   if idx = FItemIndex then
   begin
     SetAPen(RP, SelBGcolor);
@@ -153,23 +187,31 @@ begin
       LoadImage(Idx);
   end;
   //
+  SetDrmd(RP, JAM2);
   if Assigned(BigFont) then
+  begin
     SetFont(RP, BigFont);
+    SetSoftStyle(rp, FSF_BOLD or BigFont^.tf_Style, FSF_BOLD);
+  end;
   SetAPen(RP, Titlecolor);
+  //
   s := Utf8ToAnsi(List[Idx].Name);
   AGraphics.gfxMove(Rp, ARect.Left + 5, ARect.Top + TH);
   AGraphics.GfxText(RP, PChar(s), Length(s));
-
-  y := ARect.Top + TH;                                                                                                                                             s := Utf8ToAnsi(List[Idx].Name);
+  //
+  y := ARect.Top + TH;
   if Assigned(TinyFont) then
     SetFont(RP, TinyFont);
   SetAPen(RP, TextColor);
+  TextEnd := ARect.Left;
   if List[Idx].Duration > 0 then
   begin
     d := List[Idx].Duration mod 60;
     s := 'Duration: ' + IntToStr(List[Idx].Duration div 60) + ':' + Format('%2.2d',[d]) + ' ';
+    TextExtent(rp, PChar(s), Length(s), @TE);
     AGraphics.gfxMove(Rp, ARect.Left + 5, y + TH);
     AGraphics.GfxText(RP, PChar(s), Length(s));
+    TextEnd := ARect.Left + 5 + TE.te_Width;
   end;
   if List[Idx].FileSize > 0 then
   begin
@@ -178,8 +220,11 @@ begin
     else
       s := 'Size: ' + IntToStr(Round(List[Idx].FileSize / 1024)) + ' kByte ';
     TextExtent(rp, PChar(s), Length(s), @TE);
-    AGraphics.gfxMove(Rp, ARect.Right - TE.te_Width, y + TH);
-    AGraphics.GfxText(RP, PChar(s), Length(s));
+    if ARect.Right - TE.te_Width > TextEnd then
+    begin
+      AGraphics.gfxMove(Rp, ARect.Right - TE.te_Width, y + TH);
+      AGraphics.GfxText(RP, PChar(s), Length(s));
+    end;
   end;
   if Assigned(FNormFont) then
     SetFont(RP, FNormFont);
@@ -191,12 +236,25 @@ begin
     s := UTF8ToAnsi(SL[i]);
     TextExtent(rp, PChar(s), Length(s), @TE);
     AGraphics.gfxMove(Rp, ARect.Left + 2, y + TE.te_Height);
-    if y + TE.te_Height >= ARect.Bottom then
+    if y + 2 * TE.te_Height >= ARect.Bottom then
       Break;
     AGraphics.GfxText(RP, PChar(s), Length(s));
-    y := y + TE.te_Height;
+    y := y + TE.te_Height + 2;
   end;
   SL.Free;
+  // draw focus line
+  if idx = FItemIndex then
+  begin
+    SetAPen(RP, Titlecolor);
+    SetDrPt(RP, $0F0F);
+    GfxMove(RP, DrawRect.Left, DrawRect.Top);
+    Draw(RP, DrawRect.Right - 1, DrawRect.Top);
+    Draw(RP, DrawRect.Right - 1, DrawRect.Bottom - 1);
+    Draw(RP, DrawRect.Left, DrawRect.Bottom - 1);
+    Draw(RP, DrawRect.Left, DrawRect.Top);
+    SetDrPt(RP, $FFFF);
+  end;
+
 end;
 
 procedure TFancyList.LoadImage(Idx: Integer);
@@ -207,7 +265,7 @@ end;
 
 procedure TFancyList.SetItemIndex(AValue: Integer);
 begin
-  if FItemIndex = AValue then Exit;
+  //if FItemIndex = AValue then Exit;
   FItemIndex := AValue;
   if Assigned(FOnSelectionChange) then
     FOnSelectionChange(Self);
@@ -266,6 +324,7 @@ begin
     OnDrawObject  := @DrawObject;
     OnMouseDown  := @MouseDownEvent;
     OnMouseWheel  := @MouseWheelEvent;
+    OnKeyDown  := @KeyDownEvent;
     FillArea := False;
     Parent := Self;
   end;
@@ -320,6 +379,33 @@ procedure TFancyList.Redraw;
 begin
   if Assigned(MUIObj) then
     MUI_Redraw(MUIObj, MADF_DRAWOBJECT);
+end;
+
+procedure TFancyList.MakeItemVisible(Idx: Integer);
+var
+  ItemTop, ItemBottom, VisTop, VisBottom: Integer;
+begin
+  //writeln('enter make visible');
+  // check if we have a list and the idx is in the range
+  if not Assigned(List) or not InRange(Idx, 0, List.Count - 1) then
+    Exit;
+  // get some values for easier comparison
+  ItemTop := Idx * FItemHeight;
+  ItemBottom := ItemTop + FItemHeight;
+  //
+  VisTop := FScroller.First;
+  VisBottom := FScroller.First + FScroller.Visible;
+  //writeln('item: ', itemTop, ' - ', ItemBottom, '  Vis: ', VisTop, ' - ', VisBottom);
+  //
+  // First check if already visible
+  if InRange(ItemTop, VisTop, VisBottom) and InRange(ItemBottom, VisTop, VisBottom) then
+    Exit;
+  if ItemTop < VisTop then
+    FScroller.First := ItemTop
+  else
+    FScroller.First := ItemBottom - FScroller.Visible;
+  Redraw;
+  //writeln('leave make visible');
 end;
 
 end.
