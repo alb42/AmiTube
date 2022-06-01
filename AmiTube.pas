@@ -30,7 +30,7 @@ const
 
 const
   // Version info for Amiga
-  VERSION = '$VER: AmiTube 1.1 (16.03.2022)';
+  VERSION = '$VER: AmiTube 1.1 beta (01.06.2022)';
 
   // format settings, atm we have:
   NumFormats = 4;

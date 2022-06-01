@@ -1,7 +1,7 @@
 @DATABASE
 @TOC MAIN
 @NODE MAIN "AmiTube"
-@$VER AmiTube.guide 1.0 (16.03.2022)
+@$VER AmiTube.guide 1.1 (01.06.2022)
 
 AmiTube
 =======
@@ -406,6 +406,12 @@ Auto load Preview Icon
   is possible to activate that options, and every time a video is
   clicked the preview icon is automatically loaded and shown.
 
+Fancy List
+  If selected the standard MUI List is replaced by a nicer self
+  created list which has the preview image the title in big 
+  blue font duration and file size in a tiny font and a bit of
+  the description. if this list is selected you have to use
+  the menu to change the sorting
 
 Player
 ......
@@ -612,6 +618,12 @@ commands:
 
 History
 -------
+
+1.1
+- italian catalog update
+- french catalog update
+- Encoding bugs fixed
+- optional fancy movie list with preview image
 
 1.0
 - History for search

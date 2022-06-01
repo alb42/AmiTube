@@ -1,0 +1,355 @@
+## version $VER: AmiTube 1.0 (30.04.2022)
+## codeset 0
+## language italiano
+## chunk AUTH Translated by Samir Hawamdeh (http://www.betatesting.it/backforthefuture)
+;
+; ATO Italia
+; Compiled with FlexCat 2.18 PPC (AmigaOS4)
+; flexcat AmiTube.cd AmiTube.ct catalog=AmiTube.catalog
+; 
+; Italian translation of AmiTube
+;
+; Traduzione italiana di AmiTube
+;
+; --- MainMenu
+;
+MSG_MENU_PROJECT
+Progetto
+; Project
+;
+MSG_MENU_LOCAL_FILES
+File locali
+; Local Files
+;
+MSG_MENU_LOCAL_FILES_KEY
+F
+; F
+;
+MSG_MENU_SHARED
+Remoti condivisi
+; Remote Shared
+;
+MSG_MENU_SHARED_KEY
+R
+; R
+;
+MSG_MENU_MAIN_QUIT
+Esci
+; Quit
+;
+MSG_MENU_MAIN_QUIT_KEY
+Q
+; Q
+;
+MSG_MENU_DOWNLOADLIST
+Elenco scaricati
+; Download list
+;
+MSG_MENU_SETTINGS
+Impostazioni
+; Settings
+;
+MSG_MENU_PREFS
+Preferenze...
+; Prefs ...
+;
+MSG_MENU_PREFS_KEY
+P
+; P
+;
+MSG_MENU_ABOUT
+Informazioni
+; About
+;
+MSG_MENU_ABOUT_AMITUBE
+Informazioni su AmiTube...
+; About AmiTube ...
+;
+MSG_MENU_ABOUT_MUI
+Informazioni su MUI...
+; About MUI ...
+;
+MSG_MENU_CHECK_UPDATES
+Verifica aggiornamenti...
+; Check for Updates ...
+;
+MSG_MENU_SORTBY
+Ordina per
+; Sort by
+;
+MSG_GUI_BREAK
+Stoppa
+; Break
+;
+MSG_GUI_DOWNLOAD_AS
+Scarica come
+; Download as
+;
+MSG_GUI_LOAD_ICON
+Carica Anteprima
+; Load Preview
+;
+MSG_GUI_DELETE
+Cancella Video
+; Delete Movies
+;
+MSG_GUI_SHARE
+Condividi
+; Share
+;
+MSG_GUI_PLAY
+Play Video
+; Play Movie
+;
+MSG_GUI_GOTURL
+URL Ottenuto
+; Got URL
+;
+MSG_GUI_GOTURLTEXT
+Trovato URL di YouTube "%s" nella clipboard, avviare la ricerca di quel video?
+; Found YouTube URL "%s" in clipboard, search for that video?
+;
+MSG_GUI_YES
+_Si
+; Yes
+;
+MSG_GUI_NO
+_No
+; No
+;
+MSG_GUI_DISK_FULL
+Disco pieno
+; Disk full
+;
+MSG_GUI_FREE
+liberi
+; free
+;
+MSG_GUI_SELECTFILE
+Seleziona nome/percorso file
+; Select name/path for file.
+;
+MSG_GUI_GETORIGINAL
+Ottieni Originale
+; Get Original
+;
+MSG_GUI_DOWNLOADHD
+Scarica su HD
+; Download to HD
+;
+MSG_GUI_DOWNLOADTOOL
+Usa Strumento Download
+; Use Download Tool
+;
+MSG_GUI_USEURLPLAYER
+Usa URL Lettore
+; Use URL Player
+;
+MSG_GUI_NOUPDATE
+Nessun aggiornamento disponibile!
+; No Update available
+;
+MSG_GUI_UPDATEAVAIL
+Aggiornamento disponibile\n\nVersione in uso: %o \n Disponibile Online: %n \n\n Scaricare l'ultima versione ora?
+; There is an Update available.\n\nYour Version: %o \n Online Version: %n \n\n Download latest Version?
+;
+MSG_GUI_LISTNUMBER
+Nr.
+; Nr.
+;
+MSG_GUI_LISTNAME
+Nome
+; Name
+;
+MSG_GUI_LISTDURATION
+Durata
+; Duration
+;
+MSG_GUI_LISTSIZE
+Dimensione
+; Filesize
+;
+MSG_GUI_DOWNLOADLIST
+Elenco scaricati
+; Download List
+;
+MSG_GUI_CLEAR_FINISHED
+Cancella completati
+; Clear finished
+;
+MSG_GUI_REMOVE
+Rimuovi
+; Remove
+;
+MSG_GUI_LISTSTATUS
+Stato
+; Status
+;
+; ### Status
+;
+MSG_STATUS_IDLE
+Pronto
+; Idle
+;
+MSG_STATUS_SHARED
+Condiviso con successo
+; Successfully shared.
+;
+MSG_STATUS_PREPSEARCH
+Avvio della ricerca...
+; Prepare Search.
+;
+MSG_STATUS_SEARCH
+Ricerca in corso...
+; Search started.
+;
+MSG_STATUS_PARSESEARCH
+Analisi risultati della ricerca...
+; Parse search result.
+;
+MSG_STATUS_SEARCHDONE
+Ricerca completata
+; Search done.
+;
+MSG_STATUS_CONVERT
+Conversione video...
+; Converting movie
+;
+MSG_STATUS_DOWNLOADING
+Scaricamento
+; Downloading
+;
+MSG_STATUS_DONE
+Completato
+; Finished
+;
+MSG_ERROR_LOCAL
+Non è stato trovato alcun file video salvato localmente!
+; No locally saved movie files found
+;
+MSG_ERROR_SHARE
+Errore condivisione:
+; Error sharing:
+;
+MSG_ERROR_GETURL
+Errore nell'ottenimento dell'URL
+; Error get URL
+;
+MSG_ERROR_CONVERT
+Errore conversione:
+; Error converting:
+;
+MSG_ERROR_LOAD_ICON
+Errore nel caricamento dell'icona anteprima!
+; Error load Icon.
+;
+MSG_ERROR_PLAYER
+Errore: "%s" non trovato!
+; Error: "%s" not found.
+;
+MSG_ERROR_NO_SPACE
+Spazio insufficiente per lo scaricamento del video. Continuare lo stesso?
+; Not enough space to download this movie. Continue anyway?
+;
+MSG_ERROR_UPDATE
+Errore nella verifica degli aggiornamenti!
+; Error checking for Update.
+;
+MSG_ERROR_ALREADYRUN
+Un altro file è in attesa di scaricamento, attendi il suo completamento prima di avviarne un altro
+; Another downloading job is running, wait for finish before starting a new one
+;
+MSG_ERROR_ALREADYINLIST
+Il file è già presente nell'elenco dei download, l'azione verrà ignorata
+; This file is already in the download list, ignored.
+;
+MSG_ERROR_CANNOTREMOVE
+Impossibile rimuovere il file in scaricamento
+; Cannot remove running downloads.
+;
+; --- PREFS
+;
+MSG_PREFS_WINDOW
+Impostazioni
+; Settings
+;
+MSG_PREFS_STARTUP
+Elenco contenuti all'avvio
+; Start up list contents
+;
+MSG_PREFS_STARTUP1
+Vuoto
+; Empty
+;
+MSG_PREFS_STARTUP2
+File locali
+; Local Files
+;
+MSG_PREFS_STARTUP3
+Remoti condivisi
+; Remote Shared
+;
+MSG_PREFS_FORMAT
+Formato file
+; File Format
+;
+MSG_PREFS_FORMAT1
+CDXL 32 Colori OCS
+; CDXL 32 Colors OCS
+;
+MSG_PREFS_FORMAT2
+CDXL 256 Colori AGA
+; CDXL 256 Colors AGA
+;
+MSG_PREFS_FORMAT3
+MPEG1
+; MPEG1
+;
+MSG_PREFS_FORMAT4
+CDXL 256 Colori Estesi
+; CDXL 256 Colors Larger
+;
+MSG_PREFS_SEARCH
+Risultati della ricerca
+; Search Results
+;
+MSG_PREFS_SEARCHNUM
+Numero massimo
+; Maximum Number
+;
+MSG_PREFS_CLIP
+Osserva clipboard per gli URL
+; Observe clipboard for URLs
+;
+MSG_PREFS_PLAYER
+Lettore
+; Player
+;
+MSG_PREFS_AUTOSTART
+Lancia video automaticamente dopo il download
+; Auto start movie after download
+;
+MSG_PREFS_CHOOSEPLAYER
+Scegli
+; Choose
+;
+MSG_PREFS_PLAYERPARAM
+Parametro
+; Parameter
+;
+MSG_PREFS_ALLFORMATS
+Mostra tutti i formati
+; Show all Formats
+;
+MSG_PREFS_AUTOICON
+Carica anteprime automaticamente
+; Auto load Preview Icon
+;
+MSG_PREFS_MAXTITLELEN
+Lunghezza massima titoli
+; Maximum Title length
+;
+MSG_PREFS_ASKDESTINATION
+Chiedi percorso di destinazione
+; Ask for destination path
+;
