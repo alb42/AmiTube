@@ -153,9 +153,19 @@ begin
   Redraw;
 end;
 
+function GetNextSpace(s: string; Start: Integer): Integer;
+begin
+  for Result := Start + 1 to Length(s) do
+  begin
+    if s = ' ' then
+      Exit;
+  end;
+  Result := Length(s);
+end;
+
 procedure TFancyList.DrawEntry(Idx: Integer; RP: PRastPort; ARect: TRect);
 var
-  y, d, i: Integer;
+  y, d, i, n, GoodN: Integer;
   s: string;
   TE: tTextExtent;
   SL: TStringList;
@@ -195,7 +205,7 @@ begin
   end;
   SetAPen(RP, Titlecolor);
   //
-  s := Utf8ToAnsi(List[Idx].Name);
+  s := List[Idx].Name;
   AGraphics.gfxMove(Rp, ARect.Left + 5, ARect.Top + TH);
   AGraphics.GfxText(RP, PChar(s), Length(s));
   //
@@ -233,13 +243,42 @@ begin
   y := y + TH;
   for i := 5 to  SL.Count-1 do
   begin
-    s := UTF8ToAnsi(SL[i]);
-    TextExtent(rp, PChar(s), Length(s), @TE);
-    AGraphics.gfxMove(Rp, ARect.Left + 2, y + TE.te_Height);
+    s := SL[i];
+    if Trim(s) = '' then
+    begin
+      y := y + 5;
+      Continue;
+    end;
+    GoodN := -1;
+    n := 1;
+    repeat
+      n := Pos(' ',s, n + 1);
+      if n = 0 then
+        n := Length(s);
+      TextExtent(rp, PChar(s), n - 1, @TE);
+      if TE.te_Width < ARect.Width then
+        GoodN := n
+      else
+      begin
+        AGraphics.gfxMove(rp, ARect.Left + 2, y + TH);
+        AGraphics.GfxText(RP, PChar(s), GoodN);
+        Delete(s, 1, GoodN);
+        y := y + TE.te_Height;
+        if y + 2 * TE.te_Height >= ARect.Bottom then
+          Break;
+        GoodN := -1;
+        n := 1;
+      end;
+    until n = Length(s);
+    if GoodN > 0 then
+    begin
+      AGraphics.gfxMove(rp, ARect.Left + 2, y + TE.te_Height);
+      AGraphics.GfxText(RP, PChar(s), Length(s));
+      y := y + TH;
+    end;
+    y := y + 5;
     if y + 2 * TE.te_Height >= ARect.Bottom then
       Break;
-    AGraphics.GfxText(RP, PChar(s), Length(s));
-    y := y + TE.te_Height + 2;
   end;
   SL.Free;
   // draw focus line
@@ -333,6 +372,7 @@ begin
   FScroller.OnFirstChange  := @ScrollerMove;
   with FScroller do
   begin
+    Frame := MUIV_Frame_None;
     Horiz := False;
     Parent := Self;
   end;
@@ -377,7 +417,7 @@ end;
 
 procedure TFancyList.Redraw;
 begin
-  if Assigned(MUIObj) then
+  if Assigned(MUIObj) and ShowMe then
     MUI_Redraw(MUIObj, MADF_DRAWOBJECT);
 end;
 

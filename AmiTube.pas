@@ -268,7 +268,7 @@ begin
       st := SRes.Name;
       if Length(st) > Prefs.MaxTitleLen + 3 then
         st := Copy(st, 1, Prefs.MaxTitleLen) + '...';
-      List.Cells[1, i] := UTF8ToAnsi(st);
+      List.Cells[1, i] := st;
       // duration, pretty printed
       t := SRes.Duration;
       s := t mod 60;
@@ -332,7 +332,7 @@ begin
   // check for new clicked entry
   if (ItemIndex >= 0) and (ItemIndex < ResultEntries.Count) then
   begin
-    TextOut.Text := UTF8ToAnsi(ResultEntries[ItemIndex].Desc); // show desc
+    TextOut.Text := ResultEntries[ItemIndex].Desc; // show desc
     // check if movie already exists in movies dir
     PlayFormat := 0;
     if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[ItemIndex].ID + '.mpeg') then
@@ -781,7 +781,7 @@ begin
       st := MyRes[i].Name;
       if Length(st) > Prefs.MaxTitleLen + 3 then
         st := Copy(st, 1, Prefs.MaxTitleLen) + '...';
-      List.Cells[1, i] := UTF8ToAnsi(st);
+      List.Cells[1, i] := st;
       List.Cells[2, i] := MyRes[i].Size;
     end;
     List.Quiet := False;
@@ -1850,7 +1850,7 @@ begin
     st := SRes.Name;
     if Length(st) > Prefs.MaxTitleLen + 3 then
       st := Copy(st, 1, Prefs.MaxTitleLen) + '...';
-    List.Cells[1, i] := UTF8ToAnsi(st);
+    List.Cells[1, i] := st;
     // the filesize
     if (SRes.FileSize / 1024) > 1024 then
       SizeStr := FloatToStrF(SRes.FileSize / 1024 / 1024, ffFixed, 8, 1) + ' MByte'

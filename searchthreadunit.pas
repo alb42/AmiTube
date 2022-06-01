@@ -236,6 +236,7 @@ begin
           SearchRes.Add(SRes); // List of results, we assume nothing can go wrong from here ;)
           // get some data
           SRes.Name := GetStringAttribute(Child, 'fulltitle');
+          SRes.Name := StringReplace(SRes.Name, '&amp;', '&', [rfReplaceAll]);
           SRes.Id := GetStringAttribute(Child, 'id');
           SRes.Icon := GetStringAttribute(Child, 'icon');
           SRes.Duration := StrToIntDef(GetStringAttribute(Child, 'duration'), 0); // TODO: observe, sometimes the duration is 0, seldom but happens
