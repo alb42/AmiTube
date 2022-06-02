@@ -241,7 +241,7 @@ begin
           SRes.Icon := GetStringAttribute(Child, 'icon');
           SRes.Duration := StrToIntDef(GetStringAttribute(Child, 'duration'), 0); // TODO: observe, sometimes the duration is 0, seldom but happens
           // build the description directly here
-          SRes.Desc := SRes.Name + #10#10;
+          SRes.Desc := SRes.Name + #10 + 'ID: ' + SRes.ID + #10;
           s := GetStringAttribute(Child, 'uploader');
           if s <> '' then
             SRes.Desc := SRes.Desc + 'Uploader: ' + s + #10;

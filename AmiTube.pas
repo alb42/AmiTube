@@ -748,6 +748,8 @@ begin
         SL.LoadFromFile(TxtFileName);
         if SL.Count > 0 then
           MyRes[Idx].Name := SL[0];
+        if (SL.Count > 1) and (Pos('ID:', SL[1]) = 1) then
+          MyRes[Idx].Id := Trim(Copy(SL[1], 4, Length(SL[1])));
         MyRes[Idx].Desc := SL.Text;
       end;
     until not Boolean(ExNext(Movielock ,@FI));
@@ -785,12 +787,12 @@ begin
       List.Cells[2, i] := MyRes[i].Size;
     end;
     List.Quiet := False;
-    FancyList.UpdateList;
     // remove search edit contents
     SearchField.Contents := '';
   end
   else
     ShowMessage(GetLocString(MSG_ERROR_LOCAL));  // nothing found
+  FancyList.UpdateList;
   SL.Free;
 end;
 
@@ -1328,7 +1330,7 @@ begin
       begin
         AName := GetStringAttribute(XMLChild, 'fulltitle');
         AId := GetStringAttribute(XMLChild, 'id');
-        ADesc := AName + #10#10;
+        ADesc := AName + #10 + 'ID: ' + AId + #10;
         s := GetStringAttribute(XMLChild, 'uploader');
         if s <> '' then
           ADesc := ADesc + 'Uploader: ' + s + #10;
@@ -1484,7 +1486,7 @@ begin
           SRes.Id := GetStringAttribute(Child, 'id');
           SRes.Icon := GetStringAttribute(Child, 'icon');
           SRes.Duration := StrToIntDef(GetStringAttribute(Child, 'duration'), 0);
-          SRes.Desc := SRes.Name + #10#10;
+          SRes.Desc := SRes.Name + #10 + 'ID: ' + SRes.ID + #10;
           s := GetStringAttribute(Child, 'uploader');
           if s <> '' then
             SRes.Desc := SRes.Desc + 'Uploader: ' + s + #10;

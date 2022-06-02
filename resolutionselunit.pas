@@ -166,19 +166,23 @@ begin
           begin
             //SetStatusText(GetLocString(MSG_ERROR_LOAD_ICON) + '(' + E.Message + ')');
             FS.Free;
+            FS := nil;
             DeleteFile(Filename);
             //Exit;
           end;
         end;
         // hmm nothing saved...
-        if FS.Size = 0 then
+        if Assigned(FS) then
         begin
-          //SetStatusText(GetLocString(MSG_ERROR_LOAD_ICON) + '(1)');
-          FS.Free;
-          DeleteFile(Filename); // remove that file
-        end
-        else
-          FS.Free;
+          if FS.Size = 0 then
+          begin
+            //SetStatusText(GetLocString(MSG_ERROR_LOAD_ICON) + '(1)');
+            FS.Free;
+            DeleteFile(Filename); // remove that file
+          end
+          else
+            FS.Free;
+        end;
       end;
       // try to open the file  with Datatype
       DTObj := NewDTObject(PChar(FileName), [

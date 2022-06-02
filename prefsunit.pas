@@ -310,7 +310,7 @@ end;
 
 function TPrefsWindow.GetAutoIcon: Boolean;
 begin
-  Result := ChooseAutoIcon.Selected;
+  Result := ChooseAutoIcon.Selected and not ChooseFancyList.Selected;
 end;
 
 function TPrefsWindow.GetAskDest: Boolean;

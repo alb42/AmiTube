@@ -5,7 +5,7 @@ unit fancylistunit;
 interface
 
 uses
-  Classes, SysUtils, AGraphics, Utility, intuition, Datatypes, inputevent,
+  Classes, SysUtils, AGraphics, Utility, intuition, Datatypes, inputevent, EXEC,
   mui, resolutionselunit, Math,
   MUIClass.Base, MUIClass.Group, MUIClass.DrawPanel, MUIClass.Gadget;
 
@@ -67,8 +67,14 @@ var
   i: Integer;
   Ext: TTextExtent;
   r: TRect;
+  ABak, BBak, DBak: LongWord;
 
 begin
+  ABak := GetAPen(RP);
+  BBak := GetBPen(RP);
+  DBak := GetDrMd(RP);
+
+
   FNormFont := Rp^.Font;
   if not Assigned(BigFont) then
     BigFont := OpenMUIFont(fkBig);
@@ -88,7 +94,14 @@ begin
       R.Offset(0, FItemHeight);
     end;
   end;
+  if R.Bottom < DrawRect.Bottom then
+  begin
+    SetAPen(RP, 0);
+    RectFill(RP, R.Left, r.Bottom - FItemHeight, r.Right, DrawRect.Bottom);
+  end;
   InternUpdateList;
+
+  SetABPenDrMd(RP, ABak, BBak, DBak);
   if Assigned(FNormFont) then
     SetFont(RP, FNormFont);
   FNormFont := nil;
