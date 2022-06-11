@@ -30,7 +30,7 @@ const
 
 const
   // Version info for Amiga
-  VERSION = '$VER: AmiTube 1.1 beta (01.06.2022)';
+  VERSION = '$VER: AmiTube 1.1 (11.06.2022)';
 
   // format settings, atm we have:
   NumFormats = 4;
@@ -343,7 +343,7 @@ begin
     // enable download or play buttons
     EnableDownloads(PlayFormat = 0, PlayFormat > 0);
     // want to see the icon ;)
-    if Prefs.AutoIcon then
+    if Prefs.AutoIcon and not Prefs.FancyList then
       LoadIcon(Sender);
   end
   else
@@ -869,6 +869,7 @@ end;
 procedure TMainWindow.FancyListChanged(Sender: TObject);
 begin
   FancyList.ShowMe := Prefs.FancyList;
+  FancyList.AutoLoadImages := Prefs.AutoIcon;
   List.ShowMe := not Prefs.FancyList;
   List.OnClick := @ListClick;
   IconGrp.ShowMe := not Prefs.FancyList;
@@ -2088,6 +2089,7 @@ begin
   // Splitter
   with TMUIBalance.Create do
   begin
+    ObjectID := MAKE_ID('s','p','l','t');
     Parent := Grp1;
   end;
   //

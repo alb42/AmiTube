@@ -29,6 +29,7 @@ type
     procedure KeyDownEvent(Sender: TObject; Shift: TMUIShiftState; Code: Word; Key: Char; var EatEvent: Boolean);
     procedure MouseDownEvent(Sender: TObject; MouseBtn: TMUIMouseBtn; X, Y: Integer; var EatEvent: Boolean);
     procedure MouseWheelEvent(Sender: TObject; ScrollUp: Boolean; var EatEvent: Boolean);
+    procedure MouseDblClickEvent(Sender: TObject; MouseBtn: TMUIMouseBtn; X,Y: Integer; var EatEvent: Boolean);
     procedure ScrollerMove(Sender: TObject);
     procedure DrawEntry(Idx: Integer; RP: PRastPort; ARect: TRect);
     //
@@ -42,7 +43,7 @@ type
     SelBGColor: LongInt;
     Titlecolor: LongInt;
     TextColor: LongInt;
-
+    FAutoLoadImages: Boolean;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -55,6 +56,7 @@ type
     procedure MakeItemVisible(Idx: Integer); // Make the Item visible (scroll to view)
 
     property ItemIndex: Integer read FItemIndex write SetItemIndex;
+    property AutoLoadImages: boolean read FAutoLoadImages write FAutoLoadImages;
     property OnSelectionChange: TNotifyEvent read FOnSelectionChange write FOnSelectionChange;
   end;
 
@@ -161,6 +163,12 @@ begin
   end;
 end;
 
+procedure TFancyList.MouseDblClickEvent(Sender: TObject; MouseBtn: TMUIMouseBtn; X,Y: Integer; var EatEvent: Boolean);
+begin
+  if Assigned(List) and InRange(ItemIndex, 0, List.Count - 1) then
+    LoadImage(ItemIndex);
+end;
+
 procedure TFancyList.ScrollerMove(Sender: TObject);
 begin
   Redraw;
@@ -206,7 +214,7 @@ begin
   else
   begin
     //
-    if List[Idx].ImgSize.x = 0 then
+    if (List[Idx].ImgSize.x = 0) and FAutoLoadImages then
       LoadImage(Idx);
   end;
   //
@@ -363,6 +371,7 @@ var
   Sc: pScreen;
 begin
   inherited Create;
+  FAutoLoadImages := True;
   LT := TLoadImgThread.Create;
   LT.OnThreadEnd := @ThreadEnd;
   BigFont := nil;
@@ -377,6 +386,7 @@ begin
     OnMouseDown  := @MouseDownEvent;
     OnMouseWheel  := @MouseWheelEvent;
     OnKeyDown  := @KeyDownEvent;
+    OnDblClick := @MouseDblClickEvent;
     FillArea := False;
     Parent := Self;
   end;

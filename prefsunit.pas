@@ -310,7 +310,7 @@ end;
 
 function TPrefsWindow.GetAutoIcon: Boolean;
 begin
-  Result := ChooseAutoIcon.Selected and not ChooseFancyList.Selected;
+  Result := ChooseAutoIcon.Selected;
 end;
 
 function TPrefsWindow.GetAskDest: Boolean;
@@ -380,6 +380,8 @@ end;
 procedure TPrefsWindow.AutoIconChange(Sender: TObject);
 begin
   Ini.WriteBool('Search', 'AutoIcon', ChooseAutoIcon.Selected);
+  if Assigned(FOnFancyListChange) then
+    FOnFancyListChange(Self);
 end;
 
 procedure TPrefsWindow.FancyListChange(Sender: TObject);
