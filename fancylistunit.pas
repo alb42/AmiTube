@@ -70,12 +70,11 @@ var
   Ext: TTextExtent;
   r: TRect;
   ABak, BBak, DBak: LongWord;
-
+  Buffer: TDrawBuffer;
 begin
   ABak := GetAPen(RP);
   BBak := GetBPen(RP);
   DBak := GetDrMd(RP);
-
 
   FNormFont := Rp^.Font;
   if not Assigned(BigFont) then
@@ -89,11 +88,22 @@ begin
   if Assigned(List) then
   begin
     r := Rect(DrawRect.Left, DrawRect.Top - FScroller.First, DrawRect.Right, DrawRect.Top + FItemHeight - FScroller.First);
-    for i := 0 to List.Count - 1 do
-    begin
-      if ((r.Top >= 0) and (r.Top < Height + DrawRect.Top)) or ((r.Bottom > 0) and (r.Bottom <= Height + DrawRect.Top)) then
-        DrawEntry(i, RP, r);
-      R.Offset(0, FItemHeight);
+    Buffer := TDrawBuffer.Create(r.Width, FItemHeight, RP^.BitMap^.Depth, RP^.BitMap);
+    try
+      for i := 0 to List.Count - 1 do
+      begin
+        if ((r.Top >= 0) and (r.Top < Height + DrawRect.Top)) or ((r.Bottom > 0) and (r.Bottom <= Height + DrawRect.Top)) then
+        begin
+          //DrawEntry(i, RP, r);
+          Buffer.Clear(2);
+          DrawEntry(i, Buffer.RP, Rect(0, 0, r.Width, FItemHeight));
+          Buffer.DrawToRastPort(r.Left, r.Top, RP);
+        end;
+        R.Offset(0, FItemHeight);
+      end;
+
+    finally
+      Buffer.Free;
     end;
   end;
   if R.Bottom < DrawRect.Bottom then
@@ -262,6 +272,7 @@ begin
   SL := TStringList.Create;
   SL.Text := List[Idx].Desc;
   y := y + TH;
+  if ARect.Width > 100 then
   for i := 5 to  SL.Count-1 do
   begin
     s := SL[i];
@@ -276,11 +287,17 @@ begin
       n := Pos(' ',s, n + 1);
       if n = 0 then
         n := Length(s);
+      if n = 0 then
+        Break;
       TextExtent(rp, PChar(s), n - 1, @TE);
       if TE.te_Width < ARect.Width then
-        GoodN := n
+      begin
+        GoodN := n;
+      end
       else
       begin
+        if GoodN <= 0 then
+          GoodN := n;
         AGraphics.gfxMove(rp, ARect.Left + 2, y + TH);
         AGraphics.GfxText(RP, PChar(s), GoodN);
         Delete(s, 1, GoodN);
@@ -291,7 +308,7 @@ begin
         n := 1;
       end;
     until n = Length(s);
-    if GoodN > 0 then
+    if GoodN > 1 then
     begin
       AGraphics.gfxMove(rp, ARect.Left + 2, y + TE.te_Height);
       AGraphics.GfxText(RP, PChar(s), Length(s));
@@ -314,7 +331,6 @@ begin
     Draw(RP, DrawRect.Left, DrawRect.Top);
     SetDrPt(RP, $FFFF);
   end;
-
 end;
 
 procedure TFancyList.LoadImage(Idx: Integer);

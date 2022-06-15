@@ -30,7 +30,7 @@ const
 
 const
   // Version info for Amiga
-  VERSION = '$VER: AmiTube 1.1 (11.06.2022)';
+  VERSION = '$VER: AmiTube 1.1 (15.06.2022)';
 
   // format settings, atm we have:
   NumFormats = 4;
@@ -975,6 +975,7 @@ end;
 procedure TMainWindow.FormShow(Sender: TObject);
 begin
   Unused(Sender);
+  FancyListChanged(nil);
   // what we load on startup
   case Prefs.Startup of
     1: LoadLocalFiles(nil);
@@ -2063,6 +2064,7 @@ begin
   begin
     HelpNode := 'List';
     Input := True;
+    ShowMe := False;
     ShowLines := True;
     ShowTitle := True;
     OnClick := @ListClick;
@@ -2082,6 +2084,7 @@ begin
   FancyList.List := ResultEntries;
   with FancyList do
   begin
+    ShowMe := False;
     Parent := Grp1;
     OnSelectionChange := @ListClick;
   end;
