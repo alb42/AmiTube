@@ -9,7 +9,7 @@ uses
   MUIClass.Base, MUIClass.Window, MUIClass.Group, MUIClass.Area, MUIClass.Gadget,
   MUIClass.Menu, MUIClass.DrawPanel, MUIClass.Image,
   MUIClass.StringGrid, MUIClass.Dialog, MUIClass.List, filedownloadunit, prefsunit,
-  XMLRead, DOM, AmiTubelocale, resolutionselunit, historyunit, convertthreadunit, searchthreadunit, downloadlistunit, fancylistunit;
+  XMLRead, DOM, AmiTubelocale, resolutionselunit, historyunit, convertthreadunit, searchthreadunit, downloadlistunit, fancylistunit, playlistunit;
 
 const
   // base URL on my server
@@ -30,7 +30,7 @@ const
 
 const
   // Version info for Amiga
-  VERSION = '$VER: AmiTube 1.1 (15.06.2022)';
+  VERSION = '$VER: AmiTube 1.2 beta (24.06.2022)';
 
   // format settings, atm we have:
   NumFormats = 4;
@@ -94,6 +94,7 @@ type
     procedure FormatChangeEvent(Sender: TObject);
     procedure FancyListChanged(Sender: TObject);
     procedure ShowDList(Sender: TObject);
+    procedure ShowPlayList(Sender: TObject);
 
     procedure AboutMUI(Sender: TObject);
     procedure AboutAmiTube(Sender: TObject);
@@ -573,7 +574,7 @@ begin
     Param := Prefs.PlayerParam;
     Param := StringReplace(Param, '%f', '"' + Filename + '"', [rfReplaceAll]);
     MySystem(Prefs.PlayerPath + ' ' + Param,
-      [NP_StackSize, Abs(PtrInt(Me^.tc_SPUpper) - PtrInt(Me^.tc_SPLower)), // stack size same as myself]
+      [NP_StackSize, Abs(PtrUInt(Me^.tc_SPUpper) - PtrUInt(Me^.tc_SPLower)), // stack size same as myself]
       TAG_END]
     );
     LastStart := GetTickCount;
@@ -584,7 +585,7 @@ begin
     Param := Prefs.MPEGPlayerParam;
     Param := StringReplace(Param, '%f', '"' + Filename + '"', [rfReplaceAll]);
     MySystem(Prefs.MPEGPlayerPath + ' ' + Param,
-      [NP_StackSize, Abs(PtrInt(Me^.tc_SPUpper) - PtrInt(Me^.tc_SPLower)), // stack size same as myself]
+      [NP_StackSize, Abs(PtrUInt(Me^.tc_SPUpper) - PtrUInt(Me^.tc_SPLower)), // stack size same as myself]
       TAG_END]
     );
     //ExecuteProcess(Prefs.MPEGPlayerPath, Param, []);
@@ -620,7 +621,7 @@ begin
         Param := Prefs.MPEGPlayerParam;
         Param := StringReplace(Param, '%f', '"' + MovieName + '"', [rfReplaceAll]);
         MySystem(Prefs.MPEGPlayerPath + ' ' + Param,
-          [NP_StackSize, Abs(PtrInt(Me^.tc_SPUpper) - PtrInt(Me^.tc_SPLower)), // stack size same as myself]
+          [NP_StackSize, Abs(PtrUInt(Me^.tc_SPUpper) - PtrUInt(Me^.tc_SPLower)), // stack size same as myself]
           TAG_END]
         );
         //ExecuteProcess(Prefs.MPEGPlayerPath, Param, []);
@@ -635,7 +636,7 @@ begin
         Param := Prefs.PlayerParam;
         Param := StringReplace(Param, '%f', '"' + MovieName + '"', [rfReplaceAll]);
         MySystem(Prefs.PlayerPath + ' ' + Param,
-          [NP_StackSize, Abs(PtrInt(Me^.tc_SPUpper) - PtrInt(Me^.tc_SPLower)), // stack size same as myself]
+          [NP_StackSize, Abs(PtrUInt(Me^.tc_SPUpper) - PtrUInt(Me^.tc_SPLower)), // stack size same as myself]
           TAG_END]
         );
         LastStart := GetTickCount;
@@ -868,6 +869,7 @@ end;
 
 procedure TMainWindow.FancyListChanged(Sender: TObject);
 begin
+  Unused(Sender);
   FancyList.ShowMe := Prefs.FancyList;
   FancyList.AutoLoadImages := Prefs.AutoIcon;
   List.ShowMe := not Prefs.FancyList;
@@ -879,6 +881,11 @@ procedure TMainWindow.ShowDList(Sender: TObject);
 begin
   Unused(Sender);
   DownloadListWin.Show;
+end;
+
+procedure TMainWindow.ShowPlayList(Sender: TObject);
+begin
+  PlaylistWin.OpenWindow(MovieLock);
 end;
 
 { Share movie with other people}
@@ -2252,6 +2259,11 @@ begin
   MI.Parent := Menu;
 
   MI := TMUIMenuItem.Create;
+  MI.Title := 'Play list';//GetLocString(MSG_MENU_DOWNLOADLIST);  // Play list
+  MI.OnTrigger := @ShowPlayList;
+  MI.Parent := Menu;
+
+  MI := TMUIMenuItem.Create;
   MI.Title := '-';
   MI.Parent := Menu;
 
@@ -2400,6 +2412,7 @@ begin
   Prefs := TPrefsWindow.Create;
   ResWin := TResWindow.Create;
   DownloadListWin := TDownloadListWin.Create;
+  PlayListwin := TPlaylistWin.Create;
   Prefs.OnFormatChanged := @Main.FormatChangeEvent;
   Prefs.OnFormatChanged(nil);
   Prefs.OnFancyListChange := @Main.FancyListChanged;
