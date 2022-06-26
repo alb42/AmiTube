@@ -336,7 +336,10 @@ end;
 procedure TFancyList.LoadImage(Idx: Integer);
 begin
   if Assigned(List) and InRange(Idx, 0, List.Count - 1) then
-    LT.Restart(List[idx]);
+  begin
+    if List[Idx].ImgSize.x < 2 then
+      LT.Restart(List[idx]);
+  end;
 end;
 
 procedure TFancyList.SetItemIndex(AValue: Integer);
