@@ -20,6 +20,7 @@ type
     Num: Integer;      // number in the original list (to restore original sorting)
     Name: string;      // Title of the video
     ID: string;        // youtubes id of the video
+    FileName: string;  // Filename Path of the Movie if already loaded
     Duration: Integer; // duration in s
     Icon: string;      // icon url
     Desc: string;      // description of video
