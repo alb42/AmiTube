@@ -31,12 +31,7 @@ type
     EntryArray: array of string;
 
     ChooseAnnounce, ChooseRandom, ChooseLoop: TMUICheckmark;
-    ChoosePreview: TMUICheckmark;                                               
-  PlayListwin: TPlaylistWin;
-
-implementation
-
-
+    ChoosePreview: TMUICheckmark;
     WaitEdit: TMUIString;
     List: TMUIListView;
     PlayButton, ShuffleButton: TMUIButton;
@@ -47,6 +42,11 @@ implementation
   end;
 
 var
+  PlayListwin: TPlaylistWin;
+
+implementation
+
+
 { make a list of all the files in movies dir}
 procedure LoadLocalFiles(MovieLock: BPTR; ResultEntries: TResultEntries);
 var
@@ -217,30 +217,86 @@ end;
 
 procedure TPlaylistWin.PlayClick(Sender: TObject);
 var
-  i, Idx: Integer;
+  Count, i, Idx: Integer;
   FileName: string;
   ShowAnnoucement: Boolean;
+  First: Boolean;
+  LList, TempList: array of Integer;
 begin
+  First := True;
   ShowAnnoucement := ChooseAnnounce.Selected;
   // play all Files
   if List.List.Entries = 0 then
     Exit;
   //
-  for i := 0 to List.List.Entries - 1 do
+  if ChooseLoop.Selected then
   begin
-    Idx := StrToIntDef(PChar(List.List.GetEntry(i)), -1);
-    if InRange(Idx, 0, PlayEntries.Count - 1) then
-    begin
-      Filename := PlayEntries[Idx].Filename;
-      if (i > 0) and ShowAnnoucement then
+    Count := 0;
+    repeat
+      if ChooseRandom.Selected then
+        Idx := StrToIntDef(PChar(List.List.GetEntry(Random(List.List.Entries))), -1)
+      else
       begin
-        // Show next movie announcement
-        if not ShowNextMovie(PlayEntries[Idx]) then
-          Exit;
+        if Count >= List.List.Entries then
+          Break;
+        Idx := StrToIntDef(PChar(List.List.GetEntry(Count)), -1)
       end;
-      PlayStart(Filename);
+      if InRange(Idx, 0, PlayEntries.Count - 1) then
+      begin
+        Filename := PlayEntries[Idx].Filename;
+        if not First and ShowAnnoucement then
+        begin
+          // Show next movie announcement
+          if not ShowNextMovie(PlayEntries[Idx]) then
+            Exit;
+        end;
+        First := False;
+        PlayStart(Filename);
+      end;
+      //writeln('idx = ', idx);
+      Inc(Count);
+
+    until False;
+  end
+  else
+  begin
+    SetLength(TempList, List.List.Entries);
+    SetLength(LList, List.List.Entries);
+    if ChooseRandom.Selected then
+    begin
+      for i := 0 to List.List.Entries - 1 do
+        TempList[i] := i;
+      for i := 0 to High(LList) do
+      begin
+        Idx := Random(Length(TempList));
+        LList[i] := Idx;
+        Delete(TempList, Idx, 1);
+      end;
+    end
+    else
+    begin
+      for i := 0 to List.List.Entries - 1 do
+        LList[i] := i;
     end;
-    //writeln('idx = ', idx);
+    //
+
+    for i := 0 to High(LList) do
+    begin
+      Idx := StrToIntDef(PChar(List.List.GetEntry(LList[i])), -1);
+      if InRange(Idx, 0, PlayEntries.Count - 1) then
+      begin
+        Filename := PlayEntries[Idx].Filename;
+        if not First and ShowAnnoucement then
+        begin
+          // Show next movie announcement
+          if not ShowNextMovie(PlayEntries[Idx]) then
+            Exit;
+        end;
+        First := False;
+        PlayStart(Filename);
+      end;
+      //writeln('idx = ', idx);
+    end;
   end;
 end;
 
