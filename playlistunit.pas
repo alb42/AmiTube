@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, Exec, AmigaDos, MUI, Math, Utility, Intuition, AGraphics,
   MUIClass.Base, MUIClass.Area, MUIClass.Image, MUIClass.Gadget,
   MUIClass.List, MUIClass.Window, MUIClass.Group, MUIClass.Dialog,
-  Amitubelocale, PrefsUnit,
+  Amitubelocale, PrefsUnit, Datatypes,
   resolutionselunit;
 
 type
@@ -30,10 +30,16 @@ type
     PlayEntries: TResultEntries;
     EntryArray: array of string;
 
-    ChooseAnnounce: TMUICheckmark;
+    ChooseAnnounce, ChooseRandom, ChooseLoop: TMUICheckmark;
+    ChoosePreview: TMUICheckmark;                                               
+  PlayListwin: TPlaylistWin;
+
+implementation
+
+
     WaitEdit: TMUIString;
     List: TMUIListView;
-    PlayButton: TMUIButton;
+    PlayButton, ShuffleButton: TMUIButton;
     constructor Create; override;
     destructor Destroy; override;
 
@@ -41,11 +47,6 @@ type
   end;
 
 var
-  PlayListwin: TPlaylistWin;
-
-implementation
-
-
 { make a list of all the files in movies dir}
 procedure LoadLocalFiles(MovieLock: BPTR; ResultEntries: TResultEntries);
 var
@@ -100,20 +101,10 @@ begin
       end;
     until not Boolean(ExNext(Movielock ,@FI));
   end;
-  //List.NumRows := Length(MyRes);
   ResultEntries.Clear;
   // check if we have some results
   if Length(MyRes) > 0 then
   begin
-    //List.Quiet := True;
-    {if List.NumColumns <> 3 then
-    begin
-      List.NumColumns := 3;
-      List.Titles[0] := GetLocString(MSG_GUI_LISTNUMBER);
-      List.Titles[1] := GetLocString(MSG_GUI_LISTNAME);
-      List.Titles[2] := GetLocString(MSG_GUI_LISTSIZE);
-    end;}
-
     // get results from list
     for i := 0 to High(MyRes) do
     begin
@@ -125,21 +116,10 @@ begin
       SRes.Desc := MyRes[i].Desc;
       SRes.FileSize := MyRes[i].FileSize;
       SRes.Duration := 0;
-      // couldalso be done by updatelist
-      //List.Cells[0, i] := IntToStr(i + 1);
-      //st := MyRes[i].Name;
-      //if Length(st) > Prefs.MaxTitleLen + 3 then
-      //  st := Copy(st, 1, Prefs.MaxTitleLen) + '...';
-      //List.Cells[1, i] := st;
-      //List.Cells[2, i] := MyRes[i].Size;
     end;
-    //List.Quiet := False;
-    // remove search edit contents
-    //SearchField.Contents := '';
   end
   else
     ShowMessage(GetLocString(MSG_ERROR_LOCAL));  // nothing found
-  //FancyList.UpdateList;
   SL.Free;
 end;
 
@@ -230,7 +210,6 @@ begin
       [NP_StackSize, Abs(PtrUInt(Me^.tc_SPUpper) - PtrUInt(Me^.tc_SPLower)), // stack size same as myself]
       TAG_END]
     );
-    //ExecuteProcess(Prefs.MPEGPlayerPath, Param, []);
     //LastStart := GetTickCount;
   end;
 
@@ -269,13 +248,19 @@ function TPlaylistWin.ShowNextMovie(Res: TResultEntry): Boolean;
 var
   SC: PScreen;
   WD: PWindow;
-  Count, tl, y: Integer;
+  tl, y: Integer;
   s: string;
   Msg: PIntuiMessage;
   IClass: LongWord;
   Code: Integer;
   EndTime, T1: LongWord;
-  LastTime: Integer;
+  LastTime, sx, sy: Integer;
+  DTObj: pObject_;
+  FileName: string;
+  Size: Classes.TPoint;
+  bmhd: PBitMapHeader;
+  bm: PBitMap;
+  DrawHandle: Pointer;
 begin
   Result := True;
   //
@@ -294,6 +279,87 @@ begin
     WA_Flags, WFLG_ACTIVATE,
     TAG_END]);
 
+  SetRGB4(@SC^.ViewPort, 0, 0, 0, 0);
+  SetRGB4(@SC^.ViewPort, 1, $FF, $FF, $FF);
+  ObtainPen(SC^.ViewPort.ColorMap, 0, 0, 0, 0, PEN_EXCLUSIVE);
+  ObtainPen(SC^.ViewPort.ColorMap, 1, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, PEN_EXCLUSIVE);
+  SetRast(WD^.RPort, 0);
+
+  SetAPen(WD^.RPort, 1);
+  s := 'Next Video:';
+  tl := TextLength(WD^.RPort, PChar(s), Length(s));
+  y := SC^.Height div 2;
+  GfxMove(WD^.RPort, SC^.width  div 2 - tl div 2, y);
+  GfxText(WD^.RPort, PChar(s), Length(s));
+
+  s := Res.Name;
+  tl := TextLength(WD^.RPort, PChar(s), Length(s));
+  y := y + 11;
+  GfxMove(WD^.RPort, SC^.width  div 2 - tl div 2, y);
+  GfxText(WD^.RPort, PChar(s), Length(s));
+
+  s := 'starts in ';
+  tl := TextLength(WD^.RPort, PChar(s), Length(s));
+  y := y + 11;
+  GfxMove(WD^.RPort, SC^.width  div 2 - tl div 2, y);
+  GfxText(WD^.RPort, PChar(s), Length(s));
+
+  //
+  sx := SC^.width  div 2 - tl div 2 + tl;
+  sy := y;
+
+  s := 'Press ''Esc'' to stop, ''Space'' to start now.';
+  tl := TextLength(WD^.RPort, PChar(s), Length(s));
+  y := y + 22;
+  GfxMove(WD^.RPort, SC^.width  div 2 - tl div 2, y);
+  GfxText(WD^.RPort, PChar(s), Length(s));
+
+  DTObj := nil;
+  Filename := ChangeFileExt(Res.FileName, '.jpg');
+  if FileExists(Filename) and ChoosePreview.Selected then
+  begin
+    DTObj := NewDTObject(PChar(FileName), [
+      DTA_GroupID, GID_PICTURE,
+      PDTA_Remap, AsTag(TRUE),
+      PDTA_DestMode,PMODE_V43,
+      PDTA_Screen, AsTag(SC),
+      OBP_Precision, Precision_Image,
+      TAG_END, TAG_END]);
+  end;
+  if Assigned(DTObj) then
+  begin
+    Size := Point(0,0);
+    DoMethod(DTObj, [DTM_PROCLAYOUT, 0 , 1]);
+    // get the Bitmap
+    GetDTAttrs(DTObj,
+      [
+      PDTA_DestBitMap, AsTag(@bm),
+      PDTA_BitMapHeader,AsTag(@bmhd),
+      TAG_END]);
+    if not Assigned(bm) or not Assigned(bmhd) then
+    begin
+      //SetStatusText(GetLocString(MSG_ERROR_LOAD_ICON) + '(3)');
+      DisposeDTObject(DTObj);
+      DTObj := nil;
+    end;
+    if Assigned(bmhd) then
+    begin
+      // get the size
+      Size.x := bmhd^.bmh_Width;
+      Size.Y := bmhd^.bmh_Height;
+    end;
+    // we want to draw it
+    DrawHandle := ObtainDTDrawInfoA(DTObj, nil);
+
+    DrawDTObjectA(WD^.RPort, DTObj, SC^.width  div 2 - Size.X div 2, SC^.Height div 2 - (Size.Y + 11), Size.x, Size.Y, 0, 0, nil);
+
+    if Assigned(DrawHandle) then
+      ReleaseDTDrawInfo(DTObj, DrawHandle);
+    if Assigned(DTObj) then
+      DisposeDTObject(DTObj);
+  end;
+
+
   LastTime := 0;
   EndTime := GetTickCount + Max(1, WaitEdit.IntegerValue) * 1000;
   repeat
@@ -304,35 +370,9 @@ begin
     if LastTime <> (EndTime- t1) div 1000 then
     begin
       LastTime := (EndTime- t1) div 1000;
-      SetRGB4(@SC^.ViewPort, 0, 0, 0, 0);
-      SetRGB4(@SC^.ViewPort, 1, $FF, $FF, $FF);
-      SetRast(WD^.RPort, 0);
-
-      SetAPen(WD^.RPort, 1);
-      s := 'Next Video:';
-      tl := TextLength(WD^.RPort, PChar(s), Length(s));
-      y := SC^.Height div 2;
-      GfxMove(WD^.RPort, SC^.width  div 2 - tl div 2, y);
+      s := ' ' + IntToStr(LastTime) + ' s';
+      GfxMove(WD^.RPort, sx, sy);
       GfxText(WD^.RPort, PChar(s), Length(s));
-
-      s := Res.Name;
-      tl := TextLength(WD^.RPort, PChar(s), Length(s));
-      y := y + 11;
-      GfxMove(WD^.RPort, SC^.width  div 2 - tl div 2, y);
-      GfxText(WD^.RPort, PChar(s), Length(s));
-
-      s := 'starts in ' + IntToStr(LastTime) + 's';
-      tl := TextLength(WD^.RPort, PChar(s), Length(s));
-      y := y + 11;
-      GfxMove(WD^.RPort, SC^.width  div 2 - tl div 2, y);
-      GfxText(WD^.RPort, PChar(s), Length(s));
-
-      s := 'Press ''Esc'' to stop, ''Space'' to start now.';
-      tl := TextLength(WD^.RPort, PChar(s), Length(s));
-      y := y + 22;
-      GfxMove(WD^.RPort, SC^.width  div 2 - tl div 2, y);
-      GfxText(WD^.RPort, PChar(s), Length(s));
-
     end;
 
     Msg := PIntuiMessage(GetMsg(Wd^.UserPort));
@@ -343,12 +383,12 @@ begin
       ReplyMsg(PMessage(Msg));
       if IClass = IDCMP_VANILLAKEY then
       begin
-        if Code = 27 then
+        if Code = 27 then  // ESC
         begin
           Result := False;
           Break;
         end;
-        if Code = $20 then
+        if Code = $20 then // Space
         begin
           Result := True;
           Break;
@@ -356,10 +396,11 @@ begin
       end;
     end;
     SysUtils.Sleep(10);
-    Dec(Count);
   until False;
 
 
+  ReleasePen(SC^.Viewport.ColorMap, 0);
+  ReleasePen(SC^.Viewport.ColorMap, 1);
   CloseWindow(WD);
   CloseScreen(SC);
 end;
@@ -402,13 +443,34 @@ begin
     Parent := Self;
   end;
 
+
+  ChooseRandom := TMUICheckmark.Create;
+  with ChooseRandom do
+  begin
+    Parent := Grp;
+  end;
+  with TMUIText.Create('Random') do
+  begin
+    Frame := MUIV_Frame_None;
+    Parent := Grp;
+  end;
+
+  ChooseLoop := TMUICheckmark.Create;
+  with ChooseLoop do
+  begin
+    Parent := Grp;
+  end;
+  with TMUIText.Create('Loop List') do
+  begin
+    Frame := MUIV_Frame_None;
+    Parent := Grp;
+  end;
+
   ChooseAnnounce := TMUICheckmark.Create;
   with ChooseAnnounce do
   begin
     Parent := Grp;
   end;
-
-
   with TMUIText.Create('Show wait screen') do
   begin
     Frame := MUIV_Frame_None;
@@ -421,12 +483,28 @@ begin
     IntegerValue := 5;
     Parent := Grp;
   end;
-
   with TMUIText.Create('Wait time between movies') do
   begin
     Frame := MUIV_Frame_None;
     Parent := Grp;
   end;
+
+  ChoosePreview := TMUICheckmark.Create;
+  with ChoosePreview do
+  begin
+    Parent := Grp;
+  end;
+  with TMUIText.Create('Show Preview in wait screen') do
+  begin
+    Frame := MUIV_Frame_None;
+    Parent := Grp;
+  end;
+
+  TMUIRectangle.Create.Parent := Grp;
+
+  ShuffleButton := TMUIButton.Create('Shuffle');
+  ShuffleButton.Parent := Grp;
+  //ShuffleButton.OnClick := @PlayClick;
 
   TMUIRectangle.Create.Parent := Grp;
 
