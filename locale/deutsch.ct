@@ -49,6 +49,10 @@ MSG_MENU_DOWNLOADLIST
 Downloadliste
 ; Download list
 ;
+MSG_MENU_PLAYLIST
+Abspielliste
+; Play list
+;
 MSG_MENU_SETTINGS
 Einstellungen
 ; Settings
@@ -188,6 +192,46 @@ Entferne
 MSG_GUI_LISTSTATUS
 Status
 ; Status
+;
+MSG_GUI_RANDOM
+Zufall
+; Random
+;
+MSG_GUI_LOOPLIST
+Liste wiederholen
+; Loop List
+;
+MSG_GUI_SHOWWAITSCREEN
+Zeige Wartebildschirm
+; Show wait screen
+;
+MSG_GUI_WAITTIME
+Wartezeit zwischen Filmen
+; Wait time between movies
+;
+MSG_GUI_PREVIEWWAIT
+Vorschaubild auf dem Wartebildschirm
+; Preview image on wait screen
+;
+MSG_GUI_SHUFFLELIST
+Mische Liste
+; Shuffle list
+;
+MSG_GUI_NEXTVIDEO
+Nächster Film:
+; Next video:
+;
+MSG_GUI_STARTSIN
+startet in
+; starts in
+;
+MSG_GUI_STOPSKIP
+Drücke 'Esc' zum stoppen, 'Leertaste' um sofort zu starten.
+; Press 'Esc' to stop, 'Space' to start now.
+;
+MSG_GUI_STARTPLAYLIST
+Starte Abspielliste
+; Play List
 ;
 ; ### Status
 MSG_STATUS_IDLE

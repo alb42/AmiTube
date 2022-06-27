@@ -574,7 +574,7 @@ begin
     Param := Prefs.PlayerParam;
     Param := StringReplace(Param, '%f', '"' + Filename + '"', [rfReplaceAll]);
     MySystem(Prefs.PlayerPath + ' ' + Param,
-      [NP_StackSize, Abs(PtrUInt(Me^.tc_SPUpper) - PtrUInt(Me^.tc_SPLower)), // stack size same as myself]
+      [NP_StackSize, Abs(PtrInt(PtrUInt(Me^.tc_SPUpper) - PtrUInt(Me^.tc_SPLower))), // stack size same as myself]
       TAG_END]
     );
     LastStart := GetTickCount;
@@ -585,7 +585,7 @@ begin
     Param := Prefs.MPEGPlayerParam;
     Param := StringReplace(Param, '%f', '"' + Filename + '"', [rfReplaceAll]);
     MySystem(Prefs.MPEGPlayerPath + ' ' + Param,
-      [NP_StackSize, Abs(PtrUInt(Me^.tc_SPUpper) - PtrUInt(Me^.tc_SPLower)), // stack size same as myself]
+      [NP_StackSize, Abs(PtrInt(PtrUInt(Me^.tc_SPUpper) - PtrUInt(Me^.tc_SPLower))), // stack size same as myself]
       TAG_END]
     );
     //ExecuteProcess(Prefs.MPEGPlayerPath, Param, []);
@@ -621,7 +621,7 @@ begin
         Param := Prefs.MPEGPlayerParam;
         Param := StringReplace(Param, '%f', '"' + MovieName + '"', [rfReplaceAll]);
         MySystem(Prefs.MPEGPlayerPath + ' ' + Param,
-          [NP_StackSize, Abs(PtrUInt(Me^.tc_SPUpper) - PtrUInt(Me^.tc_SPLower)), // stack size same as myself]
+          [NP_StackSize, Abs(PtrInt(PtrUInt(Me^.tc_SPUpper) - PtrUInt(Me^.tc_SPLower))), // stack size same as myself]
           TAG_END]
         );
         //ExecuteProcess(Prefs.MPEGPlayerPath, Param, []);
@@ -636,7 +636,7 @@ begin
         Param := Prefs.PlayerParam;
         Param := StringReplace(Param, '%f', '"' + MovieName + '"', [rfReplaceAll]);
         MySystem(Prefs.PlayerPath + ' ' + Param,
-          [NP_StackSize, Abs(PtrUInt(Me^.tc_SPUpper) - PtrUInt(Me^.tc_SPLower)), // stack size same as myself]
+          [NP_StackSize, Abs(PtrInt(PtrUInt(Me^.tc_SPUpper) - PtrUInt(Me^.tc_SPLower))), // stack size same as myself]
           TAG_END]
         );
         LastStart := GetTickCount;
@@ -2259,7 +2259,7 @@ begin
   MI.Parent := Menu;
 
   MI := TMUIMenuItem.Create;
-  MI.Title := 'Play list';//GetLocString(MSG_MENU_DOWNLOADLIST);  // Play list
+  MI.Title := GetLocString(MSG_MENU_PLAYLIST);  // Play list
   MI.OnTrigger := @ShowPlayList;
   MI.Parent := Menu;
 

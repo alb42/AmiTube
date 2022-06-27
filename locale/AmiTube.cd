@@ -37,6 +37,9 @@ Q
 MSG_MENU_DOWNLOADLIST (10007//)
 Download list
 ;
+MSG_MENU_PLAYLIST (10008//)
+Play list
+;
 MSG_MENU_SETTINGS (11000//)
 Settings
 ;
@@ -141,6 +144,36 @@ Remove
 ;
 MSG_GUI_LISTSTATUS (20026//)
 Status
+;
+MSG_GUI_RANDOM (20027//)
+Random
+;
+MSG_GUI_LOOPLIST (20028//)
+Loop List
+;
+MSG_GUI_SHOWWAITSCREEN (20029//)
+Show wait screen
+;
+MSG_GUI_WAITTIME (20030//)
+Wait time between movies
+;
+MSG_GUI_PREVIEWWAIT (20031//)
+Preview image on wait screen
+;
+MSG_GUI_SHUFFLELIST (20032//)
+Shuffle list
+;
+MSG_GUI_NEXTVIDEO (20033//)
+Next video:
+;
+MSG_GUI_STARTSIN (20034//)
+starts in
+;
+MSG_GUI_STOPSKIP (20035//)
+Press 'Esc' to stop, 'Space' to start now.
+;
+MSG_GUI_STARTPLAYLIST (20036//)
+Play List
 ;
 ; ### Status
 MSG_STATUS_IDLE (30000//)

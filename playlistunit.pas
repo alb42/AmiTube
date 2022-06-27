@@ -24,6 +24,9 @@ type
 
     procedure PlayClick(Sender: TObject);
 
+    procedure ShuffleClick(Sender: TObject);
+    procedure RemoveClick(Sender: TObject);
+
     function ShowNextMovie(Res: TResultEntry): Boolean;
   public
     FMovieLock: BPTR;
@@ -34,7 +37,7 @@ type
     ChoosePreview: TMUICheckmark;
     WaitEdit: TMUIString;
     List: TMUIListView;
-    PlayButton, ShuffleButton: TMUIButton;
+    PlayButton, ShuffleButton, RemoveButton: TMUIButton;
     constructor Create; override;
     destructor Destroy; override;
 
@@ -196,7 +199,7 @@ begin
     Param := Prefs.PlayerParam;
     Param := StringReplace(Param, '%f', '"' + Filename + '"', [rfReplaceAll]);
     MySystem(Prefs.PlayerPath + ' ' + Param,
-      [NP_StackSize, Abs(PtrUInt(Me^.tc_SPUpper) - PtrUInt(Me^.tc_SPLower)), // stack size same as myself]
+      [NP_StackSize, Abs(PtrInt(PtrUInt(Me^.tc_SPUpper) - PtrUInt(Me^.tc_SPLower))), // stack size same as myself]
       TAG_END]
     );
     //LastStart := GetTickCount;
@@ -207,7 +210,7 @@ begin
     Param := Prefs.MPEGPlayerParam;
     Param := StringReplace(Param, '%f', '"' + Filename + '"', [rfReplaceAll]);
     MySystem(Prefs.MPEGPlayerPath + ' ' + Param,
-      [NP_StackSize, Abs(PtrUInt(Me^.tc_SPUpper) - PtrUInt(Me^.tc_SPLower)), // stack size same as myself]
+      [NP_StackSize, Abs(PtrInt(PtrUInt(Me^.tc_SPUpper) - PtrUInt(Me^.tc_SPLower))), // stack size same as myself]
       TAG_END]
     );
     //LastStart := GetTickCount;
@@ -225,6 +228,8 @@ var
 begin
   First := True;
   ShowAnnoucement := ChooseAnnounce.Selected;
+  TempList := [];
+  LList := [];
   // play all Files
   if List.List.Entries = 0 then
     Exit;
@@ -234,7 +239,7 @@ begin
     Count := 0;
     repeat
       if ChooseRandom.Selected then
-        Idx := StrToIntDef(PChar(List.List.GetEntry(Random(List.List.Entries))), -1)
+        Idx := StrToIntDef(PChar(List.List.GetEntry(System.Random(List.List.Entries))), -1)
       else
       begin
         if Count >= List.List.Entries then
@@ -268,8 +273,8 @@ begin
         TempList[i] := i;
       for i := 0 to High(LList) do
       begin
-        Idx := Random(Length(TempList));
-        LList[i] := Idx;
+        Idx := System.Random(Length(TempList));
+        LList[i] := TempList[Idx];
         Delete(TempList, Idx, 1);
       end;
     end
@@ -297,6 +302,55 @@ begin
       end;
       //writeln('idx = ', idx);
     end;
+  end;
+end;
+
+procedure TPlaylistWin.ShuffleClick(Sender: TObject);
+var
+  TempList: array of Integer;
+  i, Idx, NumEntries: Integer;
+begin
+  TempList := [];
+  NumEntries := List.List.Entries;
+  SetLength(TempList, NumEntries);
+  for i := 0 to NumEntries - 1 do
+    TempList[i] := i;
+  List.List.Quiet := True;
+  List.List.Clear;
+  SetLength(EntryArray, NumEntries);
+  for i := 0 to NumEntries - 1 do
+  begin
+    Idx := System.Random(Length(TempList));
+    EntryArray[i] := IntToStr(TempList[Idx]);
+    List.list.InsertSingle(PChar(EntryArray[i]), i);
+    Delete(TempList, Idx, 1);
+  end;
+  List.List.Quiet := False;
+
+end;
+
+procedure TPlaylistWin.RemoveClick(Sender: TObject);
+var
+  ListIdx, Idx, i: Integer;
+begin
+  ListIdx := List.List.Active;
+  if InRange(ListIdx, 0, PlayEntries.Count - 1) then
+  begin
+    Idx := StrToIntDef(EntryArray[ListIdx], -1);
+    if not InRange(Idx, 0, PlayEntries.Count - 1) then
+      Exit;
+    PlayEntries.Delete(Idx);
+    Delete(EntryArray, ListIdx, 1);
+    //
+    List.List.Quiet := True;
+    List.List.Clear;
+    SetLength(EntryArray, PlayEntries.Count);
+    for i := 0 to PlayEntries.Count - 1 do
+    begin
+      EntryArray[i] := IntToStr(i);
+      List.List.InsertSingle(PChar(EntryArray[i]), i);
+    end;
+    List.List.Quiet := False;
   end;
 end;
 
@@ -342,7 +396,7 @@ begin
   SetRast(WD^.RPort, 0);
 
   SetAPen(WD^.RPort, 1);
-  s := 'Next Video:';
+  s := GetLocString(MSG_GUI_NEXTVIDEO); //'Next Video:'
   tl := TextLength(WD^.RPort, PChar(s), Length(s));
   y := SC^.Height div 2;
   GfxMove(WD^.RPort, SC^.width  div 2 - tl div 2, y);
@@ -354,7 +408,7 @@ begin
   GfxMove(WD^.RPort, SC^.width  div 2 - tl div 2, y);
   GfxText(WD^.RPort, PChar(s), Length(s));
 
-  s := 'starts in ';
+  s := GetLocString(MSG_GUI_STARTSIN) + ' ' ; //'starts in ';
   tl := TextLength(WD^.RPort, PChar(s), Length(s));
   y := y + 11;
   GfxMove(WD^.RPort, SC^.width  div 2 - tl div 2, y);
@@ -364,7 +418,7 @@ begin
   sx := SC^.width  div 2 - tl div 2 + tl;
   sy := y;
 
-  s := 'Press ''Esc'' to stop, ''Space'' to start now.';
+  s := GetLocString(MSG_GUI_STOPSKIP); // 'Press ''Esc'' to stop, ''Space'' to start now.';
   tl := TextLength(WD^.RPort, PChar(s), Length(s));
   y := y + 22;
   GfxMove(WD^.RPort, SC^.width  div 2 - tl div 2, y);
@@ -466,6 +520,7 @@ var
   Grp: TMUIGroup;
 begin
   inherited Create;
+  Title := GetLocString(MSG_MENU_PLAYLIST);
   Horizontal := True;
   PlayEntries := TResultEntries.Create(True);
 
@@ -482,7 +537,7 @@ begin
   List.List := TMUIList.Create;
   with List do
   begin
-    HelpNode := 'List';
+    //HelpNode := 'List';
     Input := True;
     ShowMe := False;
     DragType := MUIV_Listview_DragType_Immediate;
@@ -495,7 +550,7 @@ begin
   with Grp do
   begin
     Columns := 2;
-    Title := 'Settings';
+    FrameTitle := GetLocString(MSG_PREFS_WINDOW);
     Parent := Self;
   end;
 
@@ -505,7 +560,7 @@ begin
   begin
     Parent := Grp;
   end;
-  with TMUIText.Create('Random') do
+  with TMUIText.Create(GetLocString(MSG_GUI_RANDOM)) do
   begin
     Frame := MUIV_Frame_None;
     Parent := Grp;
@@ -516,7 +571,7 @@ begin
   begin
     Parent := Grp;
   end;
-  with TMUIText.Create('Loop List') do
+  with TMUIText.Create(GetLocString(MSG_GUI_LOOPLIST)) do
   begin
     Frame := MUIV_Frame_None;
     Parent := Grp;
@@ -527,7 +582,7 @@ begin
   begin
     Parent := Grp;
   end;
-  with TMUIText.Create('Show wait screen') do
+  with TMUIText.Create(GetLocString(MSG_GUI_SHOWWAITSCREEN)) do
   begin
     Frame := MUIV_Frame_None;
     Parent := Grp;
@@ -539,7 +594,7 @@ begin
     IntegerValue := 5;
     Parent := Grp;
   end;
-  with TMUIText.Create('Wait time between movies') do
+  with TMUIText.Create(GetLocString(MSG_GUI_WAITTIME)) do
   begin
     Frame := MUIV_Frame_None;
     Parent := Grp;
@@ -550,7 +605,7 @@ begin
   begin
     Parent := Grp;
   end;
-  with TMUIText.Create('Show Preview in wait screen') do
+  with TMUIText.Create(GetLocString(MSG_GUI_PREVIEWWAIT)) do
   begin
     Frame := MUIV_Frame_None;
     Parent := Grp;
@@ -558,22 +613,25 @@ begin
 
   TMUIRectangle.Create.Parent := Grp;
 
-  ShuffleButton := TMUIButton.Create('Shuffle');
+  TMUIRectangle.Create.Parent := Grp;
+
+  TMUIRectangle.Create.Parent := Grp;
+
+  RemoveButton := TMUIButton.Create(GetLocString(MSG_GUI_REMOVE));
+  RemoveButton.Parent := Grp;
+  RemoveButton.OnClick := @RemoveClick;
+
+  TMUIRectangle.Create.Parent := Grp;
+
+  ShuffleButton := TMUIButton.Create(GetLocString(MSG_GUI_SHUFFLELIST));
   ShuffleButton.Parent := Grp;
-  //ShuffleButton.OnClick := @PlayClick;
+  ShuffleButton.OnClick := @ShuffleClick;
 
   TMUIRectangle.Create.Parent := Grp;
 
-  TMUIRectangle.Create.Parent := Grp;
-
-  TMUIRectangle.Create.Parent := Grp;
-
-  PlayButton := TMUIButton.Create('Play');
+  PlayButton := TMUIButton.Create(GetLocString(MSG_GUI_STARTPLAYLIST));
   PlayButton.Parent := Grp;
   PlayButton.OnClick := @PlayClick;
-
-
-
 end;
 
 destructor TPlaylistWin.Destroy;
