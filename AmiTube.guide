@@ -619,6 +619,10 @@ commands:
 History
 -------
 
+1.2
+- Bugfix for fancy list test printing
+- play list with wait screen
+
 1.1
 - italian catalog update
 - french catalog update

@@ -81,7 +81,7 @@ begin
       if not ((ExtractFileExt(FI.fib_FileName) = '.mpeg') or (ExtractFileExt(FI.fib_FileName) = '.cdxl')) then
         Continue;
       //
-      Filename := IncludeTrailingPathDelimiter(Movies) + FI.fib_FileName;
+      Filename := IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + FI.fib_FileName;
       TxtFilename := ChangeFileExt(FileName, '.txt');
       if FileExists(TXTFilename) then
       begin

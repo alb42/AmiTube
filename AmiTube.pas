@@ -26,8 +26,6 @@ const
 
   UpdateURL = 'http://amitube.alb42.de/amitubeversion'; // check for update always the same, even with 3rd party server
 
-  MovieTemplateFolder = 'movies'; // default Progdir:movies to save the videos
-
 const
   // Version info for Amiga
   VERSION = '$VER: AmiTube 1.2 beta (24.06.2022)';
@@ -68,6 +66,7 @@ type
     StatText: TMUIText;
     ListClickTimer: TMUITimer;
     FancyList: TFancyList;
+    MDMenu: TMUIMenuItem;
     procedure SearchEntry(Sender: TObject);
     procedure ClickHistory(Sender: TObject);
     procedure EndThread(Sender: TObject);
@@ -113,7 +112,10 @@ type
     procedure DrawIcon(Sender: TObject; RP: PRastPort; ARect: TRect);
     //
     function RexxEvent(Sender: TObject; Msg: string; out ReturnMessage: string): LongInt;
+    //
+    procedure ChangeMovieDir(Sender: TObject);
   private
+    LastWasLocal: Boolean;
     PlayFormat: Integer;
     DTObj: PObject_;
     IconName: string;
@@ -283,11 +285,15 @@ begin
         List.Cells[3, i] := IntToStr(t) + ' kB '
     end;
     List.Quiet := False;
+    List.List.Active := 0;
     FancyList.UpdateList;
+    FancyList.ItemIndex := 0;
     SearchField.Contents := '';
+    ListClick(nil);
   end;
   SearchField.Disabled := False;
   SharedMenu.Enabled := True;
+  LastWasLocal := False;
 end;
 
 
@@ -336,10 +342,10 @@ begin
     TextOut.Text := ResultEntries[ItemIndex].Desc; // show desc
     // check if movie already exists in movies dir
     PlayFormat := 0;
-    if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[ItemIndex].ID + '.mpeg') then
+    if FileExists(IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + ResultEntries[ItemIndex].ID + '.mpeg') then
       PlayFormat := 2
     else
-      if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[ItemIndex].ID + '.cdxl') then
+      if FileExists(IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + ResultEntries[ItemIndex].ID + '.cdxl') then
         PlayFormat := 1;
     // enable download or play buttons
     EnableDownloads(PlayFormat = 0, PlayFormat > 0);
@@ -538,7 +544,7 @@ begin
     end;
     // nothing selected in Filedialog, then create Filename and path
     if NewName = '' then
-      NewName := IncludeTrailingPathDelimiter(Movies) + ResultEntries[ItemIndex].ID + Ext;
+      NewName := IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + ResultEntries[ItemIndex].ID + Ext;
     // check if we have enough memory
     UpdateFreeMem;
     if FileSize > OldFreeAmount then
@@ -615,7 +621,7 @@ begin
     // special case for mpeg
     if PlayFormat = 2 then
     begin
-      MovieName := IncludeTrailingPathDelimiter(Movies) + MyID + '.mpeg';
+      MovieName := IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + MyID + '.mpeg';
       if FileExists(MovieName) then
       begin
         Param := Prefs.MPEGPlayerParam;
@@ -630,7 +636,7 @@ begin
     end
     else
     begin // all other is CDXL
-      MovieName := IncludeTrailingPathDelimiter(Movies) + MyID + '.cdxl';
+      MovieName := IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + MyID + '.cdxl';
       if FileExists(MovieName) then
       begin
         Param := Prefs.PlayerParam;
@@ -656,10 +662,10 @@ begin
   if (ItemIndex >= 0) and (ItemIndex < ResultEntries.Count) then
   begin
     MyID := ResultEntries[ItemIndex].ID;
-    MovieName := IncludeTrailingPathDelimiter(Movies) + MyID + '.cdxl';
-    MPEGName := IncludeTrailingPathDelimiter(Movies) + MyID + '.mpeg';
-    ReadmeName := IncludeTrailingPathDelimiter(Movies) + MyID + '.txt';
-    ImageName := IncludeTrailingPathDelimiter(Movies) + MyID + '.jpg';
+    MovieName := IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + MyID + '.cdxl';
+    MPEGName := IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + MyID + '.mpeg';
+    ReadmeName := IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + MyID + '.txt';
+    ImageName := IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + MyID + '.jpg';
     // ask use if it is ok?
     if MessageBox(GetLocString(MSG_GUI_DELETE), GetLocString(MSG_GUI_DELETE)+ #10' "' + List.Cells[1, ItemIndex] + '"?' , [GetLocString(MSG_GUI_YES), GetLocString(MSG_GUI_NO)]) = 1 then
     begin
@@ -733,7 +739,7 @@ begin
       if not ((ExtractFileExt(FI.fib_FileName) = '.mpeg') or (ExtractFileExt(FI.fib_FileName) = '.cdxl')) then
         Continue;
       //
-      Filename := IncludeTrailingPathDelimiter(Movies) + FI.fib_FileName;
+      Filename := IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + FI.fib_FileName;
       TxtFilename := ChangeFileExt(FileName, '.txt');
       if FileExists(TXTFilename) then
       begin
@@ -794,6 +800,11 @@ begin
   else
     ShowMessage(GetLocString(MSG_ERROR_LOCAL));  // nothing found
   FancyList.UpdateList;
+  List.List.Active := 0;
+  FancyList.UpdateList;
+  FancyList.ItemIndex := 0;
+  ListClick(nil);
+  LastWasLocal := True;
   SL.Free;
 end;
 
@@ -1132,17 +1143,17 @@ begin
     // form url
     URL := IconURL + ResultEntries[ItemIndex].ID;
     // check if there is already a image file
-    if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[ItemIndex].ID + '.jpg') then
+    if FileExists(IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + ResultEntries[ItemIndex].ID + '.jpg') then
     begin
-      Filename := IncludeTrailingPathDelimiter(Movies) + ResultEntries[ItemIndex].ID + '.jpg';
+      Filename := IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + ResultEntries[ItemIndex].ID + '.jpg';
       IconName := '';
     end
     else
     begin
       // not existing, but video is saved on the HD -> save the jpeg along with it
-      if FileExists(IncludeTrailingPathDelimiter(Movies) + ResultEntries[ItemIndex].ID + '.txt') then
+      if FileExists(IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + ResultEntries[ItemIndex].ID + '.txt') then
       begin
-        Filename := IncludeTrailingPathDelimiter(Movies) + ResultEntries[ItemIndex].ID + '.jpg';
+        Filename := IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + ResultEntries[ItemIndex].ID + '.jpg';
         IconName := '';
       end
       else
@@ -1288,9 +1299,9 @@ begin
   // check if already on the HD
   //
   if FormatID = 2 then
-    FileName := IncludeTrailingPathDelimiter(Movies) + AID + '.mpeg'
+    FileName := IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + AID + '.mpeg'
   else
-    FileName := IncludeTrailingPathDelimiter(Movies) + AID + '.cdxl';
+    FileName := IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + AID + '.cdxl';
   if FileExists(Filename) then
   begin
     // todo: Play
@@ -1428,6 +1439,34 @@ begin
     end;
   finally
     SL.Free;
+  end;
+end;
+
+procedure TMainWindow.ChangeMovieDir(Sender: TObject);
+var
+  Idx, i: Integer;
+  NDir: string;
+  NewLock: BPTR;
+begin
+  if Sender is TMUIMenuItem then
+  begin
+    Idx := (Sender as TMUIMenuItem).Tag;
+    if InRange(Idx, 0, MovieDirList.Count - 1) then
+    begin
+      NDir := MovieDirList[Idx];
+      NewLock := Lock(PChar(NDir), SHARED_LOCK);
+      if NewLock <> 0 then
+      begin
+        MovieDirList.ItemIndex := Idx;
+        for i := 0 to MDMenu.Childs.Count - 1 do
+          TMUIMenuItem(MDMenu.Childs[i]).Checked := Idx = i;
+        UnLock(MovieLock);
+        MovieLock := NewLock;
+        //
+        if LastWasLocal then
+          LoadLocalFiles(nil);
+      end;
+    end;
   end;
 end;
 
@@ -1913,6 +1952,8 @@ var
   DObj: PDiskObject;
   TextView: TMUIListView;
   SB: TMUIScrollGroup;
+  Movies: string;
+  Idx: Integer;
 begin
   inherited Create;
   //
@@ -1935,8 +1976,6 @@ begin
   //
   // titla of window, just use the version/name
   Title := ShortVer;
-  // default movies dir just in the same folder as the executable
-  Movies := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + MovieTemplateFolder;
   // by default no convert server
   BaseServer := '';
   // get the icon
@@ -1944,10 +1983,23 @@ begin
   if Assigned(DObj) then
   begin
     // get movies dir
-    Movies := ExcludeTrailingPathDelimiter(GetStrToolType(DObj, 'MOVIEDIR', Movies));
-    // bugfix, check if it exists, if not just use the default
-    if not DirectoryExists(Movies) then
-      Movies := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + MovieTemplateFolder;
+    Movies := ExcludeTrailingPathDelimiter(GetStrToolType(DObj, 'MOVIEDIR', ''));
+    // check if it exists
+    if (Movies <> '') and DirectoryExists(Movies) then
+      MovieDirList.add(Movies)
+    else
+      MovieDirList.add(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + MovieTemplateFolder);
+    Idx := 1;
+    repeat
+      Movies := ExcludeTrailingPathDelimiter(GetStrToolType(DObj, 'MOVIEDIR' + IntToStr(Idx), ''));
+      if Movies = '' then
+        Break;
+      Inc(Idx);
+      // check if it exists
+      if (Movies <> '') and DirectoryExists(Movies) then
+        MovieDirList.add(Movies);
+    until False;
+    MovieDirList.ItemIndex := 0;
     // if there is a BsaseServer given use that, no check is done
     // later Version number of Server should be checked?
     BaseServer := GetStrToolType(DObj, 'SERVERURL', '');
@@ -1967,6 +2019,7 @@ begin
     BaseServer := ''; // nothing to do just use the default URLs
   //
   // if movies not exist, create it
+  Movies := MovieDirList.MovieDir;
   if not DirectoryExists(Movies) then
     CreateDir(Movies);
   //
@@ -2252,6 +2305,31 @@ begin
   MI := TMUIMenuItem.Create;
   MI.Title := '-';
   MI.Parent := Menu;
+
+  if MovieDirList.Count > 1 then
+  begin
+    MI := TMUIMenuItem.Create;
+    MI.Title := 'Default movie dir';//GetLocString(MSG_MENU_SHARED); //'Remote Shared';
+    MI.Parent := Menu;
+    MDMenu := MI;
+
+    for i := 0 to MovieDirList.Count - 1 do
+    begin
+      MI := TMUIMenuItem.Create;
+      MI.Title := MovieDirList[i];
+      MI.Toggle := False;
+      MI.Checkit := True;
+      MI.Checked := MovieDirList.ItemIndex = i;
+      MI.OnTrigger := @ChangeMovieDir;
+
+      MI.Tag := i;
+      MI.Parent := MDMenu;
+    end;
+
+    MI := TMUIMenuItem.Create;
+    MI.Title := '-';
+    MI.Parent := Menu;
+  end;
 
   MI := TMUIMenuItem.Create;
   MI.Title := GetLocString(MSG_MENU_DOWNLOADLIST);  // Download list

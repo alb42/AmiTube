@@ -5,13 +5,24 @@ unit resolutionselunit;
 interface
 
 uses
-  Classes, Sysutils, fgl, Exec, AmigaDos, Utility, DataTypes, Intuition,
-  AGraphics, SyncObjs,
+  Sysutils, fgl, Exec, AmigaDos, Utility, DataTypes, Intuition,
+  AGraphics, SyncObjs, Classes, Math,
   MUIClass.Base, MUIClass.Dialog,
   MUIClass.StringGrid, MUIClass.Window, MUIClass.Group, MUIClass.Area;
 
+const
+  MovieTemplateFolder = 'movies'; // default Progdir:movies to save the videos
+
 type
-  {a result entry}
+  TMovieDirList = class(TStringList)
+  private
+    FItemIndex: Integer;
+    procedure SetItemIndex(AValue: Integer);
+    function GetMovieDir: string;
+  public
+    property ItemIndex: Integer read FItemIndex write SetItemIndex;
+    property MovieDir: string read GetMovieDir;
+  end;
 
   { TResultEntry }
 
@@ -88,19 +99,32 @@ type
 var
   ResWin: TResWindow;
   LastDir: string = 'Ram:'; // for all file requesters
-  Movies: string;
+  MovieDirList: TMovieDirList;
 
-function MySystem(Name: string; const Tags: array of NativeUInt): LongInt; inline;
+function MySystem(Name: string; const Tags: array of NativeUInt): LongInt;
 
 implementation
 
 uses
   prefsunit, AmiTubeLocale, FileDownloadUnit, SearchthreadUnit;
 
+procedure TMovieDirList.SetItemIndex(AValue: Integer);
+begin
+  FItemIndex := EnsureRange(AValue, -1, Count - 1);
+end;
+
+function TMovieDirList.GetMovieDir: string;
+begin
+  if (Count = 0) or not InRange(FItemIndex, 0, Count - 1) then
+    Result := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + MovieTemplateFolder
+  else
+    Result := Self.Strings[ItemIndex];
+end;
+
 { TResWindow }
 
 {System taglist overload does not exists for all systems?... ah we just create it}
-function MySystem(Name: string; const Tags: array of NativeUInt): LongInt; inline;
+function MySystem(Name: string; const Tags: array of NativeUInt): LongInt;
 begin
   Result := AmigaDos.DosSystem(PChar(Name), @Tags[0]);
 end;
@@ -136,17 +160,17 @@ begin
       DTObj := nil;
       URL := IconURL + ID;
       // check if there is already a image file
-      if FileExists(IncludeTrailingPathDelimiter(Movies) + ID + '.jpg') then
+      if FileExists(IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + ID + '.jpg') then
       begin
-        Filename := IncludeTrailingPathDelimiter(Movies) + ID + '.jpg';
+        Filename := IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + ID + '.jpg';
         IconName := '';
       end
       else
       begin
         // not existing, but video is saved on the HD -> save the jpeg along with it
-        if FileExists(IncludeTrailingPathDelimiter(Movies) + ID + '.txt') then
+        if FileExists(IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + ID + '.txt') then
         begin
-          Filename := IncludeTrailingPathDelimiter(Movies) + ID + '.jpg';
+          Filename := IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + ID + '.jpg';
           IconName := '';
         end
         else
@@ -514,6 +538,12 @@ begin
   // show to User
   Self.Show;
 end;
+
+initialization
+  MovieDirList := TMovieDirList.Create;
+  MovieDirList.ItemIndex := -1;
+
+finalization
 
 end.
 
