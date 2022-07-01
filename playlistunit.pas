@@ -466,7 +466,7 @@ begin
 
 
   LastTime := 0;
-  EndTime := GetTickCount + Max(1, WaitEdit.IntegerValue) * 1000;
+  EndTime := GetTickCount + LongWord(Max(1, WaitEdit.IntegerValue) * 1000);
   repeat
     T1 := GetTickCount;
     if T1 >= EndTime then
@@ -523,7 +523,7 @@ begin
     FD.Directory := ExtractFilePath(ParamStr(0));
     if FD.Execute then
     begin
-      L := Lock(FD.Directory, SHARED_LOCK);
+      L := Lock(PChar(FD.Directory), SHARED_LOCK);
       if L <> BPTR(0) then
       begin
         LoadFiles(L);
