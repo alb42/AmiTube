@@ -1119,9 +1119,18 @@ end;
 { event when close main window -> save settings }
 procedure TMainWindow.CloseWindow(Sender: TObject; var CloseAction: TCloseAction);
 begin
-  Unused(Sender);
-  Unused(CloseAction);
-  Prefs.SaveSettings;
+  if MessageBox(GetLocString(MSG_GUI_CLOSEREQ), GetLocString(MSG_GUI_CLOSEREQ), [GetLocString(MSG_GUI_YES), GetLocString(MSG_GUI_NO)]) = 0 then
+    CloseAction := caNone
+  else
+  begin
+    if List.ShowMe then
+      Prefs.SplitterPos := Round(List.Width / Width) * 2 * 100
+    else
+      Prefs.SplitterPos := Round(FancyList.Width / Width) * 2 * 100;
+    CloseAction := caClose;
+    Unused(Sender);
+    Prefs.SaveSettings;
+  end;
 end;
 
 { Load the icon }
@@ -1455,7 +1464,7 @@ begin
     begin
       NDir := MovieDirList[Idx];
       NewLock := Lock(PChar(NDir), SHARED_LOCK);
-      if NewLock <> 0 then
+      if NewLock <> BPTR(0) then
       begin
         MovieDirList.ItemIndex := Idx;
         for i := 0 to MDMenu.Childs.Count - 1 do
@@ -2155,6 +2164,7 @@ begin
     ObjectID := MAKE_ID('s','p','l','t');
     Parent := Grp1;
   end;
+
   //
 
   SB := TMUIScrollGroup.Create;
@@ -2309,7 +2319,7 @@ begin
   if MovieDirList.Count > 1 then
   begin
     MI := TMUIMenuItem.Create;
-    MI.Title := 'Default movie dir';//GetLocString(MSG_MENU_SHARED); //'Remote Shared';
+    MI.Title := GetLocString(MSG_MENU_MOVIEDIR); //'Default movie dir';
     MI.Parent := Menu;
     MDMenu := MI;
 
@@ -2495,6 +2505,8 @@ begin
   Prefs.OnFormatChanged(nil);
   Prefs.OnFancyListChange := @Main.FancyListChanged;
   Prefs.OnFancyListChange(nil);
+  Main.List.Weight := Prefs.SplitterPos;
+  Main.FancyList.Weight := Prefs.SplitterPos;
   DownloadListWin.OnDownloadStart := @Main.TryCThread;
   MUIApp.Title := ShortVer;
   MUIApp.Version := VERSION;

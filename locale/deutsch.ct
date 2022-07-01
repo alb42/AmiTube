@@ -53,6 +53,14 @@ MSG_MENU_PLAYLIST
 Abspielliste
 ; Play list
 ;
+MSG_MENU_MOVIEDIR
+Standard Filmverzeichnis
+; Default movie dir
+;
+MSG_MENU_OPENFOLDER
+Öffne Ordner ...
+; Open Folder ...
+;
 MSG_MENU_SETTINGS
 Einstellungen
 ; Settings
@@ -231,7 +239,11 @@ Drücke 'Esc' zum stoppen, 'Leertaste' um sofort zu starten.
 ;
 MSG_GUI_STARTPLAYLIST
 Starte Abspielliste
-; Play List
+; Start Play List
+;
+MSG_GUI_CLOSEREQ
+AmiTube schließen?
+; Close AmiTube?
 ;
 ; ### Status
 MSG_STATUS_IDLE

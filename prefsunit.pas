@@ -37,9 +37,11 @@ type
     procedure ChooseURLPlayerClick(Sender: TObject);
     procedure ChooseWGetClick(Sender: TObject);
     function GetFancyList: Boolean;
+    function GetSplitterPos: Integer;
     procedure NumEditACK(Sender: TObject);
     procedure MaxLenACK(Sender: TObject);
     procedure FormatChanged(Sender: TObject);
+    procedure SetSplitterPos(AValue: Integer);
     procedure StartupChanged(Sender: TObject);
     procedure AutoChange(Sender: TObject);
     procedure ClipChange(Sender: TObject);
@@ -94,6 +96,9 @@ type
     property AllFormats: Boolean read GetAllFormats;
     property MaxTitleLen: Integer read GetMaxTitleLen;
     property FancyList: Boolean read GetFancyList;
+    //
+    property SplitterPos: Integer read GetSplitterPos write SetSplitterPos;
+
     //
     property OnFormatChanged: TNotifyEvent read FOnFormatChanged write FOnFormatChanged;
     property OnClipChanged: TNotifyEvent read FOnClipChanged write FOnClipChanged;
@@ -231,6 +236,11 @@ begin
   Result := ChooseFancyList.Selected;
 end;
 
+function TPrefsWindow.GetSplitterPos: Integer;
+begin
+  Result := Ini.ReadInteger('Genral', 'Splitter', 100);
+end;
+
 function TPrefsWindow.GetPlayerPath: string;
 begin
   Result := PlayerEdit.Contents;
@@ -347,6 +357,11 @@ begin
   Ini.WriteInteger('General', 'Format', ChooseFormat.Active);
   if Assigned(FOnFormatChanged) then
     FOnFormatChanged(Self)
+end;
+
+procedure TPrefsWindow.SetSplitterPos(AValue: Integer);
+begin
+  Ini.WriteInteger('Genral', 'Splitter', AValue);
 end;
 
 procedure TPrefsWindow.StartupChanged(Sender: TObject);

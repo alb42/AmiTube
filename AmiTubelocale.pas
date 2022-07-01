@@ -42,6 +42,12 @@ const
   MSG_MENU_PLAYLIST = 10008 ;
   MSG_MENU_PLAYLIST_STR = 'Play list'#0;
 
+  MSG_MENU_MOVIEDIR = 10009 ;
+  MSG_MENU_MOVIEDIR_STR = 'Default movie dir'#0;
+
+  MSG_MENU_OPENFOLDER = 10010 ;
+  MSG_MENU_OPENFOLDER_STR = 'Open Folder ...'#0;
+
   MSG_MENU_SETTINGS = 11000 ;
   MSG_MENU_SETTINGS_STR = 'Settings'#0;
 
@@ -175,7 +181,10 @@ const
   MSG_GUI_STOPSKIP_STR = 'Press ''Esc'' to stop, ''Space'' to start now.'#0;
 
   MSG_GUI_STARTPLAYLIST = 20036 ;
-  MSG_GUI_STARTPLAYLIST_STR = 'Play List'#0;
+  MSG_GUI_STARTPLAYLIST_STR = 'Start Play List'#0;
+
+  MSG_GUI_CLOSEREQ = 20037 ;
+  MSG_GUI_CLOSEREQ_STR = 'Close AmiTube?'#0;
 
   MSG_STATUS_IDLE = 30000 ;
   MSG_STATUS_IDLE_STR = 'Idle'#0;
@@ -322,7 +331,7 @@ type
      str: string;
   end;
 
-  TAppStringArray = array[0..96] of TAppString;
+  TAppStringArray = array[0..99] of TAppString;
 
 const
   AppStrings: TAppStringArray = (
@@ -335,6 +344,8 @@ const
     (id: MSG_MENU_MAIN_QUIT_KEY ; str: MSG_MENU_MAIN_QUIT_KEY_STR ),
     (id: MSG_MENU_DOWNLOADLIST ; str: MSG_MENU_DOWNLOADLIST_STR ),
     (id: MSG_MENU_PLAYLIST ; str: MSG_MENU_PLAYLIST_STR ),
+    (id: MSG_MENU_MOVIEDIR ; str: MSG_MENU_MOVIEDIR_STR ),
+    (id: MSG_MENU_OPENFOLDER ; str: MSG_MENU_OPENFOLDER_STR ),
     (id: MSG_MENU_SETTINGS ; str: MSG_MENU_SETTINGS_STR ),
     (id: MSG_MENU_PREFS ; str: MSG_MENU_PREFS_STR ),
     (id: MSG_MENU_PREFS_KEY ; str: MSG_MENU_PREFS_KEY_STR ),
@@ -380,6 +391,7 @@ const
     (id: MSG_GUI_STARTSIN ; str: MSG_GUI_STARTSIN_STR ),
     (id: MSG_GUI_STOPSKIP ; str: MSG_GUI_STOPSKIP_STR ),
     (id: MSG_GUI_STARTPLAYLIST ; str: MSG_GUI_STARTPLAYLIST_STR ),
+    (id: MSG_GUI_CLOSEREQ ; str: MSG_GUI_CLOSEREQ_STR ),
     (id: MSG_STATUS_IDLE ; str: MSG_STATUS_IDLE_STR ),
     (id: MSG_STATUS_SHARED ; str: MSG_STATUS_SHARED_STR ),
     (id: MSG_STATUS_PREPSEARCH ; str: MSG_STATUS_PREPSEARCH_STR ),

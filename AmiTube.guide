@@ -453,6 +453,56 @@ List
 
 @ENDNODE
 
+@NODE PlayList "Play List Window"
+
+Play List Window
+--------------------
+
+The window contains play list capability, meaning automatically
+play the movies in the list.
+As player for the movies the CDXL Player and MPEG Player from the
+prefs are used. Of course, this works best if the Player automatically
+starts the movie and ends once the movie is finished (like AGABlaster
+for CDXL or RiVA for MPEG).
+When the window is open the default movie directory contents is loaded.
+One can sort the movies in the list by click'n'dragging. 
+On the right of the window are settings for the automatic playing.
+
+Random
+  Play the list in a random order
+
+Loop List
+  Play the whole list in a loop,
+  WARNING: you should really use "Show Wait screen" with this
+  setting, or you are not be able to stop the play list
+
+Show wait screen
+  Shows a little wait screen between the movies gives you the opportunity
+  to stop the play list using 'ESC'
+  WARNING: if you disable this you are not able to stop the playing
+  of the list until all movies are played.
+
+Wait time between movies
+  Time the wait screen is shown between movies (you can skip that wait
+  time on the screen by pressing 'Space')
+
+Preview image on wait Screen
+  Shows the preview image on the wait screen. Only if the preview image
+  is already downloaded to harddisk
+
+Remove
+  Remove the selected entry from list (will be only deteled from the play
+  list, not from hard disk)
+
+Shuffle
+  Shuffle play list
+
+Start Play list
+  Start the current play list.
+
+
+@ENDNODE
+
 @NODE AmiTubeServer "AmiTube Conversation Server"
 
 Custom AmiTube Conversation Server
@@ -492,8 +542,16 @@ Local Files
 Remote Shared
   Load the online shared list of videos.
 
+Default Movie Directory
+  If more than one movie directory is available select the default
+  directory with this menu. Local Files will load from this
+  directory and a new downloaded movie will be placed there.
+
 Download List
   Show the @{"download list" LINK DownloadList}
+
+Play List
+  Show the @{"play list" LINK PlayList}
 
 Quit
   End the program
@@ -557,7 +615,7 @@ Thanks to all users and beta testers.
 
 Some special thanks and greetings go to
 
-For initial idea and stead encouragement
+For initial idea and steady encouragement
   Michal Bergseth (http://www.amitopia.com)
 
 For the translations:
@@ -577,7 +635,6 @@ For AGAConv and AGABlaster
 For Free Pascal on Amiga-Systems
   Karoly 'ChainQ' Balogh
   Florian Klaempfl
-
 
 @ENDNODE
 
@@ -622,6 +679,11 @@ History
 1.2
 - Bugfix for fancy list test printing
 - play list with wait screen
+- open own directories with movies in play list
+- Close Requester
+- Restore splitter position on start
+- multiple movie directories via icon
+- choose default directory via menu
 
 1.1
 - italian catalog update

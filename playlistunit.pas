@@ -8,6 +8,7 @@ uses
   Classes, SysUtils, Exec, AmigaDos, MUI, Math, Utility, Intuition, AGraphics,
   MUIClass.Base, MUIClass.Area, MUIClass.Image, MUIClass.Gadget,
   MUIClass.List, MUIClass.Window, MUIClass.Group, MUIClass.Dialog,
+  MUIClass.Menu, MUIHelper,
   Amitubelocale, PrefsUnit, Datatypes,
   resolutionselunit;
 
@@ -18,7 +19,7 @@ type
   TPlaylistWin = class(TMUIWindow)
   private
     procedure ListDisplay(Sender: TObject; ToPrint: PPChar; Entry: PChar);
-    procedure LoadFiles(AMoviePath: string);
+    procedure LoadFiles(DirLock: BPTR);
 
     procedure PlayStart(Filename: string);
 
@@ -28,6 +29,8 @@ type
     procedure RemoveClick(Sender: TObject);
 
     function ShowNextMovie(Res: TResultEntry): Boolean;
+
+    procedure OpenFolderClick(Sender: TObject);
   public
     FMovieLock: BPTR;
     PlayEntries: TResultEntries;
@@ -68,11 +71,18 @@ var
   //st: string;
   SRes: TResultEntry;
   FI: TFileInfoBlock;
+  PC: PChar;
+  DirName: string;
 begin
   // make a list of files availabe, we use the TXT and Video file file
   MyRes := [];
   SL := TStringList.Create;
   FI.fib_DirEntryType := 0;
+
+  PC := AllocMem(256);
+  NameFromLock(MovieLock, PC, 255);
+  DirName := string(PC);
+  FreeMem(PC);
 
   FillChar(FI, SizeOf(TFileInfoBlock), #0);
   if Boolean(Examine(MovieLock, @FI)) then
@@ -81,7 +91,7 @@ begin
       if not ((ExtractFileExt(FI.fib_FileName) = '.mpeg') or (ExtractFileExt(FI.fib_FileName) = '.cdxl')) then
         Continue;
       //
-      Filename := IncludeTrailingPathDelimiter(MovieDirList.MovieDir) + FI.fib_FileName;
+      Filename := IncludeTrailingPathDelimiter(DirName) + FI.fib_FileName;
       TxtFilename := ChangeFileExt(FileName, '.txt');
       if FileExists(TXTFilename) then
       begin
@@ -150,21 +160,14 @@ begin
   end;
 end;
 
-procedure TPlaylistWin.LoadFiles(AMoviePath: string);
+procedure TPlaylistWin.LoadFiles(DirLock: BPTR);
 var
-  MLock: BPTR;
-  UseDefault: Boolean;
   i: Integer;
 begin
-  UseDefault := AMoviePath = '';
-  if UseDefault then
-    MLock := FMovieLock
-  else
-  begin
-    // TODO: lock the path
-  end;
+  if DirLock = BPTR(0) then
+    Exit;
 
-  LoadLocalFiles(MLock, PlayEntries);
+  LoadLocalFiles(DirLock, PlayEntries);
 
   List.List.Quiet := True;
   List.List.Clear;
@@ -175,14 +178,6 @@ begin
     List.List.InsertSingle(PChar(EntryArray[i]), i);
   end;
   List.List.Quiet := False;
-
-
-  if not UseDefault then
-  begin
-    // todo unlock the lock
-  end;
-
-
 end;
 
 procedure TPlaylistWin.PlayStart(Filename: string);
@@ -515,14 +510,44 @@ begin
   CloseScreen(SC);
 end;
 
+procedure TPlaylistWin.OpenFolderClick(Sender: TObject);
+var
+  FD: TFileDialog;
+  L: BPTR;
+begin
+  //
+  FD := TFileDialog.Create;
+  try
+    FD.TitleText := GetLocString(MSG_MENU_OPENFOLDER);
+    FD.DrawersOnly := True;
+    FD.Directory := ExtractFilePath(ParamStr(0));
+    if FD.Execute then
+    begin
+      L := Lock(FD.Directory, SHARED_LOCK);
+      if L <> BPTR(0) then
+      begin
+        LoadFiles(L);
+        Unlock(L);
+      end;
+    end;
+  finally
+    FD.Free;
+  end;
+end;
+
 constructor TPlaylistWin.Create;
 var
   Grp: TMUIGroup;
+  Menu: TMUIMenu;
+  MI: TMUIMenuItem;
 begin
   inherited Create;
   Title := GetLocString(MSG_MENU_PLAYLIST);
   Horizontal := True;
   PlayEntries := TResultEntries.Create(True);
+
+  HelpNode := 'PlayList';
+  ID := MAKE_ID('P','l','a', 'y');
 
   Grp := TMUIGroup.Create;
   with Grp do
@@ -537,7 +562,6 @@ begin
   List.List := TMUIList.Create;
   with List do
   begin
-    //HelpNode := 'List';
     Input := True;
     ShowMe := False;
     DragType := MUIV_Listview_DragType_Immediate;
@@ -580,6 +604,7 @@ begin
   ChooseAnnounce := TMUICheckmark.Create;
   with ChooseAnnounce do
   begin
+    Selected := True;
     Parent := Grp;
   end;
   with TMUIText.Create(GetLocString(MSG_GUI_SHOWWAITSCREEN)) do
@@ -603,6 +628,7 @@ begin
   ChoosePreview := TMUICheckmark.Create;
   with ChoosePreview do
   begin
+    Selected := True;
     Parent := Grp;
   end;
   with TMUIText.Create(GetLocString(MSG_GUI_PREVIEWWAIT)) do
@@ -632,6 +658,20 @@ begin
   PlayButton := TMUIButton.Create(GetLocString(MSG_GUI_STARTPLAYLIST));
   PlayButton.Parent := Grp;
   PlayButton.OnClick := @PlayClick;
+
+
+  //############ the Menu
+  MenuStrip := TMUIMenuStrip.Create;
+
+  // #### Project
+  Menu := TMUIMenu.Create;
+  Menu.Parent := MenuStrip;
+  Menu.Title := GetLocString(MSG_MENU_PROJECT);// 'Project';
+
+  MI := TMUIMenuItem.Create;
+  MI.Title := GetLocString(MSG_MENU_OPENFOLDER); //'Load Folder...';
+  MI.OnTrigger := @OpenFolderClick;
+  MI.Parent := Menu;
 end;
 
 destructor TPlaylistWin.Destroy;
@@ -646,9 +686,7 @@ begin
   Open := True;
 
   if List.List.Entries = 0 then
-  begin
-    LoadFiles('');
-  end;
+    LoadFiles(FMovieLock);
 end;
 
 end.
