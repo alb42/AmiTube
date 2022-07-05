@@ -73,7 +73,7 @@ begin
     // if FormatID is empty, normal conversation
     if DL.FormatID = '' then
     begin
-      DoProgress(0, GetLocString(MSG_STATUS_CONVERT));
+      DoProgress(0, GetLocString(MSG_STATUS_CONVERT) + '...');
       Url := ConvertURL + DL.ID + '&format=' + IntToStr(DL.Format);
       try
         // the actual download in FileDownloadUnit, with progressbar, see there

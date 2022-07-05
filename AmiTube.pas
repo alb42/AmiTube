@@ -28,7 +28,7 @@ const
 
 const
   // Version info for Amiga
-  VERSION = '$VER: AmiTube 1.2 beta (24.06.2022)';
+  VERSION = '$VER: AmiTube 1.2 beta (02.07.2022)';
 
   // format settings, atm we have:
   NumFormats = 4;
@@ -245,7 +245,7 @@ begin
   ProgressEvent(Self, 0, GetLocString(MSG_STATUS_IDLE));
   if SearchThread.IsError then
   begin
-    ShowMessage('SearchThread Error: ' + SearchThread.ErrMsg); // something was wrong, no search results
+    ShowMessage('SearchThread Error: ' + SearchThread.ErrMsg, GetLocString(MSG_ERROR_ERROR), GetLocString(MSG_GUI_OK)); // something was wrong, no search results
   end
   else
   begin
@@ -798,7 +798,7 @@ begin
     SearchField.Contents := '';
   end
   else
-    ShowMessage(GetLocString(MSG_ERROR_LOCAL));  // nothing found
+    ShowMessage(GetLocString(MSG_ERROR_LOCAL), GetLocString(MSG_ERROR_ERROR), GetLocString(MSG_GUI_OK));  // nothing found
   FancyList.UpdateList;
   List.List.Active := 0;
   FancyList.UpdateList;
@@ -847,7 +847,7 @@ begin
     begin
       // it is idle... but convert thread is still running... change back to convert (if downloading, it will changed by )
       if (FTxt = GetLocString(MSG_STATUS_IDLE)) and Assigned(ConvertThread) and not (ConvertThread.Terminated)  then
-        StatusLabel.Contents := GetLocString(MSG_STATUS_CONVERT)
+        StatusLabel.Contents := GetLocString(MSG_STATUS_CONVERT) + '...'
       else
         StatusLabel.Contents := FTxt;
       Progress.Current := FPerc;
@@ -925,10 +925,10 @@ begin
         hp.AllowRedirect := True;
         hp.AddHeader('User-Agent', ShortVer + ' ' +  {$INCLUDE %FPCTARGETCPU%} + '-' + {$INCLUDE %FPCTARGETOS%});
         s := hp.Get(URL);
-        ShowMessage(GetLocString(MSG_STATUS_SHARED) + #10 + s); // server will tell if already in the list
+        ShowMessage(GetLocString(MSG_STATUS_SHARED) + #10 + s, GetLocString(MSG_ERROR_ERROR), GetLocString(MSG_GUI_OK)); // server will tell if already in the list
       except
         On E:Exception do
-          ShowMessage(GetLocString(MSG_ERROR_SHARE)+ ' ' + E.Message); // error
+          ShowMessage(GetLocString(MSG_ERROR_SHARE)+ ' ' + E.Message, GetLocString(MSG_ERROR_ERROR), GetLocString(MSG_GUI_OK)); // error
       end;
     end;
   finally
@@ -971,15 +971,18 @@ var
   s: string;
 begin
   Unused(Sender);
-  s := (MUIX_C + #10 + MUIX_B + '---   ' + ShortVer + '   ---' + MUIX_N+ #10 +
+  //
+  s :=  StringReplace(GetLocString(MSG_GUI_ABOUT), '\n', #10, [rfReplaceAll]);
+  s := StringReplace(s, '%1', 'ALB42', [rfReplaceAll]);
+  s := StringReplace(s, '%2', 'Michal Bergseth', [rfReplaceAll]);
+  s := StringReplace(s, '%3', MUIX_U + 'https://blog.alb42.de' + MUIX_N, [rfReplaceAll]);
+  //
+  s :=  MUIX_C + #10 + MUIX_B + '---   ' + ShortVer + '   ---' + MUIX_N+ #10 +
         {$INCLUDE %FPCTARGETCPU%} + '-' + {$INCLUDE %FPCTARGETOS%} + #10#10 +
-       'made with Free Pascal for Amiga by ALB42'#10 +
-       'special thanks to Michal Bergseth for idea and encouragement.'#10#10 +
-       'Make Amiga programs, not war'#10#10 +
-       'Check ' + MUIX_U + 'https://blog.alb42.de' + MUIX_N + ' for updates.'#10);
+        s + #10;
   if BaseServer <> '' then
-    s := s + 'Used Server: ' + BaseServer + #10;
-  ShowMessage(s);
+    s := s + #10 + BaseServer + #10;
+  ShowMessage(s, GetLocString(MSG_MENU_ABOUT), GetLocString(MSG_GUI_OK));
 end;
 
 { menu mui settings }
@@ -1701,14 +1704,14 @@ begin
         end
         else
         begin
-          ShowMessage(GetLocString(MSG_GUI_NOUPDATE)); // nothing to update
+          ShowMessage(GetLocString(MSG_GUI_NOUPDATE), GetLocString(MSG_GUI_NOUPDATE), GetLocString(MSG_GUI_OK)); // nothing to update
         end;
       end;
       if (Link = '') or (OnlineVersion = '') then
-        ShowMessage(GetLocString(MSG_ERROR_UPDATE));  // error update
+        ShowMessage(GetLocString(MSG_ERROR_UPDATE), GetLocString(MSG_ERROR_ERROR), GetLocString(MSG_GUI_OK));  // error update
     except
       on E: Exception do
-        ShowMessage(GetLocString(MSG_ERROR_UPDATE) + ' ' + E.Message); // error update
+        ShowMessage(GetLocString(MSG_ERROR_UPDATE) + ' ' + E.Message, GetLocString(MSG_ERROR_ERROR), GetLocString(MSG_GUI_OK)); // error update
     end;
   finally
     Mem.Free;
@@ -1719,7 +1722,7 @@ end;
 procedure TMainWindow.SetStatusText(AText: string; APos: LongInt);
 begin
   if (AText = GetLocString(MSG_STATUS_IDLE)) and Assigned(ConvertThread) and not ConvertThread.Terminated then
-    AText := GetLocString(MSG_STATUS_CONVERT);
+    AText := GetLocString(MSG_STATUS_CONVERT) + '...';
   StatusLabel.Contents := AText;
   // do not change if APos < 0
   if APos >= 0 then
@@ -1984,7 +1987,8 @@ begin
   DTObj := nil;
   //
   // titla of window, just use the version/name
-  Title := ShortVer;
+  Title := 'AmiTube';
+  ScreenTitle := ShortVer;
   // by default no convert server
   BaseServer := '';
   // get the icon

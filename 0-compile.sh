@@ -21,30 +21,30 @@ cp -r Catalogs/* pack/AmiTubeOS4/Catalogs/
 #
 mkdir -p lib/m68k-amiga
 rm -f ./lib/m68k-amiga/*
-fpc4amiga000.sh -B -O2 -FU./lib/m68k-amiga -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTube/AmiTube.000
+fpc4amiga000.sh -B -XX CX -FU./lib/m68k-amiga -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTube/AmiTube.000
 
 rm -f ./lib/m68k-amiga/*
-fpc4amiga.sh -B -O2 -FU./lib/m68k-amiga -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTube/AmiTube
+fpc4amiga.sh -B -XX -CX -FU./lib/m68k-amiga -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTube/AmiTube
 
 mkdir -p lib/i386-aros
 rm -f ./lib/i386-aros/*
-fpc4aros.sh -B -O2 -FU./lib/i386-aros -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTubeAROS/AmiTube.i386
+fpc4aros.sh -B -O2 -XX -CX -FU./lib/i386-aros -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTubeAROS/AmiTube.i386
 
 mkdir -p lib/arm-aros
 rm -f ./lib/arm-aros/*
-fpc4arosarm.sh -B -O2 -FU./lib/arm-aros -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTubeAROS/AmiTube.arm
+fpc4arosarm.sh -B -O2 -XX -CX -FU./lib/arm-aros -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTubeAROS/AmiTube.arm
 
 mkdir -p lib/x86_64-aros
 rm -f ./lib/x86_64-aros/*
-fpc4aros64.sh -B -O2 -FU./lib/x86_64-aros -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTubeAROS/AmiTube.x64
+fpc4aros64.sh -B -O2 -XX -CX -FU./lib/x86_64-aros -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTubeAROS/AmiTube.x64
 
 mkdir -p lib/powerpc-morphos
 rm -f ./lib/powerpc-morphos/*
-fpc4mos.sh -B -O2 -FU./lib/powerpc-morphos -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTubeMorphOS/AmiTube
+fpc4mos.sh -B -O2 -XX -CX -FU./lib/powerpc-morphos -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTubeMorphOS/AmiTube
 
 mkdir -p lib/powerpc-amiga
 rm -f ./lib/powerpc-amiga/*
-fpc4os4.sh -B -O2 -FU./lib/powerpc-amiga -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTubeOS4/AmiTube
+fpc4os4.sh -B -O2 -XX -CX -FU./lib/powerpc-amiga -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTubeOS4/AmiTube
 
 cd pack
 ./packme.sh

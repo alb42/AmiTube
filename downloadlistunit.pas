@@ -142,7 +142,7 @@ begin
     DL := DList[List.Row];
     if DL.Status = dsRunning then
     begin
-      ShowMessage(GetLocString(MSG_ERROR_CANNOTREMOVE)); //'You cannot remove running downloads');
+      ShowMessage(GetLocString(MSG_ERROR_CANNOTREMOVE), GetLocString(MSG_ERROR_ERROR), GetLocString(MSG_GUI_OK)); //'You cannot remove running downloads');
       Exit;
     end;
     DList.Remove(DL);
@@ -206,7 +206,7 @@ begin
     DT := DList[i];
     if (LowerCase(DT.filename) = LowerCase(AFilename)) and (DT.Status <> dsFinished) then
     begin
-      ShowMessage(GetLocString(MSG_ERROR_ALREADYINLIST));
+      ShowMessage(GetLocString(MSG_ERROR_ALREADYINLIST), GetLocString(MSG_ERROR_ERROR), GetLocString(MSG_GUI_OK));
       Exit;
     end;
   end;

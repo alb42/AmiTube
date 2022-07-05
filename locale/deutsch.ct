@@ -126,12 +126,12 @@ YouTube URL "%s" in Zwischenablage gefunden, nach diesem video suchen?
 ; Found YouTube URL "%s" in clipboard, search for that video?
 ;
 MSG_GUI_YES
-Ja
-; Yes
+_Ja
+; _Yes
 ;
 MSG_GUI_NO
-Nein
-; No
+_Nein
+; _No
 ;
 MSG_GUI_DISK_FULL
 Festplatte voll
@@ -245,6 +245,14 @@ MSG_GUI_CLOSEREQ
 AmiTube schließen?
 ; Close AmiTube?
 ;
+MSG_GUI_OK
+_OK
+; _OK
+;
+MSG_GUI_ABOUT
+erstellt mit Free Pascal für Amiga von %1\nbesonderer Dank geht an %2 für die Idee und Ermunterung.\n\nBesuche %3 für Neuigkeiten.
+; made with Free Pascal for Amiga by %1\nspecial thanks to %2 for idea and encouragement.\n\nCheck %3 for news.
+;
 ; ### Status
 MSG_STATUS_IDLE
 Wartet
@@ -325,6 +333,10 @@ Diese Datei ist schon in der Downloadliste, wird ignoriert.
 MSG_ERROR_CANNOTREMOVE
 Laufende Downloads können nicht entfernt werden.
 ; Cannot remove running downloads.
+;
+MSG_ERROR_ERROR
+Fehler
+; Error
 ;
 ;--- PREFS
 ;

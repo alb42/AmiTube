@@ -127,7 +127,7 @@ var
   SRes: TResultEntry;
 begin
   // main Search thread routine, only runs once, then the Thread is killed
-  DoProgress(0, GetLocString(MSG_STATUS_PREPSEARCH)); // rather useless now, it's fast enough now
+  DoProgress(0, GetLocString(MSG_STATUS_PREPSEARCH) + '..'); // rather useless now, it's fast enough now
   Doc := nil;
   Mem := Nil;
   try
@@ -191,7 +191,7 @@ begin
         // we got a break
         if Terminated then
           Exit;
-        DoProgress(0, GetLocString(MSG_STATUS_PARSESEARCH));
+        DoProgress(0, GetLocString(MSG_STATUS_PARSESEARCH) + '..');
         // debugoutput of search result
         {Mem.Position := 0;
         With TStringList.Create do
@@ -227,7 +227,7 @@ begin
         i := 0;
         while Assigned(Child) do
         begin
-          DoProgress(Round(((i + 1) / Count) * 100), GetLocString(MSG_STATUS_PARSESEARCH)); // slows down? ... not anymore main GUI polling instead syncronize
+          DoProgress(Round(((i + 1) / Count) * 100), GetLocString(MSG_STATUS_PARSESEARCH) + '..'); // slows down? ... not anymore main GUI polling instead syncronize
           Inc(i);
           if Child.NodeName <> 'result' then // only results are interesting for us right now
             Continue;

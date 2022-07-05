@@ -132,7 +132,7 @@ begin
     end;
   end
   else
-    ShowMessage(GetLocString(MSG_ERROR_LOCAL));  // nothing found
+    ShowMessage(GetLocString(MSG_ERROR_LOCAL), GetLocString(MSG_ERROR_ERROR), GetLocString(MSG_GUI_OK));  // nothing found
   SL.Free;
 end;
 

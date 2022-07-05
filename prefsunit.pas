@@ -150,7 +150,7 @@ begin
         Ini.WriteString('Player', 'Path', PlayerEdit.Contents);
       end
       else
-        ShowMessage(StringReplace(GetLocString(MSG_ERROR_PLAYER), '%s', Player, [rfReplaceAll]));
+        ShowMessage(StringReplace(GetLocString(MSG_ERROR_PLAYER), '%s', Player, [rfReplaceAll]), GetLocString(MSG_ERROR_ERROR), GetLocString(MSG_GUI_OK));
     end;
     Free;
   end;
@@ -175,7 +175,7 @@ begin
         Ini.WriteString('Player', 'MPEGPath', MPEGPlayerEdit.Contents);
       end
       else
-        ShowMessage(StringReplace(GetLocString(MSG_ERROR_PLAYER), '%s', Player, [rfReplaceAll]));
+        ShowMessage(StringReplace(GetLocString(MSG_ERROR_PLAYER), '%s', Player, [rfReplaceAll]), GetLocString(MSG_ERROR_ERROR), GetLocString(MSG_GUI_OK));
     end;
     Free;
   end;
@@ -200,7 +200,7 @@ begin
         Ini.WriteString('Player', 'URLPlayerPath', URLPlayerEdit.Contents);
       end
       else
-        ShowMessage(StringReplace(GetLocString(MSG_ERROR_PLAYER), '%s', Player, [rfReplaceAll]));
+        ShowMessage(StringReplace(GetLocString(MSG_ERROR_PLAYER), '%s', Player, [rfReplaceAll]), GetLocString(MSG_ERROR_ERROR), GetLocString(MSG_GUI_OK));
     end;
     Free;
   end;
@@ -225,7 +225,7 @@ begin
         Ini.WriteString('Player', 'WGetPath', WGetEdit.Contents);
       end
       else
-        ShowMessage(StringReplace(GetLocString(MSG_ERROR_PLAYER), '%s', Player, [rfReplaceAll]));
+        ShowMessage(StringReplace(GetLocString(MSG_ERROR_PLAYER), '%s', Player, [rfReplaceAll]), GetLocString(MSG_ERROR_ERROR), GetLocString(MSG_GUI_OK));
     end;
     Free;
   end;

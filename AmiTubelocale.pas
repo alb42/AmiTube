@@ -97,10 +97,10 @@ const
   MSG_GUI_GOTURLTEXT_STR = 'Found YouTube URL "%s" in clipboard, search for that video?'#0;
 
   MSG_GUI_YES = 20008 ;
-  MSG_GUI_YES_STR = 'Yes'#0;
+  MSG_GUI_YES_STR = '_Yes'#0;
 
   MSG_GUI_NO = 20009 ;
-  MSG_GUI_NO_STR = 'No'#0;
+  MSG_GUI_NO_STR = '_No'#0;
 
   MSG_GUI_DISK_FULL = 20010 ;
   MSG_GUI_DISK_FULL_STR = 'Disk full'#0;
@@ -186,6 +186,12 @@ const
   MSG_GUI_CLOSEREQ = 20037 ;
   MSG_GUI_CLOSEREQ_STR = 'Close AmiTube?'#0;
 
+  MSG_GUI_OK = 20038 ;
+  MSG_GUI_OK_STR = '_OK'#0;
+
+  MSG_GUI_ABOUT = 20039 ;
+  MSG_GUI_ABOUT_STR = 'made with Free Pascal for Amiga by %1\nspecial thanks to %2 for idea and encouragement.\n\nCheck %3 for news.'#0;
+
   MSG_STATUS_IDLE = 30000 ;
   MSG_STATUS_IDLE_STR = 'Idle'#0;
 
@@ -245,6 +251,9 @@ const
 
   MSG_ERROR_CANNOTREMOVE = 40010 ;
   MSG_ERROR_CANNOTREMOVE_STR = 'Cannot remove running downloads.'#0;
+
+  MSG_ERROR_ERROR = 40011 ;
+  MSG_ERROR_ERROR_STR = 'Error'#0;
 
   MSG_PREFS_WINDOW = 50000 ;
   MSG_PREFS_WINDOW_STR = 'Settings'#0;
@@ -331,7 +340,7 @@ type
      str: string;
   end;
 
-  TAppStringArray = array[0..99] of TAppString;
+  TAppStringArray = array[0..102] of TAppString;
 
 const
   AppStrings: TAppStringArray = (
@@ -392,6 +401,8 @@ const
     (id: MSG_GUI_STOPSKIP ; str: MSG_GUI_STOPSKIP_STR ),
     (id: MSG_GUI_STARTPLAYLIST ; str: MSG_GUI_STARTPLAYLIST_STR ),
     (id: MSG_GUI_CLOSEREQ ; str: MSG_GUI_CLOSEREQ_STR ),
+    (id: MSG_GUI_OK ; str: MSG_GUI_OK_STR ),
+    (id: MSG_GUI_ABOUT ; str: MSG_GUI_ABOUT_STR ),
     (id: MSG_STATUS_IDLE ; str: MSG_STATUS_IDLE_STR ),
     (id: MSG_STATUS_SHARED ; str: MSG_STATUS_SHARED_STR ),
     (id: MSG_STATUS_PREPSEARCH ; str: MSG_STATUS_PREPSEARCH_STR ),
@@ -412,6 +423,7 @@ const
     (id: MSG_ERROR_ALREADYRUN ; str: MSG_ERROR_ALREADYRUN_STR ),
     (id: MSG_ERROR_ALREADYINLIST ; str: MSG_ERROR_ALREADYINLIST_STR ),
     (id: MSG_ERROR_CANNOTREMOVE ; str: MSG_ERROR_CANNOTREMOVE_STR ),
+    (id: MSG_ERROR_ERROR ; str: MSG_ERROR_ERROR_STR ),
     (id: MSG_PREFS_WINDOW ; str: MSG_PREFS_WINDOW_STR ),
     (id: MSG_PREFS_STARTUP ; str: MSG_PREFS_STARTUP_STR ),
     (id: MSG_PREFS_STARTUP1 ; str: MSG_PREFS_STARTUP1_STR ),

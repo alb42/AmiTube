@@ -95,10 +95,10 @@ MSG_GUI_GOTURLTEXT (20007//)
 Found YouTube URL "%s" in clipboard, search for that video?
 ;
 MSG_GUI_YES (20008//)
-Yes
+_Yes
 ;
 MSG_GUI_NO (20009//)
-No
+_No
 ;
 MSG_GUI_DISK_FULL (20010//)
 Disk full
@@ -184,6 +184,12 @@ Start Play List
 MSG_GUI_CLOSEREQ (20037//)
 Close AmiTube?
 ;
+MSG_GUI_OK (20038//)
+_OK
+;
+MSG_GUI_ABOUT (20039//)
+made with Free Pascal for Amiga by %1\nspecial thanks to %2 for idea and encouragement.\n\nCheck %3 for news.
+;
 ; ### Status
 MSG_STATUS_IDLE (30000//)
 Idle
@@ -244,6 +250,9 @@ This file is already in the download list, ignored.
 ;
 MSG_ERROR_CANNOTREMOVE (40010//)
 Cannot remove running downloads.
+;
+MSG_ERROR_ERROR (40011//)
+Error
 ;
 ;--- PREFS
 ;

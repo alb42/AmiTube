@@ -343,7 +343,7 @@ begin
     DOSClose(OutP); // close the console window, usually will stay open AUTO is given
   end
   else
-    Showmessage(StringReplace(GetLocString(MSG_ERROR_PLAYER), '%s', Prefs.UrlPlayerPath, [rfReplaceAll]));
+    Showmessage(StringReplace(GetLocString(MSG_ERROR_PLAYER), '%s', Prefs.UrlPlayerPath, [rfReplaceAll]), GetLocString(MSG_ERROR_ERROR), GetLocString(MSG_GUI_OK));
 end;
 
 { use WGET to download the YouTube URL}
@@ -406,7 +406,7 @@ begin
     DOSClose(OutP);
   end
   else
-    Showmessage(StringReplace(GetLocString(MSG_ERROR_PLAYER), '%s', Prefs.WgetPath, [rfReplaceAll]));
+    Showmessage(StringReplace(GetLocString(MSG_ERROR_PLAYER), '%s', Prefs.WgetPath, [rfReplaceAll]), GetLocString(MSG_ERROR_ERROR), GetLocString(MSG_GUI_OK));
 end;
 
 { proxy the YouTube download throug hthe download server, no SSL support included, so thats easier
