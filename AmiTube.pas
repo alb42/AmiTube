@@ -28,7 +28,7 @@ const
 
 const
   // Version info for Amiga
-  VERSION = '$VER: AmiTube 1.2 beta (02.07.2022)';
+  VERSION = '$VER: AmiTube 1.2 beta (05.07.2022)';
 
   // format settings, atm we have:
   NumFormats = 4;
@@ -1988,7 +1988,7 @@ begin
   //
   // titla of window, just use the version/name
   Title := 'AmiTube';
-  ScreenTitle := ShortVer;
+  ScreenTitle := Trim(Copy(VERSION, 7, Length(VERSION)));
   // by default no convert server
   BaseServer := '';
   // get the icon
