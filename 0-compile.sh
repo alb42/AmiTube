@@ -44,7 +44,8 @@ fpc4mos.sh -B -O2 -XX -CX -FU./lib/powerpc-morphos -Fu../MUIClass/src AmiTube.pa
 
 mkdir -p lib/powerpc-amiga
 rm -f ./lib/powerpc-amiga/*
-fpc4os4.sh -B -O2 -XX -CX -FU./lib/powerpc-amiga -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTubeOS4/AmiTube
+fpc4os4.sh -B -O2 -Xs -XX -CX -FU./lib/powerpc-amiga -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTubeOS4/AmiTube
+powerpc-amiga-strip ./pack/AmiTubeOS4/AmiTube
 
 cd pack
 ./packme.sh
