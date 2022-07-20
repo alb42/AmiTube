@@ -28,7 +28,7 @@ const
 
 const
   // Version info for Amiga
-  VERSION = '$VER: AmiTube 1.2 (09.07.2022)';
+  VERSION = '$VER: AmiTube 1.3 beta (18.07.2022)';
 
   // format settings, atm we have:
   NumFormats = 4;
@@ -1126,10 +1126,10 @@ begin
     CloseAction := caNone
   else
   begin
-    if List.ShowMe then
-      Prefs.SplitterPos := Round(List.Width / Width) * 2 * 100
+    if Prefs.FancyList then
+      Prefs.SplitterPos := Round(FancyList.Width / Width * 2 * 100)
     else
-      Prefs.SplitterPos := Round(FancyList.Width / Width) * 2 * 100;
+      Prefs.SplitterPos := Round(List.Width / Width * 2 * 100);
     CloseAction := caClose;
     Unused(Sender);
     Prefs.SaveSettings;
@@ -2509,8 +2509,8 @@ begin
   Prefs.OnFormatChanged(nil);
   Prefs.OnFancyListChange := @Main.FancyListChanged;
   Prefs.OnFancyListChange(nil);
-  Main.List.Weight := Prefs.SplitterPos;
-  Main.FancyList.Weight := Prefs.SplitterPos;
+  Main.List.Weight := Max(10, Prefs.SplitterPos);
+  Main.FancyList.Weight := Max(10, Prefs.SplitterPos);
   DownloadListWin.OnDownloadStart := @Main.TryCThread;
   MUIApp.Title := ShortVer;
   MUIApp.Version := VERSION;

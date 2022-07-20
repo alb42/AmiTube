@@ -238,7 +238,7 @@ end;
 
 function TPrefsWindow.GetSplitterPos: Integer;
 begin
-  Result := Ini.ReadInteger('Genral', 'Splitter', 100);
+  Result := Ini.ReadInteger('General', 'Splitter', 100);
 end;
 
 function TPrefsWindow.GetPlayerPath: string;
@@ -361,7 +361,7 @@ end;
 
 procedure TPrefsWindow.SetSplitterPos(AValue: Integer);
 begin
-  Ini.WriteInteger('Genral', 'Splitter', AValue);
+  Ini.WriteInteger('General', 'Splitter', AValue);
 end;
 
 procedure TPrefsWindow.StartupChanged(Sender: TObject);
