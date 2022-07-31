@@ -146,6 +146,7 @@ var
   Idx, Idx1: Integer;
   p: PPtrInt;
 begin
+  SysDebugLn('ListDisplay: ' + string(Entry));
   P := PPtrInt(ToPrint);
   Dec(P);
   Idx := P^;
@@ -238,7 +239,7 @@ begin
       else
       begin
         if Count >= List.List.Entries then
-          Break;
+          Count := 0;
         Idx := StrToIntDef(PChar(List.List.GetEntry(Count)), -1)
       end;
       if InRange(Idx, 0, PlayEntries.Count - 1) then
@@ -563,7 +564,7 @@ begin
   with List do
   begin
     Input := True;
-    ShowMe := False;
+    ShowMe := True;
     DragType := MUIV_Listview_DragType_Immediate;
     List.OnDisplay  := @ListDisplay;
     Parent := Grp;
