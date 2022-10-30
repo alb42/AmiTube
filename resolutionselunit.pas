@@ -317,6 +317,8 @@ var
   Me: PTask;
 begin
   Unused(Sender);
+  if not InRange(List.Row, 0 , List.NumRows - 1) then
+    Exit;
   // must check if the player exists
   if FileExists(Prefs.UrlPlayerPath) then
   begin
@@ -355,6 +357,8 @@ var
   Me: pTask;
 begin
   Unused(Sender);
+  if not InRange(List.Row, 0 , List.NumRows - 1) then
+    Exit;
   // check if wget is there
   if FileExists(Prefs.WgetPath) then
   begin
@@ -400,7 +404,7 @@ begin
     MySystem(Prefs.WgetPath + ' ' + Param, [
       SYS_OUTPUT, AsTag(OutP),
       SYS_INPUT, AsTag(OutP),
-      //NP_StackSize, Abs(PtrInt(Me^.tc_SPUpper) - PtrInt(Me^.tc_SPLower)),
+      NP_StackSize, Abs(PtrInt(Me^.tc_SPUpper) - PtrInt(Me^.tc_SPLower)),
       TAG_DONE]);
     // close console, but should stay open because AUTO is given
     DOSClose(OutP);
@@ -416,7 +420,7 @@ var
   TargetName: string;
 begin
   Unused(Sender);
-  if Assigned(FOnStartDownLoad) then
+  if Assigned(FOnStartDownLoad) and InRange(List.Row, 0 , List.NumRows - 1) then
   begin
     // ask for filename
     with TFileDialog.Create do
