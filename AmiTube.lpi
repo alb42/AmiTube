@@ -70,6 +70,11 @@
         <Filename Value="playlistunit.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="askforidunit.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="AskForIDUnit"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

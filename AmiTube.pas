@@ -9,7 +9,8 @@ uses
   MUIClass.Base, MUIClass.Window, MUIClass.Group, MUIClass.Area, MUIClass.Gadget,
   MUIClass.Menu, MUIClass.DrawPanel, MUIClass.Image,
   MUIClass.StringGrid, MUIClass.Dialog, MUIClass.List, filedownloadunit, prefsunit,
-  XMLRead, DOM, AmiTubelocale, resolutionselunit, historyunit, convertthreadunit, searchthreadunit, downloadlistunit, fancylistunit, playlistunit;
+  XMLRead, DOM, AmiTubelocale, resolutionselunit, historyunit, convertthreadunit,
+  searchthreadunit, downloadlistunit, fancylistunit, playlistunit, AskForIDUnit;
 
 const
   // base URL on my server
@@ -28,7 +29,7 @@ const
 
 const
   // Version info for Amiga
-  VERSION = '$VER: AmiTube 1.3 (29.07.2022)';
+  VERSION = '$VER: AmiTube 1.4 (07.03.2023)';
 
   // format settings, atm we have:
   NumFormats = 4;
@@ -67,6 +68,7 @@ type
     ListClickTimer: TMUITimer;
     FancyList: TFancyList;
     MDMenu: TMUIMenuItem;
+    procedure SearchByID(Sender: TObject);
     procedure SearchEntry(Sender: TObject);
     procedure ClickHistory(Sender: TObject);
     procedure EndThread(Sender: TObject);
@@ -114,6 +116,7 @@ type
     function RexxEvent(Sender: TObject; Msg: string; out ReturnMessage: string): LongInt;
     //
     procedure ChangeMovieDir(Sender: TObject);
+    procedure AskIDCloseEvent(Sender: TObject; var CloseAction: TCloseAction);
   private
     LastWasLocal: Boolean;
     PlayFormat: Integer;
@@ -197,6 +200,14 @@ end;
 
 
 { TMainWindow }
+
+procedure TMainWindow.SearchByID(Sender: TObject);
+begin
+  //
+  AskForIDWin.OnCloseRequest := @AskIDCloseEvent;
+  Self.Sleep := True;
+  AskForIDWin.Execute
+end;
 
 {Event for search by the contents of the search edit}
 procedure TMainWindow.SearchEntry(Sender: TObject);
@@ -1482,6 +1493,19 @@ begin
   end;
 end;
 
+procedure TMainWindow.AskIDCloseEvent(Sender: TObject; var CloseAction: TCloseAction);
+var
+  s: string;
+begin
+  Self.Sleep := False;
+  s := AskForIDWin.Id;
+  if s <> '' then
+  begin
+    SearchField.Contents := 'ID:' + s;
+    SearchEntry(SearchField);
+  end;
+end;
+
 { download directly from YouTube, open the resolution window for that}
 procedure TMainWindow.GetOriginal(Sender: TObject);
 var
@@ -2099,7 +2123,7 @@ begin
     FixWidthTxt := GetLocString(MSG_GUI_BREAK);
     Contents := GetLocString(MSG_GUI_BREAK);
     OnClick := @StopAll;
-    Disabled := True;
+    Disabled := False;
     Parent := Grp2;
   end;
 
@@ -2304,6 +2328,16 @@ begin
   Menu.Title := GetLocString(MSG_MENU_PROJECT);// 'Project';
 
   MI := TMUIMenuItem.Create;
+  MI.Title := GetLocString(MSG_MENU_SEARCHBYID); // 'Search by ID';
+  MI.ShortCut := GetLocString(MSG_MENU_SEARCHBYID_KEY); //'i';
+  MI.OnTrigger := @SearchByID;
+  MI.Parent := Menu;
+
+  MI := TMUIMenuItem.Create;
+  MI.Title := '-';
+  MI.Parent := Menu;
+
+  MI := TMUIMenuItem.Create;
   MI.Title := GetLocString(MSG_MENU_LOCAL_FILES); //'Local Files';
   MI.ShortCut := GetLocString(MSG_MENU_LOCAL_FILES_KEY); //'f';
   MI.OnTrigger := @LoadLocalFiles;
@@ -2505,6 +2539,7 @@ begin
   ResWin := TResWindow.Create;
   DownloadListWin := TDownloadListWin.Create;
   PlayListwin := TPlaylistWin.Create;
+  AskForIDWin := TAskForIDWin.Create;
   Prefs.OnFormatChanged := @Main.FormatChangeEvent;
   Prefs.OnFormatChanged(nil);
   Prefs.OnFancyListChange := @Main.FancyListChanged;
@@ -2515,7 +2550,7 @@ begin
   MUIApp.Title := ShortVer;
   MUIApp.Version := VERSION;
   MUIApp.Author := 'Marcus "ALB42" Sackrow';
-  MUIApp.Copyright := '(c) 2022 Marcus "ALB42" Sackrow';
+  MUIApp.Copyright := '(c) 2022-2023 Marcus "ALB42" Sackrow';
   MUIApp.Description := 'YouTube for classic Amiga';
   MUIApp.HelpFile := 'PROGDIR:AmiTube.guide';
   MUIApp.Base := 'AMITUBE';

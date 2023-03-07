@@ -8,6 +8,10 @@ uses
   Classes, SysUtils, filedownloadunit, resolutionselunit, XMLRead, DOM,
   amitubelocale, prefsunit, fphttpclient, SyncObjs;
 
+const
+  YOUTUBE_VIDEO_ID_LENGTH = 11;
+  YOUTUBE_LIST_ID_LENGTH = 34;
+
 type
     { TSearchThread }
 
@@ -167,7 +171,14 @@ begin
             AsId := True;
           end;
         end;
+      end
+      else
+      if (Copy(Search, 1, 3) = 'ID:') and ((Length(Search) = 3 + YOUTUBE_VIDEO_ID_LENGTH) or (Length(Search) = 3 + YOUTUBE_LIST_ID_LENGTH))  then
+      begin
+        Delete(Search, 1, 3);
+        AsID := True;
       end;
+
       // convert Search string to UTF8
       SearchTerm := AnsiToUTF8(Search);
       // we can have some strange chars in there, so we convert all to Hex, no problems

@@ -48,6 +48,12 @@ const
   MSG_MENU_OPENFOLDER = 10010 ;
   MSG_MENU_OPENFOLDER_STR = 'Open Folder ...'#0;
 
+  MSG_MENU_SEARCHBYID = 10011 ;
+  MSG_MENU_SEARCHBYID_STR = 'Search by ID ...'#0;
+
+  MSG_MENU_SEARCHBYID_KEY = 10012 ;
+  MSG_MENU_SEARCHBYID_KEY_STR = 'I'#0;
+
   MSG_MENU_SETTINGS = 11000 ;
   MSG_MENU_SETTINGS_STR = 'Settings'#0;
 
@@ -191,6 +197,21 @@ const
 
   MSG_GUI_ABOUT = 20039 ;
   MSG_GUI_ABOUT_STR = 'made with Free Pascal for Amiga by %1\nspecial thanks to %2 for idea and encouragement.\n\nCheck %3 for news.'#0;
+
+  MSG_GUI_ENTERVALIDID = 20040 ;
+  MSG_GUI_ENTERVALIDID_STR = 'Enter a valid YouTube Video ID (11 chars)'#0;
+
+  MSG_GUI_ENTERVALIDLISTID = 20041 ;
+  MSG_GUI_ENTERVALIDLISTID_STR = 'Enter a valid YouTube List ID (34 chars)'#0;
+
+  MSG_GUI_SEARCHFORVIDEO = 20042 ;
+  MSG_GUI_SEARCHFORVIDEO_STR = 'Search for Video'#0;
+
+  MSG_GUI_SEARCHFORLIST = 20043 ;
+  MSG_GUI_SEARCHFORLIST_STR = 'Search for List'#0;
+
+  MSG_GUI_ENTERYOUTUBEURL = 20044 ;
+  MSG_GUI_ENTERYOUTUBEURL_STR = 'Insert YouTube URL and press enter to extract ID''s'#0;
 
   MSG_STATUS_IDLE = 30000 ;
   MSG_STATUS_IDLE_STR = 'Idle'#0;
@@ -340,7 +361,7 @@ type
      str: string;
   end;
 
-  TAppStringArray = array[0..102] of TAppString;
+  TAppStringArray = array[0..109] of TAppString;
 
 const
   AppStrings: TAppStringArray = (
@@ -355,6 +376,8 @@ const
     (id: MSG_MENU_PLAYLIST ; str: MSG_MENU_PLAYLIST_STR ),
     (id: MSG_MENU_MOVIEDIR ; str: MSG_MENU_MOVIEDIR_STR ),
     (id: MSG_MENU_OPENFOLDER ; str: MSG_MENU_OPENFOLDER_STR ),
+    (id: MSG_MENU_SEARCHBYID ; str: MSG_MENU_SEARCHBYID_STR ),
+    (id: MSG_MENU_SEARCHBYID_KEY ; str: MSG_MENU_SEARCHBYID_KEY_STR ),
     (id: MSG_MENU_SETTINGS ; str: MSG_MENU_SETTINGS_STR ),
     (id: MSG_MENU_PREFS ; str: MSG_MENU_PREFS_STR ),
     (id: MSG_MENU_PREFS_KEY ; str: MSG_MENU_PREFS_KEY_STR ),
@@ -403,6 +426,11 @@ const
     (id: MSG_GUI_CLOSEREQ ; str: MSG_GUI_CLOSEREQ_STR ),
     (id: MSG_GUI_OK ; str: MSG_GUI_OK_STR ),
     (id: MSG_GUI_ABOUT ; str: MSG_GUI_ABOUT_STR ),
+    (id: MSG_GUI_ENTERVALIDID ; str: MSG_GUI_ENTERVALIDID_STR ),
+    (id: MSG_GUI_ENTERVALIDLISTID ; str: MSG_GUI_ENTERVALIDLISTID_STR ),
+    (id: MSG_GUI_SEARCHFORVIDEO ; str: MSG_GUI_SEARCHFORVIDEO_STR ),
+    (id: MSG_GUI_SEARCHFORLIST ; str: MSG_GUI_SEARCHFORLIST_STR ),
+    (id: MSG_GUI_ENTERYOUTUBEURL ; str: MSG_GUI_ENTERYOUTUBEURL_STR ),
     (id: MSG_STATUS_IDLE ; str: MSG_STATUS_IDLE_STR ),
     (id: MSG_STATUS_SHARED ; str: MSG_STATUS_SHARED_STR ),
     (id: MSG_STATUS_PREPSEARCH ; str: MSG_STATUS_PREPSEARCH_STR ),

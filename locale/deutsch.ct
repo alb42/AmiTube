@@ -61,6 +61,14 @@ MSG_MENU_OPENFOLDER
 Öffne Ordner ...
 ; Open Folder ...
 ;
+MSG_MENU_SEARCHBYID
+Suchen mit ID ...
+; Search by ID ...
+;
+MSG_MENU_SEARCHBYID_KEY
+I
+; I
+;
 MSG_MENU_SETTINGS
 Einstellungen
 ; Settings
@@ -252,6 +260,26 @@ _OK
 MSG_GUI_ABOUT
 erstellt mit Free Pascal für Amiga von %1\nbesonderer Dank geht an %2 für die Idee und Ermunterung.\n\nBesuche %3 für Neuigkeiten.
 ; made with Free Pascal for Amiga by %1\nspecial thanks to %2 for idea and encouragement.\n\nCheck %3 for news.
+;
+MSG_GUI_ENTERVALIDID
+Gültige YouTube Video ID eingeben (11 Zeichen)
+; Enter a valid YouTube Video ID (11 chars)
+;
+MSG_GUI_ENTERVALIDLISTID
+Gültige YouTube List ID eingeben (34 Zeichen)
+; Enter a valid YouTube List ID (34 chars)
+;
+MSG_GUI_SEARCHFORVIDEO
+Such nach Video
+; Search for Video
+;
+MSG_GUI_SEARCHFORLIST
+Suche nach Liste
+; Search for List
+;
+MSG_GUI_ENTERYOUTUBEURL
+Gebe YouTube URL ein und drücke Enter um ID's zu extrahieren
+; Insert YouTube URL and press enter to extract ID's
 ;
 ; ### Status
 MSG_STATUS_IDLE
