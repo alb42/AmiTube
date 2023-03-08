@@ -17,7 +17,7 @@ type
   private
     LastTime: Cardinal;
     procedure DoProgress(APercent: integer; AText: string);
-    procedure ProgressUpdate(Sender: TObject; Percent, Speed: Integer; ASize: Int64);
+    procedure ProgressUpdate(Sender: TObject; Percent, Speed: Integer; ASize, Fullsize: Int64);
   protected
     procedure Execute; override;
     procedure DoOnEnd;
@@ -32,12 +32,22 @@ type
 
 implementation
 
+function FormatTime(t: LongWord): string;
+var
+  m: LongWord;
+begin
+  t := t div 1000;
+  m := t div 60;
+  t := t mod 60;
+  Result := Format('%2.2d:%2.2d',[m,t]);
+end;
 
 {Progress update when downloading a big file}
-procedure TStartConvertThread.ProgressUpdate(Sender: TObject; Percent: integer; Speed: Integer; ASize: Int64);
+procedure TStartConvertThread.ProgressUpdate(Sender: TObject; Percent: integer; Speed: Integer; ASize, Fullsize: Int64);
 var
-  t1: Cardinal;
+  t1, sec: Cardinal;
   s: string;
+  Left: Int64;
 begin
   // do not fire too often, GUI will not update that often ;)
   t1 := GetTickCount;
@@ -46,7 +56,12 @@ begin
     // form status text with downloaded size and overall speed
     s := GetLocString(MSG_STATUS_DOWNLOADING) + '...' + FloatToStrF(ASize/1000/1000, ffFixed, 8, 3) + ' MB';
     if Speed > 0 then
-      s := s + ' @' + FloatToStrF(Speed/1000, ffFixed, 8,2) + ' kb/s';
+    begin
+      Left := FullSize - ASize;
+      sec := Round((Left/Speed) * 1000);
+      //writeln('asize ', asize, ' full size, ', fullsize, ' left ', left, ' speed ', speed, ' sec ', sec);
+      s := s + ' @' + FloatToStrF(Speed/1000, ffFixed, 8,2) + ' kb/s ' + FormatTime(sec);
+    end;
     //
     if Percent = 0 then
       Percent := -1;  // -1 means no change

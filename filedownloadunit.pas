@@ -11,7 +11,7 @@ type
     // event type for pregress informations, mainly for download files
   TProgressEvent = procedure(Sender: TObject; Percent: Integer; Text: string) of object;
 
-  TOnProgress = procedure(Sender: TObject; Percent, Speed: integer; FullSize: Int64) of object;
+  TOnProgress = procedure(Sender: TObject; Percent, Speed: integer; CurSize, FullSize: Int64) of object;
 
 { Download a file with progress from URL to File}
 procedure DownloadFile(OnProgress: TOnProgress; AURL: string; AFileName: string);
@@ -227,7 +227,7 @@ begin
       Speed := Round(FPos / (t1 / 1000));
     // send to GUI
     if Assigned(OnProgress) then
-      OnProgress(self, Percent, Speed, FPos);
+      OnProgress(self, Percent, Speed, FPos, FSize);
     //
     LastCall := t1;
   end;

@@ -708,6 +708,7 @@ History
 - Bugfix for Get Original Window when no entry is selected
 - Search by ID Window added for easier URL handling
 - Support for Youtube shorts (movies in portait format)
+- show the time left when downloading videos
 
 1.3
 - fix restoring Splitter postion
