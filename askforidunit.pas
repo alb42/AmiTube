@@ -85,7 +85,7 @@ begin
   FEdit2.Parent := Grp;
   FEdit2.OnContentsChange := @Edit2Change;
 
-  FOK2 := TMUIButton.Create(GetLocString(MSG_GUI_SEARCHFORVIDEO)); //'Search for List');
+  FOK2 := TMUIButton.Create(GetLocString(MSG_GUI_SEARCHFORLIST)); //'Search for List');
   FOK2.FixWidthTxt := ' Search for Video ';
   FOK2.Disabled :=  True;
   FOK2.Parent := Grp;
@@ -201,7 +201,7 @@ begin
         s2 := Copy(s1, 1, P - 1)
       else
         s2 := Copy(s1, 1);
-      if Length(s2) = 34 then
+      if Length(s2) <= 34 then
       begin
         F2 := True;
         FEdit2.Contents := s2;
