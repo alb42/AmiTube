@@ -1440,6 +1440,7 @@ begin
         // the user want that?
         SearchField.Contents := NName; // just put to search bar and press "enter"
         SearchEntry(SearchField);
+        ToFront;
         ReturnMessage := '';
         Result := 0;
       end;
@@ -1457,6 +1458,7 @@ begin
           if not InRange(FormatN, 0, 3) then
             FormatN := Prefs.Format;
         end;
+        ToFront;
         Result := RexxConvert(NName, FormatN, cmd = 'PLAY', ReturnMessage);
       end;
     end;
