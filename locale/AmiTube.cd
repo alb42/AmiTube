@@ -211,6 +211,9 @@ Search for List
 MSG_GUI_ENTERYOUTUBEURL (20044//)
 Insert YouTube URL and press enter to extract ID's
 ;
+MSG_GUI_CANCEL (20045//)
+Cancel
+;
 ; ### Status
 MSG_STATUS_IDLE (30000//)
 Idle

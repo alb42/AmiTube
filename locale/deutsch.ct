@@ -281,6 +281,10 @@ MSG_GUI_ENTERYOUTUBEURL
 Gebe YouTube URL ein und drücke Enter um ID's zu extrahieren
 ; Insert YouTube URL and press enter to extract ID's
 ;
+MSG_GUI_CANCEL
+Abbrechen
+; Cancel
+;
 ; ### Status
 MSG_STATUS_IDLE
 Wartet

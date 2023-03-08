@@ -112,8 +112,8 @@ begin
 
   TMUIRectangle.Create.Parent := Grp;
 
-  FCancel := TMUIButton.Create('Cancel');
-  FCancel.FixWidthTxt := ' Cancel ';
+  FCancel := TMUIButton.Create(GetLocString(MSG_GUI_CANCEL));
+  FCancel.FixWidthTxt := ' ' + GetLocString(MSG_GUI_CANCEL) + ' ';
   FCancel.Parent := Grp;
   FCancel.OnClick := @CancelClick;
 end;

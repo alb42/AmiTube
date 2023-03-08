@@ -213,6 +213,9 @@ const
   MSG_GUI_ENTERYOUTUBEURL = 20044 ;
   MSG_GUI_ENTERYOUTUBEURL_STR = 'Insert YouTube URL and press enter to extract ID''s'#0;
 
+  MSG_GUI_CANCEL = 20045 ;
+  MSG_GUI_CANCEL_STR = 'Cancel'#0;
+
   MSG_STATUS_IDLE = 30000 ;
   MSG_STATUS_IDLE_STR = 'Idle'#0;
 
@@ -361,7 +364,7 @@ type
      str: string;
   end;
 
-  TAppStringArray = array[0..109] of TAppString;
+  TAppStringArray = array[0..110] of TAppString;
 
 const
   AppStrings: TAppStringArray = (
@@ -431,6 +434,7 @@ const
     (id: MSG_GUI_SEARCHFORVIDEO ; str: MSG_GUI_SEARCHFORVIDEO_STR ),
     (id: MSG_GUI_SEARCHFORLIST ; str: MSG_GUI_SEARCHFORLIST_STR ),
     (id: MSG_GUI_ENTERYOUTUBEURL ; str: MSG_GUI_ENTERYOUTUBEURL_STR ),
+    (id: MSG_GUI_CANCEL ; str: MSG_GUI_CANCEL_STR ),
     (id: MSG_STATUS_IDLE ; str: MSG_STATUS_IDLE_STR ),
     (id: MSG_STATUS_SHARED ; str: MSG_STATUS_SHARED_STR ),
     (id: MSG_STATUS_PREPSEARCH ; str: MSG_STATUS_PREPSEARCH_STR ),
