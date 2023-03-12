@@ -39,7 +39,7 @@ RUN python3 -m pip install -U yt-dlp && \
     apt-get -y purge gcc g++ git libpng-dev make && \
     apt-get -y autoremove && \
     apt-get -y autoclean && \
-    rm -rf /usr/src/* /tmp/* /var/lib/apt/lists/* /var/tmp/*
+    rm -rf /usr/src/* /tmp/* /var/lib/apt/lists/* /var/tmp/* /etc/php/8.2/fpm/pool.d/www.conf
 
 # Install binaries and sourcecode
 ADD docker/entrypoint.sh        /entrypoint.sh
@@ -52,7 +52,7 @@ COPY src/                       /var/www/html/
 RUN mkdir -p /var/log/amitube /var/www/html/cdxlstore /var/www/html/tmp && \
     chmod -R a+rwx /var/log/amitube /var/www && \
     chmod -R a+rx /usr/local/bin /entrypoint.sh && \
-    chmod -R a+rx /usr/bin/agaconv && \
+    chmod a+rx /usr/bin/agaconv && \
     chown -R www-data:www-data /var/www /var/log/amitube && \
     crontab -l | { cat; echo "0 0 * * * python3 -m pip install yt-dlp --upgrade"; } | crontab -
 
