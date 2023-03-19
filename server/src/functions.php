@@ -16,7 +16,7 @@ function logToFile(string $logFile, string $logMessage): void
     );
 }
 
-function downloadFile(string $url, string $targetFile): bool
+function downloadImageFile(string $url, string $targetFile): bool
 {
     $fileHandle = fopen($targetFile, "wb");
     $curlHandle = curl_init();
@@ -25,7 +25,7 @@ function downloadFile(string $url, string $targetFile): bool
     $downloadSuccess = curl_exec($curlHandle);
     curl_close($curlHandle);
     fclose($fileHandle);
-
+    clearstatcache(true, $filename);
     return $downloadSuccess;
 }
 
@@ -36,9 +36,10 @@ function dieIfRequestIsNotValid(): void
     }
 }
 
-function downloadBaseHeaders(int $filesize): void
+function downloadBaseHeaders(string $filename): void
 {
-    header('Content-Length: ' . $filesize);
+    clearstatcache(true, $filename);
+    header('Content-Length: ' . (int) filesize($filename));
     header('Content-Transfer-Encoding: binary');
     header('Cache-Control: no-cache, must-revalidate');
     header('Pragma: no-cache');
@@ -70,4 +71,17 @@ function setBasicAttributesOfResultChild(object $resultData, SimpleXMLElement $b
     if (property_exists($resultData, 'description')) {
         $base->addChild('description', htmlspecialchars($resultData->{'description'}, ENT_XML1, 'UTF-8'));
     }
+}
+
+function isValidJpegThumbnail(string $filename): bool
+{
+    $fileHandle = fopen($filename, 'rb');
+    fseek($fileHandle, -2, SEEK_END);
+    if (ftell($fileHandle) < 2000) {
+      $return = false;
+    } else {
+      $return = true;
+    }
+    fclose($fileHandle);
+    return $return;
 }

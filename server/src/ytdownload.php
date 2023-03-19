@@ -24,11 +24,11 @@ if ($format === 'mp3') {
     unlink($tempFilename.'.wav');
     rename($tempFilename.'.8svx', $tempFilename);
 } else {
-    exec("/usr/local/bin/yt-dlp -f '".$format."' -o ".$tempFilename." -- \"".$id."\"", $msg, $returnCode);
+    exec("/usr/local/bin/yt-dlp -N `nproc` -f '".$format."' -o ".$tempFilename." -- \"".$id."\"", $msg, $returnCode);
 }
 
 if ($returnCode === 0 && file_exists($tempFilename)) {
-    downloadBaseHeaders(filesize($tempFilename));
+    downloadBaseHeaders($tempFilename);
     ob_end_clean();//required here or large files will not work
 
     $file = fopen($tempFilename, 'rb');

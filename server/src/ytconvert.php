@@ -28,8 +28,8 @@ $txt = implode("\n", $commandOutput);
 logToFile($logFile, 'ID "' . $videoId . '" output ' . $txt);
 
 if ($returnCode === 0) {
-    downloadBaseHeaders(filesize($tempFilename));
-    
+    downloadBaseHeaders($tempFilename);
+
     if ($format === 2) {
         header('Content-Type: video/MP1S');
         header('Content-Disposition: filename="' . $videoId . '.mpeg"');

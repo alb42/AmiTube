@@ -23,7 +23,7 @@ ifeq ("$(wildcard $(pwd)/data/ytshares.xml)","")
 	echo "<?xml version=\"1.0\"?><results></results>" > $(pwd)/data/ytshares.xml
 endif
 	-chmod -R a+rwx $(pwd)/data
-	docker run -d -it --rm \
+	docker run -d --rm \
 		-v $(pwd)/data/logs:/var/log/amitube \
 		-v $(pwd)/data/ytshares.xml:/var/www/html/ytshares.xml \
 		-p 1234:80 \

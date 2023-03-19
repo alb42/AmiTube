@@ -57,3 +57,4 @@ RUN mkdir -p /var/log/amitube /var/www/html/cdxlstore /var/www/html/tmp && \
     crontab -l | { cat; echo "0 0 * * * python3 -m pip install yt-dlp --upgrade"; } | crontab -
 
 ENTRYPOINT ["/entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]
