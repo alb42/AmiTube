@@ -46,6 +46,7 @@ type
     end;
     DrawHandle: Pointer;
     DTObj: Pointer;
+    IconName: string;
     ImgSize: TPoint;
     constructor Create; virtual;
     destructor Destroy; override;
@@ -72,6 +73,7 @@ type
     DTObj: Pointer;
     size: TPoint;
     DrawHandle: Pointer;
+    IconName: string;
     //
     Running: Boolean;
     OnThreadEnd: TNotifyEvent;
@@ -146,7 +148,7 @@ end;
 procedure TLoadImgThread.Execute;
 var
   Url: string;
-  IconName, FileName: string;
+  FileName: string;
   FS: TFileStream;
   bmhd: PBitMapHeader;
   bm: PBitMap;
@@ -294,6 +296,7 @@ end;
 constructor TResultEntry.Create;
 begin
   DTObj := nil;
+  IconName := '';
   ImgSize.x := 0;
 end;
 
@@ -303,8 +306,8 @@ begin
   begin
     ReleaseDTDrawInfo(DTObj, DrawHandle);
     DisposeDTObject(DTObj);
-    //if IconName <> '' then
-    //  DeleteFile(IconName);
+    if IconName <> '' then
+      DeleteFile(IconName);
   end;
   inherited Destroy;
 end;

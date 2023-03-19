@@ -15,6 +15,9 @@ uses
 const
   // base URL on my server
   BaseURL = 'http://amitube.alb42.de/atv2/';
+  //BaseURL = 'http://build.alb42.de/atv3/';
+  //BaseURL = 'http://build.alb42.de:8083/';//amitube.alb42.de/atv2/';
+  //BaseURL = 'http://athos.alb:1234/';
 
   // php scripts for different functions will be added to BaseURL
   SearchBase = 'ytsearch.php?q=';         // search by keyword

@@ -75,6 +75,9 @@ begin
   ABak := GetAPen(RP);
   BBak := GetBPen(RP);
   DBak := GetDrMd(RP);
+  {$ifdef AROS}
+  SetRast(RP, 0);
+  {$endif}
 
   FNormFont := Rp^.Font;
   if not Assigned(BigFont) then
@@ -362,6 +365,7 @@ begin
       LT.ItemLink.DrawHandle := LT.DrawHandle;
       LT.DrawHandle := nil;
       LT.ItemLink.ImgSize := LT.Size;
+      LT.ItemLink.IconName := LT.IconName;
     end
     else
     begin
