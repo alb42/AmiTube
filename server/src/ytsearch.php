@@ -20,7 +20,7 @@ $xml = new SimpleXMLElement('<results/>');
 if (empty($videoId)) {
     exec("/usr/local/bin/yt-dlp -j \"ytsearch" . escapeshellcmd($num) . ":" . escapeshellcmd($searchTerm) . "\"", $searchResults, $ret);
 } else {
-    exec("/usr/local/bin/yt-dlp -j --max-downloads " . escapeshellcmd($videoId) . " -- \"" . escapeshellcmd($videoId) . "\"", $searchResults, $ret);
+    exec("/usr/local/bin/yt-dlp -j --max-downloads " . escapeshellcmd($num) . " -- \"" . escapeshellcmd($videoId) . "\"", $searchResults, $ret);
 }
 //logToFile('/tmp/ytresult.log', var_export($searchResults, true));
 
