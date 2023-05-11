@@ -49,6 +49,9 @@ var
 
 implementation
 
+uses
+  AskForIDUnit;
+
 
 {Kill all search threads}
 procedure KillSearch;
@@ -147,8 +150,9 @@ begin
       Search := Trim(Search);
       // First URL type https://www.youtube.com/watch?v=ID
 
-      if (Pos('https://', LowerCase(Trim(Search))) = 1) then
+      if (Pos('https://', LowerCase(Search)) = 1) then
       begin
+        Search := Unescape(Search);
         if Pos('https://youtu.be/', LowerCase(Search)) = 1 then
         begin
           Delete(Search, 1, 17);

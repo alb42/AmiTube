@@ -137,7 +137,7 @@ ID:<ID>
 
 AmiTube will then load the properties of the video describe by ID.
 There is a @{"dedicated window" LINK AskForID} to enter Youtube URLs and retrieve
-IDs from it. 
+IDs from it.
 
 If the automatic clipboard observation is enabled, these URL types are
 automatically loaded (with a requester asking for conformation).
@@ -414,7 +414,7 @@ Auto load Preview Icon
 
 Fancy List
   If selected the standard MUI List is replaced by a nicer self
-  created list which has the preview image the title in big 
+  created list which has the preview image the title in big
   blue font duration and file size in a tiny font and a bit of
   the description. if this list is selected you have to use
   the menu to change the sorting
@@ -471,7 +471,7 @@ prefs are used. Of course, this works best if the Player automatically
 starts the movie and ends once the movie is finished (like AGABlaster
 for CDXL or RiVA for MPEG).
 When the window is open the default movie directory contents is loaded.
-One can sort the movies in the list by click'n'dragging. 
+One can sort the movies in the list by click'n'dragging.
 On the right of the window are settings for the automatic playing.
 
 Random
@@ -703,6 +703,9 @@ commands:
 
 History
 -------
+
+1.5
+- Support for Escaped URLs
 
 1.4
 - Bugfix for Get Original Window when no entry is selected

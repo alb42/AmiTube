@@ -6,7 +6,7 @@ interface
 
 uses
   MUIClass.Base, MUIClass.Window, MUIClass.Area, MUIClass.Gadget, MUIClass.Group,
-  MUIClass.Dialog, mui;
+  mui;
 
 type
   TAskForIDWin = class(TMUIWindow)
@@ -36,6 +36,8 @@ type
 
 var
  AskForIDWin: TAskForIDWin;
+
+function Unescape(const s: String): String;
 
 
 implementation
@@ -145,6 +147,42 @@ begin
   FOK2.Disabled := Length(FEdit2.Contents) <> 34;
 end;
 
+function HexValue(c: Char): Integer;
+begin
+  case c of
+    '0'..'9': Result := ord(c) - ord('0');
+    'A'..'F': Result := ord(c) - (ord('A') - 10);
+    'a'..'f': Result := ord(c) - (ord('a') - 10);
+  else
+    Result := 0;
+  end;
+end;
+
+function Unescape(const s: String): String;
+var
+  i, RealLength: Integer;
+  P: PChar;
+begin
+  SetLength(Result, Length(s));
+  i := 1;
+  P := PChar(Result);  { use PChar to prevent numerous calls to UniqueString }
+  RealLength := 0;
+  while i <= Length(s) do
+  begin
+    if s[i] = '%' then
+    begin
+      P[RealLength] := Chr(HexValue(s[i + 1]) shl 4 or HexValue(s[i + 2]));
+      Inc(i, 3);
+    end else
+    begin
+      P[RealLength] := s[i];
+      Inc(i);
+    end;
+    Inc(RealLength);
+  end;
+  SetLength(Result, RealLength);
+end;
+
 procedure TAskForIDWin.AckURL(Sender: TObject);
 var
   s, s1,s2: string;
@@ -156,7 +194,9 @@ begin
   //
   F1 := False;
   F2 := False;
-  s := FEditURL.Contents;
+  // unescape the URL, like https://www.youtube.com/watch%3Fv%3DHo9TbIbtIUY
+  s := Unescape(FEditURL.Contents);
+
   // search for ID
   P := Pos('youtu.be/', LowerCase(s));
   if P > 0 then
