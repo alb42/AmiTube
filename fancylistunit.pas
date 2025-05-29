@@ -447,6 +447,7 @@ begin
   LT.WaitFor;
   LT.Free;
   CloseMUIFont(Bigfont);
+  CloseMUIFont(TinyFont);
   Sc := IntuitionBase^.ActiveScreen;
   ReleasePen(SC^.ViewPort.ColorMap, BGColor);
   ReleasePen(SC^.ViewPort.ColorMap, SelBGColor);
