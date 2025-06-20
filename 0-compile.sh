@@ -1,5 +1,6 @@
 #!/bin/bash -e
 
+
 flexcat locale/AmiTube.cd AmiTubelocale.pas=locale/FPCUnit.sd
 # languages
 flexcat locale/AmiTube.cd locale/deutsch.ct NEWCTFILE locale/deutsch.ct
@@ -21,7 +22,7 @@ cp -r Catalogs/* pack/AmiTubeOS4/Catalogs/
 #
 mkdir -p lib/m68k-amiga
 rm -f ./lib/m68k-amiga/*
-fpc4amiga000.sh -B -XX CX -FU./lib/m68k-amiga -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTube/AmiTube.000
+fpc4amiga000.sh -B -XX -CX -FU./lib/m68k-amiga -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTube/AmiTube.000
 
 rm -f ./lib/m68k-amiga/*
 fpc4amiga.sh -B -XX -CX -FU./lib/m68k-amiga -Fu../MUIClass/src AmiTube.pas -o./pack/AmiTube/AmiTube
