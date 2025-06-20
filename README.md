@@ -7,6 +7,14 @@ The original Idea for this program is by [Michal Bergseth](https://amitopia.com)
 
 I suggest you use [AGABlaster](http://home.alb42.de/files/agablaster_0_9_83.lha) for CDXL Movies and [RiVA](http://aminet.net/gfx/show/RiVA-0.54.lha) for MPEG movies.
 
+## How to compile
+
+Cross compilation is strongly, natively compiling on Amiga is possible but need a lot of RAM (128 MB+).
+Check the [FPC Amiga Wiki](https://fpcamigawiki.alb42.de/index.php?title=Installation_Classic#Crosscompile_from_Linux) how to create an Amiga Cross compiler on your Linux System. You will need [MUIClass](https://github.com/alb42/MUIClass) to compile the project. for example to compile for Classic Amiga 68020:
+```
+fpc -Tamiga -Pm68k -Avasm -XV -Fu/path/to/MUIClass/src AmiTube.pas
+```
+
 ## Your very own converter Server (via docker container)
 All you need to get it, is to start:
 ```
