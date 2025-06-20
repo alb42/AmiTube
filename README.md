@@ -9,7 +9,7 @@ I suggest you use [AGABlaster](http://home.alb42.de/files/agablaster_0_9_83.lha)
 
 ## How to compile
 
-Cross compilation is strongly, natively compiling on Amiga is possible but need a lot of RAM (128 MB+).
+Cross compilation is strongly advised, natively compiling on Amiga is possible but need a lot of RAM (128 MB+).
 Check the [FPC Amiga Wiki](https://fpcamigawiki.alb42.de/index.php?title=Installation_Classic#Crosscompile_from_Linux) how to create an Amiga Cross compiler on your Linux System. You will need [MUIClass](https://github.com/alb42/MUIClass) to compile the project. for example to compile for Classic Amiga 68020:
 ```
 fpc -Tamiga -Pm68k -Avasm -XV -Fu/path/to/MUIClass/src AmiTube.pas
